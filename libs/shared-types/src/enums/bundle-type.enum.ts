@@ -1,0 +1,7 @@
+export enum BundleType {
+  FIXED = 'FIXED',
+  MIX_MATCH = 'MIX_MATCH',
+  VOLUME = 'VOLUME',
+  CROSS_SELL = 'CROSS_SELL',
+  DEAD_STOCK = 'DEAD_STOCK',
+}

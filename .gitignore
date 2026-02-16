@@ -1,0 +1,39 @@
+# Dependencies
+node_modules/
+
+# Build
+dist/
+tmp/
+out-tsc/
+
+# NX
+.nx/
+
+# Environment
+.env.local
+.env.*.local
+
+# IDE
+/.idea/
+.vscode/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Test
+coverage/
+
+# Prisma
+libs/prisma-client/src/generated/
+
+# Logs
+*.log
+npm-debug.log*
+
+# Misc
+.cache/
+
+vite.config.*.timestamp*

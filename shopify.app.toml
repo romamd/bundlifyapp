@@ -1,0 +1,29 @@
+name = "Bundlify"
+client_id = "YOUR_CLIENT_ID"
+application_url = "http://localhost:3000"
+
+[auth]
+redirect_urls = ["http://localhost:3000/auth/callback"]
+
+[webhooks]
+api_version = "2025-01"
+
+  [[webhooks.subscriptions]]
+  topics = [
+    "products/create",
+    "products/update",
+    "products/delete",
+    "orders/create",
+    "orders/paid",
+    "inventory_levels/update",
+    "app/uninstalled"
+  ]
+  uri = "/webhooks"
+
+[access_scopes]
+scopes = "read_products,write_products,read_orders,read_inventory,write_discounts,read_price_rules,write_price_rules"
+
+[app_proxy]
+url = "http://localhost:3000/api/storefront"
+subpath = "bundlify"
+prefix = "apps"

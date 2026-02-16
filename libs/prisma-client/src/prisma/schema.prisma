@@ -1,0 +1,282 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// STORE & AUTH
+// ============================================
+
+model Shop {
+  id              String   @id @default(cuid())
+  shopifyDomain   String   @unique @db.VarChar(255)
+  accessToken     String   @db.Text
+  shopifyStoreId  String?  @unique @db.VarChar(255)
+  name            String?  @db.VarChar(255)
+  email           String?  @db.VarChar(255)
+  plan            PlanType @default(FREE)
+  trialEndsAt     DateTime?
+  installedAt     DateTime @default(now())
+  uninstalledAt   DateTime?
+  currency        String   @default("USD") @db.VarChar(3)
+
+  defaultShippingCost   Decimal  @default(0)    @db.Decimal(10, 2)
+  paymentProcessingPct  Decimal  @default(2.9)  @db.Decimal(5, 2)
+  paymentProcessingFlat Decimal  @default(0.30) @db.Decimal(10, 2)
+
+  products             Product[]
+  bundles              Bundle[]
+  bundleViews          BundleView[]
+  settings             ShopSettings?
+  webhookSubscriptions WebhookSubscription[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum PlanType {
+  FREE
+  STARTER
+  GROWTH
+}
+
+model ShopSettings {
+  id     String @id @default(cuid())
+  shopId String @unique
+  shop   Shop   @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  bundleWidgetEnabled   Boolean @default(true)
+  checkoutUpsellEnabled Boolean @default(true)
+  exitIntentEnabled     Boolean @default(false)
+
+  autoGenerateBundles    Boolean @default(true)
+  minBundleMarginPct     Decimal @default(15) @db.Decimal(5, 2)
+  maxBundleProducts      Int     @default(4)
+  includeDeadStock       Boolean @default(true)
+  deadStockDaysThreshold Int     @default(60)
+
+  showOnProductPage Boolean @default(true)
+  showOnCartPage    Boolean @default(true)
+  showAtCheckout    Boolean @default(true)
+  showOnExitIntent  Boolean @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ============================================
+// PRODUCTS & COSTS
+// ============================================
+
+model Product {
+  id               String  @id @default(cuid())
+  shopId           String
+  shop             Shop    @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  shopifyProductId String  @db.VarChar(255)
+  shopifyVariantId String? @db.VarChar(255)
+  title            String  @db.VarChar(500)
+  variantTitle     String? @db.VarChar(500)
+  sku              String? @db.VarChar(255)
+  price            Decimal @db.Decimal(10, 2)
+  compareAtPrice   Decimal? @db.Decimal(10, 2)
+
+  cogs            Decimal? @db.Decimal(10, 2)
+  shippingCost    Decimal? @db.Decimal(10, 2)
+  additionalCosts Decimal? @db.Decimal(10, 2)
+
+  contributionMargin    Decimal? @db.Decimal(10, 2)
+  contributionMarginPct Decimal? @db.Decimal(5, 2)
+
+  inventoryQuantity Int      @default(0)
+  inventoryItemId   String?  @db.VarChar(255)
+  avgDailySales     Decimal  @default(0) @db.Decimal(10, 4)
+  lastSoldAt        DateTime?
+  daysWithoutSale   Int      @default(0)
+  isDeadStock       Boolean  @default(false)
+
+  shopifyUpdatedAt DateTime?
+  lastSyncedAt     DateTime?
+  imageUrl         String?       @db.Text
+  status           ProductStatus @default(ACTIVE)
+
+  bundleItems BundleItem[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([shopId, shopifyProductId, shopifyVariantId])
+  @@index([shopId, isDeadStock])
+  @@index([shopId, contributionMarginPct])
+  @@index([shopId, avgDailySales])
+}
+
+enum ProductStatus {
+  ACTIVE
+  DRAFT
+  ARCHIVED
+}
+
+// ============================================
+// BUNDLES
+// ============================================
+
+model Bundle {
+  id     String       @id @default(cuid())
+  shopId String
+  shop   Shop         @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  name   String       @db.VarChar(255)
+  slug   String       @db.VarChar(255)
+  type   BundleType
+  status BundleStatus @default(DRAFT)
+  source BundleSource @default(AUTO)
+
+  bundlePrice     Decimal      @db.Decimal(10, 2)
+  individualTotal Decimal      @db.Decimal(10, 2)
+  discountPct     Decimal      @db.Decimal(5, 2)
+  discountType    DiscountType @default(PERCENTAGE)
+
+  totalCogs             Decimal? @db.Decimal(10, 2)
+  totalShippingCost     Decimal? @db.Decimal(10, 2)
+  processingFee         Decimal? @db.Decimal(10, 2)
+  contributionMargin    Decimal? @db.Decimal(10, 2)
+  contributionMarginPct Decimal? @db.Decimal(5, 2)
+
+  displayPriority Int         @default(0)
+  triggerType     TriggerType @default(PRODUCT_PAGE)
+  minCartValue    Decimal?    @db.Decimal(10, 2)
+  maxCartValue    Decimal?    @db.Decimal(10, 2)
+
+  maxRedemptions     Int?
+  currentRedemptions Int      @default(0)
+  startsAt           DateTime?
+  endsAt             DateTime?
+
+  items        BundleItem[]
+  views        BundleView[]
+  displayRules BundleDisplayRule[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([shopId, status, triggerType])
+  @@index([shopId, contributionMarginPct])
+}
+
+model BundleDisplayRule {
+  id         String            @id @default(cuid())
+  bundleId   String
+  bundle     Bundle            @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+  targetType DisplayRuleTarget
+  targetId   String            @db.VarChar(255)
+
+  @@unique([bundleId, targetType, targetId])
+  @@index([targetType, targetId])
+}
+
+enum DisplayRuleTarget {
+  PRODUCT
+  COLLECTION
+}
+
+enum BundleType {
+  FIXED
+  MIX_MATCH
+  VOLUME
+  CROSS_SELL
+  DEAD_STOCK
+}
+
+enum BundleStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  EXPIRED
+  ARCHIVED
+}
+
+enum BundleSource {
+  AUTO
+  MANUAL
+}
+
+enum DiscountType {
+  PERCENTAGE
+  FIXED_AMOUNT
+}
+
+enum TriggerType {
+  PRODUCT_PAGE
+  CART_PAGE
+  CHECKOUT
+  EXIT_INTENT
+  POST_PURCHASE
+}
+
+model BundleItem {
+  id        String  @id @default(cuid())
+  bundleId  String
+  bundle    Bundle  @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  quantity    Int     @default(1)
+  isAnchor    Boolean @default(false)
+  isDeadStock Boolean @default(false)
+  sortOrder   Int     @default(0)
+
+  @@unique([bundleId, productId])
+}
+
+// ============================================
+// ANALYTICS
+// ============================================
+
+model BundleView {
+  id       String @id @default(cuid())
+  shopId   String
+  shop     Shop   @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  bundleId String
+  bundle   Bundle @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+
+  event     BundleEvent
+  sessionId String?     @db.VarChar(255)
+
+  triggerType TriggerType
+  pageUrl     String?     @db.Text
+  cartValue   Decimal?    @db.Decimal(10, 2)
+
+  orderId String?  @db.VarChar(255)
+  revenue Decimal? @db.Decimal(10, 2)
+  margin  Decimal? @db.Decimal(10, 2)
+
+  createdAt DateTime @default(now())
+
+  @@index([shopId, bundleId, event, createdAt])
+  @@index([shopId, createdAt])
+}
+
+enum BundleEvent {
+  VIEWED
+  CLICKED
+  ADDED_TO_CART
+  PURCHASED
+  DISMISSED
+}
+
+model WebhookSubscription {
+  id        String @id @default(cuid())
+  shopId    String
+  shop      Shop   @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  topic     String @db.VarChar(255)
+  webhookId String @unique @db.VarChar(255)
+
+  createdAt DateTime @default(now())
+
+  @@unique([shopId, topic])
+}

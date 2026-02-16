@@ -1,0 +1,21 @@
+{
+  "name": "prisma-client",
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/prisma-client/src",
+  "projectType": "library",
+  "tags": [],
+  "targets": {
+    "generate": {
+      "command": "npx prisma generate --schema=libs/prisma-client/src/prisma/schema.prisma"
+    },
+    "migrate": {
+      "command": "npx prisma migrate dev --schema=libs/prisma-client/src/prisma/schema.prisma"
+    },
+    "migrate-deploy": {
+      "command": "npx prisma migrate deploy --schema=libs/prisma-client/src/prisma/schema.prisma"
+    },
+    "db-push": {
+      "command": "npx prisma db push --schema=libs/prisma-client/src/prisma/schema.prisma"
+    }
+  }
+}
