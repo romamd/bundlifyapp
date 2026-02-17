@@ -1,5 +1,7 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { APP_FILTER } from '@nestjs/core';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import { join } from 'path';
 import { AuthModule } from '../modules/auth/auth.module';
 import { WebhooksModule } from '../modules/webhooks/webhooks.module';
 import { ProductsModule } from '../modules/products/products.module';
@@ -20,6 +22,10 @@ import { ShopifyErrorFilter } from '../common/filters/shopify-error.filter';
 
 @Module({
   imports: [
+    ServeStaticModule.forRoot({
+      rootPath: join(__dirname, '..', 'admin'),
+      exclude: ['/api/(.*)', '/auth/(.*)', '/webhooks/(.*)'],
+    }),
     AuthModule,
     WebhooksModule,
     ProductsModule,
