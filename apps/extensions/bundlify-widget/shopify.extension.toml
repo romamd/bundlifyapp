@@ -1,0 +1,30 @@
+api_version = "2025-01"
+
+[[extensions]]
+type = "theme"
+name = "Bundlify Widget"
+handle = "bundlify-widget"
+
+  [[extensions.blocks]]
+  type = "bundle-product-page"
+  name = "Bundle Offer - Product Page"
+  target = "section"
+
+  [[extensions.blocks]]
+  type = "bundle-cart-upsell"
+  name = "Bundle Upsell - Cart"
+  target = "section"
+
+[extensions.settings]
+  [extensions.settings.fields]
+    [[extensions.settings.fields.field]]
+    key = "heading_text"
+    type = "text"
+    label = "Widget heading"
+    default = "Complete the look"
+
+    [[extensions.settings.fields.field]]
+    key = "show_savings_badge"
+    type = "checkbox"
+    label = "Show savings badge"
+    default = true

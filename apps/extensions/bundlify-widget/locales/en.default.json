@@ -1,0 +1,12 @@
+{
+  "name": "Bundlify",
+  "description": "Margin-aware product bundle offers",
+  "settings": {
+    "heading_text": {
+      "label": "Widget heading"
+    },
+    "show_savings_badge": {
+      "label": "Show savings badge"
+    }
+  }
+}
