@@ -14,4 +14,6 @@ export interface ShopSettingsDto {
   defaultShippingCost: number;
   paymentProcessingPct: number;
   paymentProcessingFlat: number;
+  multiCurrencyEnabled: boolean;
+  displayCurrency: string;
 }

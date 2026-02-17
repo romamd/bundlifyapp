@@ -1,0 +1,33 @@
+api_version = "2025-01"
+
+[[extensions]]
+name = "bundlify-flow"
+type = "flow_action_definition"
+handle = "bundlify-flow"
+
+  [[extensions.actions]]
+  title = "Activate Bundle"
+  description = "Set a Bundlify bundle status to ACTIVE"
+  url = "/api/flow/actions/activate-bundle"
+
+    [[extensions.actions.fields]]
+    key = "bundle_id"
+    name = "Bundle ID"
+    type = "string"
+    required = true
+
+  [[extensions.actions]]
+  title = "Pause Bundle"
+  description = "Set a Bundlify bundle status to PAUSED"
+  url = "/api/flow/actions/pause-bundle"
+
+    [[extensions.actions.fields]]
+    key = "bundle_id"
+    name = "Bundle ID"
+    type = "string"
+    required = true
+
+  [[extensions.actions]]
+  title = "Generate Bundles"
+  description = "Trigger automatic bundle generation for the shop"
+  url = "/api/flow/actions/generate-bundles"

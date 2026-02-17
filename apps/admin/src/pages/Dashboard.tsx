@@ -1,10 +1,17 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAnalyticsStore } from '../stores/analytics.store';
 import { useAuthenticatedFetch } from '../hooks/useAuthenticatedFetch';
 import { FunnelChart } from '../components/analytics/FunnelChart';
 import { TopBundlesCard } from '../components/analytics/TopBundlesCard';
 import { LoadingState } from '../components/common/LoadingState';
+
+interface ProductPair {
+  productA: string;
+  productB: string;
+  affinityScore: number;
+}
+
 
 const DATE_RANGE_OPTIONS: Array<{ value: '7d' | '30d' | '90d'; label: string }> = [
   { value: '7d', label: '7 Days' },
@@ -18,9 +25,18 @@ export function Dashboard() {
   const { dashboard, dateRange, loading, error, setDateRange, fetchDashboard } =
     useAnalyticsStore();
 
+  const [productPairs, setProductPairs] = useState<ProductPair[]>([]);
+
   useEffect(() => {
     fetchDashboard(fetch);
   }, [dateRange]);
+
+  useEffect(() => {
+    fetch('/api/admin/analytics/product-pairs')
+      .then((res) => res.json())
+      .then((data) => setProductPairs(Array.isArray(data) ? data.slice(0, 5) : []))
+      .catch(() => setProductPairs([]));
+  }, []);
 
   const kpiCardStyle: React.CSSProperties = {
     flex: '1 1 0',
@@ -254,6 +270,97 @@ export function Dashboard() {
               </p>
             </div>
           </div>
+
+          {/* Frequently Bought Together */}
+          {productPairs.length > 0 && (
+            <div
+              style={{
+                border: '1px solid #e1e3e5',
+                borderRadius: '8px',
+                backgroundColor: '#ffffff',
+                padding: '16px',
+                marginBottom: '20px',
+              }}
+            >
+              <h3
+                style={{
+                  fontSize: '14px',
+                  fontWeight: 600,
+                  margin: '0 0 12px 0',
+                }}
+              >
+                Frequently Bought Together
+              </h3>
+              <div style={{ fontSize: '13px', color: '#6d7175', marginBottom: '12px' }}>
+                Top product pairs by purchase affinity. Use these insights to create high-performing bundles.
+              </div>
+              {productPairs.map((pair, idx) => (
+                <div
+                  key={idx}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '12px',
+                    padding: '8px 0',
+                    borderBottom:
+                      idx < productPairs.length - 1
+                        ? '1px solid #f1f1f1'
+                        : 'none',
+                  }}
+                >
+                  <div
+                    style={{
+                      flex: 1,
+                      fontSize: '13px',
+                      fontWeight: 500,
+                      color: '#202223',
+                    }}
+                  >
+                    {pair.productA}
+                    <span style={{ color: '#6d7175', margin: '0 6px' }}>+</span>
+                    {pair.productB}
+                  </div>
+                  <div
+                    style={{
+                      width: '120px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                    }}
+                  >
+                    <div
+                      style={{
+                        flex: 1,
+                        height: '6px',
+                        backgroundColor: '#e4e5e7',
+                        borderRadius: '3px',
+                        overflow: 'hidden',
+                      }}
+                    >
+                      <div
+                        style={{
+                          width: `${Math.min(pair.affinityScore, 100)}%`,
+                          height: '100%',
+                          backgroundColor: '#008060',
+                          borderRadius: '3px',
+                        }}
+                      />
+                    </div>
+                    <span
+                      style={{
+                        fontSize: '12px',
+                        color: '#6d7175',
+                        minWidth: '36px',
+                        textAlign: 'right',
+                      }}
+                    >
+                      {pair.affinityScore.toFixed(0)}%
+                    </span>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* Quick actions */}
           <div

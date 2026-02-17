@@ -34,6 +34,8 @@ export interface StorefrontBundleDto {
     quantity: number;
     isAnchor: boolean;
   }>;
+  abTestId?: string;
+  abVariant?: 'control' | 'variant';
 }
 
 export interface TrackEventDto {
@@ -45,4 +47,6 @@ export interface TrackEventDto {
   cartValue?: number;
   orderId?: string;
   revenue?: number;
+  abTestId?: string;
+  abVariant?: string;
 }

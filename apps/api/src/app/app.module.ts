@@ -9,6 +9,11 @@ import { StorefrontModule } from '../modules/storefront/storefront.module';
 import { AnalyticsModule } from '../modules/analytics/analytics.module';
 import { SettingsModule } from '../modules/settings/settings.module';
 import { BillingModule } from '../modules/billing/billing.module';
+import { FlowModule } from '../modules/flow/flow.module';
+import { ABTestingModule } from '../modules/ab-testing/ab-testing.module';
+import { CurrencyModule } from '../modules/currency/currency.module';
+import { IntegrationsModule } from '../modules/integrations/integrations.module';
+import { AffinityModule } from '../modules/affinity/affinity.module';
 import { JobsModule } from '../jobs/jobs.module';
 import { SessionMiddleware } from '../modules/auth/session.middleware';
 import { ShopifyErrorFilter } from '../common/filters/shopify-error.filter';
@@ -24,6 +29,11 @@ import { ShopifyErrorFilter } from '../common/filters/shopify-error.filter';
     AnalyticsModule,
     SettingsModule,
     BillingModule,
+    FlowModule,
+    ABTestingModule,
+    CurrencyModule,
+    IntegrationsModule,
+    AffinityModule,
     JobsModule,
   ],
   providers: [

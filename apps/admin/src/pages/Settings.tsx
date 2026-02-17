@@ -385,7 +385,54 @@ export function Settings() {
             />
           </div>
 
-          {/* Section 4: Widget Settings */}
+          {/* Section 4: Multi-Currency */}
+          <div style={sectionStyle}>
+            <h2 style={sectionTitleStyle}>Multi-Currency</h2>
+            <p
+              style={{
+                fontSize: '13px',
+                color: '#6d7175',
+                marginTop: 0,
+                marginBottom: '12px',
+              }}
+            >
+              Configure multi-currency support for international storefronts.
+            </p>
+            <ToggleField
+              label="Enable Multi-Currency"
+              sublabel="Allow bundle prices to be displayed in multiple currencies"
+              value={form.multiCurrencyEnabled}
+              onChange={(val) => updateField('multiCurrencyEnabled', val)}
+            />
+            <div style={fieldRowStyle}>
+              <div>
+                <div style={labelStyle}>Display Currency</div>
+                <div style={sublabelStyle}>
+                  Primary currency for displaying bundle prices
+                </div>
+              </div>
+              <select
+                value={form.displayCurrency ?? 'USD'}
+                onChange={(e) => updateField('displayCurrency', e.target.value)}
+                style={{
+                  padding: '6px 10px',
+                  border: '1px solid #c9cccf',
+                  borderRadius: '4px',
+                  fontSize: '14px',
+                  width: '120px',
+                }}
+              >
+                <option value="USD">USD</option>
+                <option value="EUR">EUR</option>
+                <option value="GBP">GBP</option>
+                <option value="CAD">CAD</option>
+                <option value="AUD">AUD</option>
+                <option value="JPY">JPY</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Section 5: Widget Settings */}
           <div style={sectionStyle}>
             <h2 style={sectionTitleStyle}>Widget Settings</h2>
             <p

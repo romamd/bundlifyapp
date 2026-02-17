@@ -12,6 +12,13 @@ import { DeadStockDetectProcessor } from './dead-stock-detect.processor';
 import { BundleGenerateProcessor } from './bundle-generate.processor';
 import { AnalyticsAggregateProcessor } from './analytics-aggregate.processor';
 import { CleanupProcessor } from './cleanup.processor';
+import { AffinityCalculateProcessor } from './affinity-calculate.processor';
+import { DiscountOptimizeProcessor } from './discount-optimize.processor';
+import { ExchangeRateSyncProcessor } from './exchange-rate-sync.processor';
+import { CogsSyncProcessor } from './cogs-sync.processor';
+import { AffinityModule } from '../modules/affinity/affinity.module';
+import { CurrencyModule } from '../modules/currency/currency.module';
+import { IntegrationsModule } from '../modules/integrations/integrations.module';
 
 @Module({
   imports: [
@@ -28,10 +35,17 @@ import { CleanupProcessor } from './cleanup.processor';
       { name: 'bundle-generate' },
       { name: 'analytics-aggregate' },
       { name: 'cleanup' },
+      { name: 'affinity-calculate' },
+      { name: 'discount-optimize' },
+      { name: 'exchange-rate-sync' },
+      { name: 'cogs-sync' },
     ),
     ProductsModule,
     MarginModule,
     BundlesModule,
+    AffinityModule,
+    CurrencyModule,
+    IntegrationsModule,
   ],
   providers: [
     PrismaService,
@@ -41,6 +55,10 @@ import { CleanupProcessor } from './cleanup.processor';
     BundleGenerateProcessor,
     AnalyticsAggregateProcessor,
     CleanupProcessor,
+    AffinityCalculateProcessor,
+    DiscountOptimizeProcessor,
+    ExchangeRateSyncProcessor,
+    CogsSyncProcessor,
   ],
 })
 export class JobsModule implements OnModuleInit {
@@ -57,6 +75,14 @@ export class JobsModule implements OnModuleInit {
     private readonly analyticsAggregateQueue: Queue,
     @InjectQueue('cleanup')
     private readonly cleanupQueue: Queue,
+    @InjectQueue('affinity-calculate')
+    private readonly affinityCalculateQueue: Queue,
+    @InjectQueue('discount-optimize')
+    private readonly discountOptimizeQueue: Queue,
+    @InjectQueue('exchange-rate-sync')
+    private readonly exchangeRateSyncQueue: Queue,
+    @InjectQueue('cogs-sync')
+    private readonly cogsSyncQueue: Queue,
   ) {}
 
   async onModuleInit(): Promise<void> {
@@ -100,6 +126,34 @@ export class JobsModule implements OnModuleInit {
       'cleanup-schedule',
       { pattern: '0 6 * * *' },
       { name: 'cleanup', data: {} },
+    );
+
+    // Affinity calculation: weekly on Sunday at 2am
+    await this.affinityCalculateQueue.upsertJobScheduler(
+      'affinity-calculate-schedule',
+      { pattern: '0 2 * * 0' },
+      { name: 'affinity-calculate', data: {} },
+    );
+
+    // Smart discount optimization: weekly on Monday at 3am
+    await this.discountOptimizeQueue.upsertJobScheduler(
+      'discount-optimize-schedule',
+      { pattern: '0 3 * * 1' },
+      { name: 'discount-optimize', data: {} },
+    );
+
+    // Exchange rate sync: every 12 hours
+    await this.exchangeRateSyncQueue.upsertJobScheduler(
+      'exchange-rate-sync-schedule',
+      { pattern: '0 */12 * * *' },
+      { name: 'exchange-rate-sync', data: {} },
+    );
+
+    // COGS sync from accounting integrations: daily at 2am
+    await this.cogsSyncQueue.upsertJobScheduler(
+      'cogs-sync-schedule',
+      { pattern: '0 2 * * *' },
+      { name: 'cogs-sync', data: {} },
     );
   }
 }

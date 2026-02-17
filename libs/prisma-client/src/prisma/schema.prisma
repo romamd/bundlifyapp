@@ -33,6 +33,10 @@ model Shop {
   bundleViews          BundleView[]
   settings             ShopSettings?
   webhookSubscriptions WebhookSubscription[]
+  abTests              ABTest[]
+  affinities           ProductAffinity[]
+  integrations         Integration[]
+  discountHistories    DiscountHistory[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -63,6 +67,9 @@ model ShopSettings {
   showOnCartPage    Boolean @default(true)
   showAtCheckout    Boolean @default(true)
   showOnExitIntent  Boolean @default(false)
+
+  multiCurrencyEnabled Boolean  @default(false)
+  displayCurrency      String?  @db.VarChar(3)
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -104,7 +111,9 @@ model Product {
   imageUrl         String?       @db.Text
   status           ProductStatus @default(ACTIVE)
 
-  bundleItems BundleItem[]
+  bundleItems  BundleItem[]
+  affinitiesA  ProductAffinity[] @relation("AffinityProductA")
+  affinitiesB  ProductAffinity[] @relation("AffinityProductB")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -136,6 +145,8 @@ model Bundle {
   status BundleStatus @default(DRAFT)
   source BundleSource @default(AUTO)
 
+  abTestId String?
+
   bundlePrice     Decimal      @db.Decimal(10, 2)
   individualTotal Decimal      @db.Decimal(10, 2)
   discountPct     Decimal      @db.Decimal(5, 2)
@@ -157,9 +168,11 @@ model Bundle {
   startsAt           DateTime?
   endsAt             DateTime?
 
-  items        BundleItem[]
-  views        BundleView[]
-  displayRules BundleDisplayRule[]
+  items            BundleItem[]
+  views            BundleView[]
+  displayRules     BundleDisplayRule[]
+  abTests          ABTest[]
+  discountHistory  DiscountHistory[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -247,6 +260,9 @@ model BundleView {
   event     BundleEvent
   sessionId String?     @db.VarChar(255)
 
+  abTestId  String?     @db.VarChar(255)
+  abVariant String?     @db.VarChar(10)
+
   triggerType TriggerType
   pageUrl     String?     @db.Text
   cartValue   Decimal?    @db.Decimal(10, 2)
@@ -279,4 +295,140 @@ model WebhookSubscription {
   createdAt DateTime @default(now())
 
   @@unique([shopId, topic])
+}
+
+// ============================================
+// A/B TESTING
+// ============================================
+
+model ABTest {
+  id       String       @id @default(cuid())
+  shopId   String
+  shop     Shop         @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  bundleId String
+  bundle   Bundle       @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+
+  name   String       @db.VarChar(255)
+  status ABTestStatus @default(DRAFT)
+
+  controlDiscountPct Decimal @db.Decimal(5, 2)
+  variantDiscountPct Decimal @db.Decimal(5, 2)
+
+  controlImpressions  Int @default(0)
+  controlConversions  Int @default(0)
+  controlRevenue      Decimal @default(0) @db.Decimal(10, 2)
+  variantImpressions  Int @default(0)
+  variantConversions  Int @default(0)
+  variantRevenue      Decimal @default(0) @db.Decimal(10, 2)
+
+  startedAt       DateTime?
+  endedAt         DateTime?
+  winnerVariant   String?   @db.VarChar(10)
+  confidenceLevel Decimal?  @db.Decimal(5, 4)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([shopId, status])
+  @@index([bundleId])
+}
+
+enum ABTestStatus {
+  DRAFT
+  RUNNING
+  COMPLETED
+}
+
+// ============================================
+// PRODUCT AFFINITY (Frequently Bought Together)
+// ============================================
+
+model ProductAffinity {
+  id     String @id @default(cuid())
+  shopId String
+  shop   Shop   @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  productAId String
+  productA   Product @relation("AffinityProductA", fields: [productAId], references: [id], onDelete: Cascade)
+  productBId String
+  productB   Product @relation("AffinityProductB", fields: [productBId], references: [id], onDelete: Cascade)
+
+  coOccurrences    Int     @default(0)
+  affinityScore    Decimal @default(0) @db.Decimal(10, 6)
+  lastCalculatedAt DateTime @default(now())
+
+  @@unique([shopId, productAId, productBId])
+  @@index([shopId, affinityScore])
+}
+
+// ============================================
+// MULTI-CURRENCY
+// ============================================
+
+model ExchangeRate {
+  id             String @id @default(cuid())
+  baseCurrency   String @db.VarChar(3)
+  targetCurrency String @db.VarChar(3)
+  rate           Decimal @db.Decimal(20, 10)
+  source         String  @default("ecb") @db.VarChar(50)
+  fetchedAt      DateTime @default(now())
+
+  @@unique([baseCurrency, targetCurrency])
+}
+
+// ============================================
+// INTEGRATIONS (QuickBooks / Xero)
+// ============================================
+
+model Integration {
+  id       String            @id @default(cuid())
+  shopId   String
+  shop     Shop              @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  provider IntegrationProvider
+
+  accessToken    String  @db.Text
+  refreshToken   String? @db.Text
+  tokenExpiresAt DateTime?
+  externalId     String? @db.VarChar(255)
+
+  lastSyncedAt DateTime?
+  status       IntegrationStatus @default(CONNECTED)
+  syncErrors   String?           @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([shopId, provider])
+}
+
+enum IntegrationProvider {
+  QUICKBOOKS
+  XERO
+}
+
+enum IntegrationStatus {
+  CONNECTED
+  DISCONNECTED
+  ERROR
+}
+
+// ============================================
+// DISCOUNT HISTORY (Smart Optimization)
+// ============================================
+
+model DiscountHistory {
+  id       String @id @default(cuid())
+  bundleId String
+  bundle   Bundle @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+  shopId   String
+  shop     Shop   @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  previousDiscountPct Decimal @db.Decimal(5, 2)
+  newDiscountPct      Decimal @db.Decimal(5, 2)
+  reason              String  @db.VarChar(100)
+
+  appliedAt DateTime @default(now())
+
+  @@index([bundleId, appliedAt])
+  @@index([shopId])
 }

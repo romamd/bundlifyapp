@@ -18,6 +18,7 @@ export class StorefrontController {
     @Query('shop') shop: string,
     @Query('product_id') productId?: string,
     @Query('trigger') trigger?: string,
+    @Query('session_id') sessionId?: string,
   ) {
     if (!shop) {
       throw new BadRequestException('shop query parameter is required');
@@ -27,6 +28,7 @@ export class StorefrontController {
       shop,
       productId,
       trigger,
+      sessionId,
     );
   }
 

@@ -1,17 +1,22 @@
 import { Injectable, Logger, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '@bundlify/prisma-client';
 import type { StorefrontBundleDto, TrackEventDto } from '@bundlify/shared-types';
+import { ABTestingService } from '../ab-testing/ab-testing.service';
 
 @Injectable()
 export class StorefrontService {
   private readonly logger = new Logger(StorefrontService.name);
 
-  constructor(private readonly prisma: PrismaService) {}
+  constructor(
+    private readonly prisma: PrismaService,
+    private readonly abTestingService: ABTestingService,
+  ) {}
 
   async getBundlesForStorefront(
     shopDomain: string,
     productId?: string,
     trigger?: string,
+    sessionId?: string,
   ): Promise<StorefrontBundleDto[]> {
     const shop = await this.prisma.shop.findUnique({
       where: { shopifyDomain: shopDomain },
@@ -67,24 +72,69 @@ export class StorefrontService {
         })
       : activeBundles;
 
-    return filteredBundles.map((bundle) => ({
-      bundleId: bundle.id,
-      name: bundle.name,
-      bundlePrice: Number(bundle.bundlePrice),
-      individualTotal: Number(bundle.individualTotal),
-      savingsAmount: Number(bundle.individualTotal) - Number(bundle.bundlePrice),
-      savingsPct: Number(bundle.discountPct),
-      items: bundle.items.map((item) => ({
-        shopifyProductId: item.product.shopifyProductId,
-        shopifyVariantId: item.product.shopifyVariantId,
-        title: item.product.title,
-        variantTitle: item.product.variantTitle,
-        price: Number(item.product.price),
-        imageUrl: item.product.imageUrl,
-        quantity: item.quantity,
-        isAnchor: item.isAnchor,
-      })),
-    }));
+    const results: StorefrontBundleDto[] = [];
+
+    for (const bundle of filteredBundles) {
+      let bundlePrice = Number(bundle.bundlePrice);
+      let savingsPct = Number(bundle.discountPct);
+      let abTestId: string | undefined;
+      let abVariant: 'control' | 'variant' | undefined;
+
+      // Check if this bundle has an active A/B test
+      if (bundle.abTestId && sessionId) {
+        try {
+          const test = await this.prisma.aBTest.findFirst({
+            where: { id: bundle.abTestId, status: 'RUNNING' },
+          });
+
+          if (test) {
+            abTestId = test.id;
+            abVariant = this.abTestingService.assignVariant(test.id, sessionId);
+
+            // If variant, recalculate price using variant discount
+            if (abVariant === 'variant') {
+              const individualTotal = Number(bundle.individualTotal);
+              savingsPct = Number(test.variantDiscountPct);
+              bundlePrice = individualTotal * (1 - savingsPct / 100);
+            }
+
+            // Record impression asynchronously (fire and forget)
+            this.abTestingService
+              .recordMetric(test.id, abVariant, 'impression')
+              .catch((err) =>
+                this.logger.error(`Failed to record A/B test impression: ${err.message}`),
+              );
+          }
+        } catch (err: any) {
+          this.logger.error(`Error processing A/B test for bundle ${bundle.id}: ${err.message}`);
+        }
+      }
+
+      const individualTotal = Number(bundle.individualTotal);
+
+      results.push({
+        bundleId: bundle.id,
+        name: bundle.name,
+        bundlePrice,
+        individualTotal,
+        savingsAmount: individualTotal - bundlePrice,
+        savingsPct,
+        items: bundle.items.map((item) => ({
+          shopifyProductId: item.product.shopifyProductId,
+          shopifyVariantId: item.product.shopifyVariantId,
+          title: item.product.title,
+          variantTitle: item.product.variantTitle,
+          price: Number(item.product.price),
+          imageUrl: item.product.imageUrl,
+          quantity: item.quantity,
+          isAnchor: item.isAnchor,
+        })),
+        abTestId,
+        abVariant,
+      });
+    }
+
+    return results;
   }
 
   async trackEvent(shopDomain: string, data: TrackEventDto): Promise<void> {
@@ -107,8 +157,24 @@ export class StorefrontService {
         cartValue: data.cartValue ?? null,
         orderId: data.orderId || null,
         revenue: data.revenue ?? null,
+        abTestId: data.abTestId || null,
+        abVariant: data.abVariant || null,
       },
     });
+
+    // Record A/B test conversion metrics for purchase events
+    if (
+      data.abTestId &&
+      data.abVariant &&
+      (data.event === 'PURCHASE' || data.event === 'ADD_TO_CART')
+    ) {
+      const variant = data.abVariant as 'control' | 'variant';
+      this.abTestingService
+        .recordMetric(data.abTestId, variant, 'conversion', data.revenue)
+        .catch((err) =>
+          this.logger.error(`Failed to record A/B test conversion: ${err.message}`),
+        );
+    }
 
     this.logger.debug(
       `Tracked ${data.event} for bundle ${data.bundleId} in shop ${shopDomain}`,

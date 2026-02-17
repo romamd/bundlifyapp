@@ -16,6 +16,9 @@ import { BundleEngineService } from './bundle-engine.service';
 import { CreateBundleDto } from './dto/create-bundle.dto';
 import { UpdateBundleDto } from './dto/update-bundle.dto';
 
+// NOTE: Bundle count limits per plan should be enforced at the service level
+// (e.g., BundlesService.createBundle), not via a guard, since the limit is
+// based on bundle count rather than a simple plan-tier gate.
 @Controller('api/admin/bundles')
 @UseGuards(ShopifyAuthGuard)
 export class BundlesController {

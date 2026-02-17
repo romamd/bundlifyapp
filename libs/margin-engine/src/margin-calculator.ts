@@ -50,6 +50,8 @@ export interface BundleMarginInput {
   bundleDiscountPct: number;
   paymentProcessingPct: number;
   paymentProcessingFlat: number;
+  /** Optional exchange rate to convert COGS to sale currency. If costs are in a different currency than sale price. */
+  costsExchangeRate?: number;
 }
 
 /**
@@ -78,12 +80,24 @@ export function calculateBundleMargin(
     (sum, i) => sum + i.additionalCosts * i.quantity,
     0,
   );
+
+  // Apply exchange rate conversion if costs are in a different currency
+  let adjustedCogs = totalCogs;
+  let adjustedShipping = totalShipping;
+  let adjustedAdditional = totalAdditional;
+
+  if (input.costsExchangeRate && input.costsExchangeRate !== 1) {
+    adjustedCogs *= input.costsExchangeRate;
+    adjustedShipping *= input.costsExchangeRate;
+    adjustedAdditional *= input.costsExchangeRate;
+  }
+
   const processingFee =
     bundlePrice * (input.paymentProcessingPct / 100) +
     input.paymentProcessingFlat;
 
   const totalCost =
-    totalCogs + totalShipping + totalAdditional + processingFee;
+    adjustedCogs + adjustedShipping + adjustedAdditional + processingFee;
   const contributionMargin = bundlePrice - totalCost;
   const contributionMarginPct =
     bundlePrice > 0 ? (contributionMargin / bundlePrice) * 100 : 0;

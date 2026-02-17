@@ -3,6 +3,8 @@ import { Dashboard } from '../pages/Dashboard';
 import { Products } from '../pages/Products';
 import { Bundles } from '../pages/Bundles';
 import { Analytics } from '../pages/Analytics';
+import { ABTests } from '../pages/ABTests';
+import { Integrations } from '../pages/Integrations';
 import { Settings } from '../pages/Settings';
 
 const navItems = [
@@ -10,6 +12,8 @@ const navItems = [
   { path: '/products', label: 'Products' },
   { path: '/bundles', label: 'Bundles' },
   { path: '/analytics', label: 'Analytics' },
+  { path: '/ab-tests', label: 'A/B Tests' },
+  { path: '/integrations', label: 'Integrations' },
   { path: '/settings', label: 'Settings' },
 ];
 
@@ -56,6 +60,8 @@ export function App() {
         <Route path="/products" element={<Products />} />
         <Route path="/bundles" element={<Bundles />} />
         <Route path="/analytics" element={<Analytics />} />
+        <Route path="/ab-tests" element={<ABTests />} />
+        <Route path="/integrations" element={<Integrations />} />
         <Route path="/settings" element={<Settings />} />
       </Routes>
     </div>

@@ -1,4 +1,4 @@
-import { IsOptional, IsBoolean, IsNumber, Min, Max } from 'class-validator';
+import { IsOptional, IsBoolean, IsNumber, IsString, Min, Max } from 'class-validator';
 
 export class UpdateSettingsDto {
   @IsOptional()
@@ -53,6 +53,14 @@ export class UpdateSettingsDto {
   @IsOptional()
   @IsBoolean()
   showOnExitIntent?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  multiCurrencyEnabled?: boolean;
+
+  @IsOptional()
+  @IsString()
+  displayCurrency?: string;
 
   @IsOptional()
   @IsNumber()

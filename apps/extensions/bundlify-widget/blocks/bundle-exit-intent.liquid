@@ -1,0 +1,25 @@
+{% comment %}
+  Bundlify – Exit-Intent Bundle Overlay
+  Renders an invisible container that the JS reads to initialize exit-intent detection.
+{% endcomment %}
+
+<div id="bundlify-exit-intent"
+     data-shop="{{ shop.permanent_domain }}"
+     data-enabled="{{ block.settings.enabled }}"
+     style="display:none;">
+</div>
+
+{% schema %}
+{
+  "name": "Bundlify Exit-Intent",
+  "target": "body",
+  "settings": [
+    {
+      "type": "checkbox",
+      "id": "enabled",
+      "label": "Enable exit-intent bundles",
+      "default": false
+    }
+  ]
+}
+{% endschema %}

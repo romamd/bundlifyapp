@@ -56,6 +56,10 @@ export class SettingsService {
       settingsData.showAtCheckout = dto.showAtCheckout;
     if (dto.showOnExitIntent !== undefined)
       settingsData.showOnExitIntent = dto.showOnExitIntent;
+    if (dto.multiCurrencyEnabled !== undefined)
+      settingsData.multiCurrencyEnabled = dto.multiCurrencyEnabled;
+    if (dto.displayCurrency !== undefined)
+      settingsData.displayCurrency = dto.displayCurrency;
 
     // Ensure settings row exists before updating
     await this.prisma.shopSettings.upsert({
@@ -97,6 +101,8 @@ export class SettingsService {
       showOnCartPage: settings.showOnCartPage,
       showAtCheckout: settings.showAtCheckout,
       showOnExitIntent: settings.showOnExitIntent,
+      multiCurrencyEnabled: settings.multiCurrencyEnabled,
+      displayCurrency: settings.displayCurrency ?? '',
       defaultShippingCost: Number(shop.defaultShippingCost),
       paymentProcessingPct: Number(shop.paymentProcessingPct),
       paymentProcessingFlat: Number(shop.paymentProcessingFlat),

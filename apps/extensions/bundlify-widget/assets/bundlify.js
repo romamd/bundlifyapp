@@ -327,6 +327,165 @@
   }
 
   /* ------------------------------------------------------------------ */
+  /*  Exit-Intent Detection                                              */
+  /* ------------------------------------------------------------------ */
+
+  var EXIT_SHOWN_KEY = 'bundlify_exit_shown';
+  var exitIntentArmed = false;
+  var exitIntentEnabled = false;
+  var exitIntentShop = '';
+
+  /**
+   * Initialize exit-intent detection if the Liquid block is present
+   * and the merchant has enabled it.
+   */
+  function initExitIntent() {
+    var container = document.getElementById('bundlify-exit-intent');
+    if (!container) return;
+
+    exitIntentShop = container.dataset.shop || '';
+    var enabled = container.dataset.enabled;
+
+    if (enabled !== 'true' || !exitIntentShop) return;
+
+    // Don't show if already shown this session
+    if (sessionStorage.getItem(EXIT_SHOWN_KEY)) return;
+
+    exitIntentEnabled = true;
+
+    // Arm after a 3-second delay so we don't trigger immediately
+    setTimeout(function () {
+      exitIntentArmed = true;
+    }, 3000);
+
+    // Desktop: detect mouse leaving through the top of the viewport
+    if (window.innerWidth > 768) {
+      document.addEventListener('mouseleave', onMouseLeave);
+    } else {
+      // Mobile: detect back-button (popstate) and rapid scroll-up
+      window.addEventListener('popstate', onMobileExit);
+      initMobileScrollDetection();
+    }
+  }
+
+  function onMouseLeave(e) {
+    if (!exitIntentArmed || !exitIntentEnabled) return;
+    if (e.clientY < 0) {
+      triggerExitIntent();
+    }
+  }
+
+  function onMobileExit() {
+    if (!exitIntentArmed || !exitIntentEnabled) return;
+    triggerExitIntent();
+  }
+
+  /**
+   * Mobile scroll-up detection: if the user scrolls upward rapidly
+   * (more than 100px in under 300ms), treat it as exit intent.
+   */
+  function initMobileScrollDetection() {
+    var lastScrollY = window.scrollY;
+    var lastScrollTime = Date.now();
+
+    window.addEventListener('scroll', function () {
+      if (!exitIntentArmed || !exitIntentEnabled) return;
+
+      var currentY = window.scrollY;
+      var currentTime = Date.now();
+      var deltaY = lastScrollY - currentY; // positive = scrolling up
+      var deltaTime = currentTime - lastScrollTime;
+
+      if (deltaY > 100 && deltaTime < 300 && currentY < 50) {
+        triggerExitIntent();
+      }
+
+      lastScrollY = currentY;
+      lastScrollTime = currentTime;
+    }, { passive: true });
+  }
+
+  function triggerExitIntent() {
+    // Prevent further triggers
+    exitIntentEnabled = false;
+    sessionStorage.setItem(EXIT_SHOWN_KEY, '1');
+
+    // Remove listeners
+    document.removeEventListener('mouseleave', onMouseLeave);
+    window.removeEventListener('popstate', onMobileExit);
+
+    showExitIntentModal(exitIntentShop);
+  }
+
+  /**
+   * Fetch exit-intent bundles and render them in a full-screen overlay modal.
+   */
+  async function showExitIntentModal(shop) {
+    var params = new URLSearchParams({ shop: shop, trigger: 'exit_intent' });
+
+    try {
+      var res = await fetch(PROXY_BASE + '/bundles?' + params.toString());
+      if (!res.ok) return;
+
+      var bundles = await res.json();
+      if (!bundles || !bundles.length) return;
+
+      // Build modal HTML
+      var overlay = document.createElement('div');
+      overlay.className = 'bundlify-exit-overlay';
+      overlay.innerHTML =
+        '<div class="bundlify-exit-modal">' +
+        '  <button class="bundlify-exit-close" aria-label="Close">&times;</button>' +
+        '  <h2 class="bundlify-exit-title">Wait! Check out these deals</h2>' +
+        '  <div class="bundlify-bundles"></div>' +
+        '  <button class="bundlify-exit-dismiss">No thanks</button>' +
+        '</div>';
+
+      document.body.appendChild(overlay);
+
+      // Render bundles inside the modal using the shared renderer
+      var modalContainer = overlay.querySelector('.bundlify-exit-modal');
+      renderBundles(modalContainer, bundles, 'exit_intent', shop);
+
+      // Track VIEWED for all bundles
+      bundles.forEach(function (b) {
+        trackEvent(shop, b.bundleId, 'VIEWED', 'exit_intent');
+      });
+
+      // Close handlers
+      var closeBtn = overlay.querySelector('.bundlify-exit-close');
+      var dismissBtn = overlay.querySelector('.bundlify-exit-dismiss');
+
+      function closeModal() {
+        bundles.forEach(function (b) {
+          trackEvent(shop, b.bundleId, 'DISMISSED', 'exit_intent');
+        });
+        overlay.remove();
+      }
+
+      closeBtn.addEventListener('click', closeModal);
+      dismissBtn.addEventListener('click', closeModal);
+
+      // Close on overlay background click
+      overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) {
+          closeModal();
+        }
+      });
+
+      // Close on Escape key
+      document.addEventListener('keydown', function onEsc(e) {
+        if (e.key === 'Escape') {
+          closeModal();
+          document.removeEventListener('keydown', onEsc);
+        }
+      });
+    } catch (e) {
+      console.error('Bundlify: Failed to load exit-intent bundles', e);
+    }
+  }
+
+  /* ------------------------------------------------------------------ */
   /*  Initialization                                                     */
   /* ------------------------------------------------------------------ */
 
@@ -335,6 +494,7 @@
       '#bundlify-product-bundles, #bundlify-cart-upsell'
     );
     containers.forEach(fetchBundles);
+    initExitIntent();
   }
 
   if (document.readyState === 'loading') {

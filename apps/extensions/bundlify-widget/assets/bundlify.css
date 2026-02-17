@@ -293,6 +293,79 @@
   }
 }
 
+/* ── Exit-Intent Modal ──────────────────────────────────────────────── */
+
+.bundlify-exit-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 999999;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+  animation: bundlify-fade-in 0.3s ease;
+}
+
+.bundlify-exit-modal {
+  position: relative;
+  width: 90%;
+  max-width: 520px;
+  max-height: 80vh;
+  overflow-y: auto;
+  background: var(--bundlify-card-bg);
+  border-radius: var(--bundlify-radius);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+  padding: 32px 24px 24px;
+}
+
+.bundlify-exit-close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: transparent;
+  font-size: 20px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--bundlify-text-secondary);
+  border-radius: 50%;
+  transition: background 0.15s ease;
+}
+
+.bundlify-exit-close:hover {
+  background: #f3f4f6;
+}
+
+.bundlify-exit-title {
+  margin: 0 0 20px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--bundlify-text-primary);
+  text-align: center;
+}
+
+.bundlify-exit-dismiss {
+  display: block;
+  margin: 16px auto 0;
+  padding: 8px 16px;
+  border: none;
+  background: transparent;
+  color: var(--bundlify-text-secondary);
+  font-size: 13px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+@keyframes bundlify-fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
 /* ── Print: hide the widget entirely ──────────────────────────────────── */
 
 @media print {
