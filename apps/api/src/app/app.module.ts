@@ -24,7 +24,7 @@ import { ShopifyErrorFilter } from '../common/filters/shopify-error.filter';
   imports: [
     ServeStaticModule.forRoot({
       rootPath: join(__dirname, '..', 'admin'),
-      exclude: ['/api/(.*)', '/auth/(.*)', '/webhooks/(.*)'],
+      exclude: ['/api/{*path}', '/auth/{*path}', '/webhooks/{*path}'],
     }),
     AuthModule,
     WebhooksModule,
@@ -51,6 +51,7 @@ import { ShopifyErrorFilter } from '../common/filters/shopify-error.filter';
 })
 export class AppModule implements NestModule {
   configure(consumer: MiddlewareConsumer) {
-    consumer.apply(SessionMiddleware).forRoutes('api/admin/*');
+    consumer.apply(SessionMiddleware).forRoutes('api/admin/(.*)');
+
   }
 }

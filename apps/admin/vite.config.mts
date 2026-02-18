@@ -10,10 +10,11 @@ export default defineConfig(() => ({
   server: {
     port: 4200,
     host: 'localhost',
+    allowedHosts: ['dev.bundlify.io'],
     proxy: {
-      '/api': { target: 'http://localhost:3000', changeOrigin: true },
-      '/auth': { target: 'http://localhost:3000', changeOrigin: true },
-      '/webhooks': { target: 'http://localhost:3000', changeOrigin: true },
+      '/api': { target: 'http://localhost:4000', changeOrigin: true },
+      '/auth': { target: 'http://localhost:4000', changeOrigin: true },
+      '/webhooks': { target: 'http://localhost:4000', changeOrigin: true },
     },
   },
   preview: {

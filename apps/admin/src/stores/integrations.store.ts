@@ -14,6 +14,8 @@ interface IntegrationsState {
   integrations: IntegrationDto[];
   loading: boolean;
   error: string | null;
+  upgradeRequired: boolean;
+  requiredPlan: string | null;
 
   fetchIntegrations: (authenticatedFetch: typeof fetch) => Promise<void>;
   connect: (
@@ -36,11 +38,26 @@ export const useIntegrationsStore = create<IntegrationsState>()(
       integrations: [],
       loading: false,
       error: null,
+      upgradeRequired: false,
+      requiredPlan: null,
 
       fetchIntegrations: async (authenticatedFetch) => {
-        set({ loading: true, error: null });
+        set({ loading: true, error: null, upgradeRequired: false });
         try {
           const res = await authenticatedFetch('/api/admin/integrations');
+          if (res.status === 403) {
+            const body = await res.json();
+            set({
+              loading: false,
+              upgradeRequired: true,
+              requiredPlan: body.requiredPlan ?? 'GROWTH',
+            });
+            return;
+          }
+          if (!res.ok) {
+            const body = await res.json().catch(() => ({}));
+            throw new Error(body.message || `Request failed (${res.status})`);
+          }
           const data = await res.json();
           set({ integrations: data.items ?? data, loading: false });
         } catch (e: any) {

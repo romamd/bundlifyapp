@@ -4,7 +4,7 @@ import { CurrentShop } from '../../common/decorators/current-shop.decorator';
 import { AnalyticsService } from './analytics.service';
 import type { Shop } from '@bundlify/prisma-client';
 
-@Controller('api/admin')
+@Controller('api/admin/analytics')
 @UseGuards(ShopifyAuthGuard)
 export class AnalyticsController {
   constructor(private readonly analyticsService: AnalyticsService) {}
@@ -18,7 +18,7 @@ export class AnalyticsController {
     return this.analyticsService.getDashboard(shop.id, validRange);
   }
 
-  @Get('analytics/bundles')
+  @Get('bundles')
   async getBundleAnalytics(
     @CurrentShop() shop: Shop,
     @Query('range') range?: string,
@@ -27,9 +27,14 @@ export class AnalyticsController {
     return this.analyticsService.getBundleAnalytics(shop.id, validRange);
   }
 
-  @Get('analytics/products')
+  @Get('products')
   async getProductAnalytics(@CurrentShop() shop: Shop) {
     return this.analyticsService.getProductAnalytics(shop.id);
+  }
+
+  @Get('product-pairs')
+  async getProductPairs(@CurrentShop() shop: Shop) {
+    return this.analyticsService.getProductPairs(shop.id);
   }
 
   private parseRange(range?: string): '7d' | '30d' | '90d' {

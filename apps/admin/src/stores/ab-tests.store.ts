@@ -34,6 +34,8 @@ interface ABTestsState {
   tests: ABTestDto[];
   loading: boolean;
   error: string | null;
+  upgradeRequired: boolean;
+  requiredPlan: string | null;
 
   fetchTests: (authenticatedFetch: typeof fetch) => Promise<void>;
   createTest: (
@@ -56,11 +58,26 @@ export const useABTestsStore = create<ABTestsState>()(
       tests: [],
       loading: false,
       error: null,
+      upgradeRequired: false,
+      requiredPlan: null,
 
       fetchTests: async (authenticatedFetch) => {
-        set({ loading: true, error: null });
+        set({ loading: true, error: null, upgradeRequired: false });
         try {
           const res = await authenticatedFetch('/api/admin/ab-tests');
+          if (res.status === 403) {
+            const body = await res.json();
+            set({
+              loading: false,
+              upgradeRequired: true,
+              requiredPlan: body.requiredPlan ?? 'GROWTH',
+            });
+            return;
+          }
+          if (!res.ok) {
+            const body = await res.json().catch(() => ({}));
+            throw new Error(body.message || `Request failed (${res.status})`);
+          }
           const data = await res.json();
           set({ tests: data.items ?? data, loading: false });
         } catch (e: any) {
@@ -76,6 +93,10 @@ export const useABTestsStore = create<ABTestsState>()(
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify(data),
           });
+          if (!res.ok) {
+            const body = await res.json().catch(() => ({}));
+            throw new Error(body.message || `Request failed (${res.status})`);
+          }
           const created = await res.json();
           set((s) => ({
             tests: [created, ...s.tests],
@@ -93,6 +114,10 @@ export const useABTestsStore = create<ABTestsState>()(
             `/api/admin/ab-tests/${id}/start`,
             { method: 'POST' },
           );
+          if (!res.ok) {
+            const body = await res.json().catch(() => ({}));
+            throw new Error(body.message || `Request failed (${res.status})`);
+          }
           const updated = await res.json();
           set((s) => ({
             tests: s.tests.map((t) => (t.id === id ? updated : t)),
@@ -109,6 +134,10 @@ export const useABTestsStore = create<ABTestsState>()(
             `/api/admin/ab-tests/${id}/stop`,
             { method: 'POST' },
           );
+          if (!res.ok) {
+            const body = await res.json().catch(() => ({}));
+            throw new Error(body.message || `Request failed (${res.status})`);
+          }
           const updated = await res.json();
           set((s) => ({
             tests: s.tests.map((t) => (t.id === id ? updated : t)),

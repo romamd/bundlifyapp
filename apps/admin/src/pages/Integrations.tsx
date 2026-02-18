@@ -194,6 +194,8 @@ export function Integrations() {
     integrations,
     loading,
     error,
+    upgradeRequired,
+    requiredPlan,
     fetchIntegrations,
     connect,
     syncCogs,
@@ -254,7 +256,43 @@ export function Integrations() {
         </p>
       </div>
 
-      {error && (
+      {upgradeRequired && (
+        <div
+          style={{
+            padding: '24px',
+            backgroundColor: '#fff8e6',
+            border: '1px solid #ffd966',
+            borderRadius: '8px',
+            textAlign: 'center',
+            marginBottom: '16px',
+          }}
+        >
+          <h2 style={{ margin: '0 0 8px 0', fontSize: '18px', color: '#7a5b00' }}>
+            Upgrade Required
+          </h2>
+          <p style={{ margin: '0 0 16px 0', color: '#6d7175', fontSize: '14px' }}>
+            Integrations require the <strong>{requiredPlan}</strong> plan. Upgrade to
+            connect QuickBooks, Xero, and sync COGS data automatically.
+          </p>
+          <button
+            onClick={() => window.open('/api/admin/billing/subscribe', '_top')}
+            style={{
+              padding: '10px 24px',
+              backgroundColor: '#008060',
+              color: '#ffffff',
+              border: 'none',
+              borderRadius: '4px',
+              cursor: 'pointer',
+              fontSize: '14px',
+              fontWeight: 600,
+            }}
+          >
+            Upgrade Plan
+          </button>
+        </div>
+      )}
+
+      {error && !upgradeRequired && (
         <div
           style={{
             color: '#8c1a1a',

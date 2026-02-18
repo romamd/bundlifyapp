@@ -31,9 +31,6 @@ export function App() {
           backgroundColor: '#ffffff',
         }}
       >
-        <strong style={{ marginRight: '20px', fontSize: '16px' }}>
-          Bundlify
-        </strong>
         {navItems.map((item) => (
           <Link
             key={item.path}

@@ -250,6 +250,36 @@ export class AnalyticsService {
     }));
   }
 
+  async getProductPairs(shopId: string) {
+    const pairs = await this.prisma.productAffinity.findMany({
+      where: { shopId },
+      orderBy: { affinityScore: 'desc' },
+      take: 10,
+      include: {
+        productA: { select: { id: true, title: true, imageUrl: true, price: true } },
+        productB: { select: { id: true, title: true, imageUrl: true, price: true } },
+      },
+    });
+
+    return pairs.map((p) => ({
+      id: p.id,
+      productA: {
+        id: p.productA.id,
+        title: p.productA.title,
+        imageUrl: p.productA.imageUrl,
+        price: Number(p.productA.price),
+      },
+      productB: {
+        id: p.productB.id,
+        title: p.productB.title,
+        imageUrl: p.productB.imageUrl,
+        price: Number(p.productB.price),
+      },
+      coOccurrences: p.coOccurrences,
+      affinityScore: Number(p.affinityScore),
+    }));
+  }
+
   private getRangeStart(range: DateRange): Date {
     const now = new Date();
     const daysMap: Record<DateRange, number> = {

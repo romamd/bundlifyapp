@@ -64,22 +64,80 @@ export class AuthService {
   }
 
   async validateSessionToken(token: string) {
-    try {
-      const payload = this.decodeSessionToken(token);
-      const shop = payload.dest.replace('https://', '');
+    const payload = this.decodeSessionToken(token);
+    const shop = payload.dest.replace('https://', '');
 
-      const shopRecord = await this.prisma.shop.findUnique({
-        where: { shopifyDomain: shop },
-      });
+    let shopRecord = await this.prisma.shop.findUnique({
+      where: { shopifyDomain: shop },
+    });
 
-      if (!shopRecord || shopRecord.uninstalledAt) {
-        throw new UnauthorizedException('Shop not found or uninstalled');
+    // If shop doesn't exist, use token exchange to get an access token
+    // and auto-create the shop record (managed installation flow)
+    if (!shopRecord || shopRecord.uninstalledAt) {
+      this.logger.log(`Shop ${shop} not found, attempting token exchange`);
+      try {
+        shopRecord = await this.exchangeSessionForOfflineToken(shop, token);
+      } catch (err) {
+        this.logger.error(`Token exchange failed for ${shop}`, err);
+        throw new UnauthorizedException('Shop not found and token exchange failed');
       }
-
-      return shopRecord;
-    } catch (error) {
-      throw new UnauthorizedException('Invalid session token');
     }
+
+    return shopRecord;
+  }
+
+  private async exchangeSessionForOfflineToken(shop: string, sessionToken: string) {
+    const response: globalThis.Response = await fetch(
+      `https://${shop}/admin/oauth/access_token`,
+      {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          client_id: process.env.SHOPIFY_API_KEY,
+          client_secret: process.env.SHOPIFY_API_SECRET,
+          grant_type: 'urn:ietf:params:oauth:grant-type:token-exchange',
+          subject_token: sessionToken,
+          subject_token_type: 'urn:ietf:params:oauth:token-type:id_token',
+          requested_token_type: 'urn:shopify:params:oauth:token-type:offline-access-token',
+        }),
+      },
+    );
+
+    if (!response.ok) {
+      const body: any = await response.json().catch(() => ({}));
+      throw new Error(`Token exchange failed: ${response.status} ${JSON.stringify(body)}`);
+    }
+
+    const data: any = await response.json();
+    const accessToken = data.access_token;
+
+    const encryptedToken = encryptToken(accessToken, this.encryptionKey);
+
+    const savedShop = await this.prisma.shop.upsert({
+      where: { shopifyDomain: shop },
+      update: {
+        accessToken: encryptedToken,
+        uninstalledAt: null,
+      },
+      create: {
+        shopifyDomain: shop,
+        accessToken: encryptedToken,
+        installedAt: new Date(),
+      },
+    });
+
+    // Create default settings if new
+    const existingSettings = await this.prisma.shopSettings.findUnique({
+      where: { shopId: savedShop.id },
+    });
+    if (!existingSettings) {
+      await this.prisma.shopSettings.create({
+        data: { shopId: savedShop.id },
+      });
+    }
+
+    this.logger.log(`Shop ${shop} auto-registered via token exchange`);
+    return savedShop;
   }
 
   async getDecryptedAccessToken(shopId: string): Promise<string> {

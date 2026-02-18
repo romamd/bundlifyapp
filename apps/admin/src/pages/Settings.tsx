@@ -140,15 +140,37 @@ export function Settings() {
     prefix?: string;
     suffix?: string;
   }) {
+    const addonStyle: React.CSSProperties = {
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '0 8px',
+      fontSize: '13px',
+      color: '#6d7175',
+      backgroundColor: '#f6f6f7',
+      borderTop: '1px solid #c9cccf',
+      borderBottom: '1px solid #c9cccf',
+      lineHeight: 1,
+      whiteSpace: 'nowrap',
+    };
+
     return (
       <div style={fieldRowStyle}>
         <div>
           <div style={labelStyle}>{label}</div>
           {sublabel && <div style={sublabelStyle}>{sublabel}</div>}
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+        <div style={{ display: 'flex', alignItems: 'stretch', width: '100px' }}>
           {prefix && (
-            <span style={{ fontSize: '14px', color: '#6d7175' }}>{prefix}</span>
+            <span
+              style={{
+                ...addonStyle,
+                borderLeft: '1px solid #c9cccf',
+                borderRadius: '4px 0 0 4px',
+              }}
+            >
+              {prefix}
+            </span>
           )}
           <input
             type="number"
@@ -156,10 +178,32 @@ export function Settings() {
             onChange={(e) => onChange(parseFloat(e.target.value) || 0)}
             step={step ?? 0.01}
             min={min ?? 0}
-            style={numberInputStyle}
+            style={{
+              ...numberInputStyle,
+              width: undefined,
+              flex: 1,
+              minWidth: 0,
+              borderRadius: prefix && suffix
+                ? '0'
+                : prefix
+                  ? '0 4px 4px 0'
+                  : suffix
+                    ? '4px 0 0 4px'
+                    : '4px',
+              ...(prefix ? { borderLeft: 'none' } : {}),
+              ...(suffix ? { borderRight: 'none' } : {}),
+            }}
           />
           {suffix && (
-            <span style={{ fontSize: '14px', color: '#6d7175' }}>{suffix}</span>
+            <span
+              style={{
+                ...addonStyle,
+                borderRight: '1px solid #c9cccf',
+                borderRadius: '0 4px 4px 0',
+              }}
+            >
+              {suffix}
+            </span>
           )}
         </div>
       </div>
@@ -419,7 +463,7 @@ export function Settings() {
                   border: '1px solid #c9cccf',
                   borderRadius: '4px',
                   fontSize: '14px',
-                  width: '120px',
+                  width: '100px',
                 }}
               >
                 <option value="USD">USD</option>

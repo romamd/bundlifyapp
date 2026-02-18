@@ -5,6 +5,7 @@
   "description": "Margin-aware product bundles for Shopify",
   "scripts": {
     "dev": "export HOST=https://dev.bundlify.io:443 && npx shopify app dev",
+    "start": "npx nx build admin && npx nx serve api",
     "start:dev": "npx nx serve api",
     "start:admin": "npx nx serve admin",
     "build": "npx nx run-many --target=build --all",
