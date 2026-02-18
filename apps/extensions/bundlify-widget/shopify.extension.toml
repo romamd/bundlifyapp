@@ -15,6 +15,11 @@ handle = "bundlify-widget"
   name = "Bundle Upsell - Cart"
   target = "section"
 
+  [[extensions.blocks]]
+  type = "bundle-exit-intent"
+  name = "Exit Intent Overlay"
+  target = "body"
+
 [extensions.settings]
   [extensions.settings.fields]
     [[extensions.settings.fields.field]]

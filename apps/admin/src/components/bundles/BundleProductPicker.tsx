@@ -17,6 +17,20 @@ interface BundleProductPickerProps {
   discountPct?: number;
 }
 
+type SortOption = 'title' | 'price-asc' | 'price-desc' | 'margin-desc' | 'margin-asc';
+
+const FILTER_CHIP_STYLE = (active: boolean): React.CSSProperties => ({
+  padding: '4px 10px',
+  fontSize: '12px',
+  fontWeight: 500,
+  border: `1px solid ${active ? '#008060' : '#c9cccf'}`,
+  borderRadius: '16px',
+  backgroundColor: active ? '#e3f1df' : '#ffffff',
+  color: active ? '#1a5632' : '#6d7175',
+  cursor: 'pointer',
+  whiteSpace: 'nowrap',
+});
+
 export function BundleProductPicker({
   selectedItems,
   onItemsChange,
@@ -26,16 +40,50 @@ export function BundleProductPicker({
   discountPct = 0,
 }: BundleProductPickerProps) {
   const [search, setSearch] = useState('');
+  const [deadStockOnly, setDeadStockOnly] = useState(false);
+  const [hasCogs, setHasCogs] = useState(false);
+  const [inStockOnly, setInStockOnly] = useState(false);
+  const [sortBy, setSortBy] = useState<SortOption>('title');
 
   const filteredProducts = useMemo(() => {
-    if (!search.trim()) return products;
-    const lower = search.toLowerCase();
-    return products.filter(
-      (p) =>
-        p.title.toLowerCase().includes(lower) ||
-        (p.sku && p.sku.toLowerCase().includes(lower)),
-    );
-  }, [products, search]);
+    let result = products;
+
+    if (search.trim()) {
+      const lower = search.toLowerCase();
+      result = result.filter(
+        (p) =>
+          p.title.toLowerCase().includes(lower) ||
+          (p.sku && p.sku.toLowerCase().includes(lower)),
+      );
+    }
+
+    if (deadStockOnly) {
+      result = result.filter((p) => p.isDeadStock);
+    }
+    if (hasCogs) {
+      result = result.filter((p) => p.cogs !== null && p.cogs > 0);
+    }
+    if (inStockOnly) {
+      result = result.filter((p) => p.inventoryQuantity > 0);
+    }
+
+    result = [...result].sort((a, b) => {
+      switch (sortBy) {
+        case 'price-asc':
+          return a.price - b.price;
+        case 'price-desc':
+          return b.price - a.price;
+        case 'margin-desc':
+          return (b.contributionMarginPct ?? -1) - (a.contributionMarginPct ?? -1);
+        case 'margin-asc':
+          return (a.contributionMarginPct ?? 999) - (b.contributionMarginPct ?? 999);
+        default:
+          return a.title.localeCompare(b.title);
+      }
+    });
+
+    return result;
+  }, [products, search, deadStockOnly, hasCogs, inStockOnly, sortBy]);
 
   const selectedIds = new Set(selectedItems.map((i) => i.productId));
 
@@ -124,10 +172,69 @@ export function BundleProductPicker({
           border: '1px solid #c9cccf',
           borderRadius: '4px',
           fontSize: '14px',
-          marginBottom: '12px',
+          marginBottom: '8px',
           boxSizing: 'border-box',
         }}
       />
+
+      {/* Filters row */}
+      <div
+        style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          marginBottom: '12px',
+          flexWrap: 'wrap',
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => setDeadStockOnly(!deadStockOnly)}
+          style={FILTER_CHIP_STYLE(deadStockOnly)}
+        >
+          Dead Stock
+        </button>
+        <button
+          type="button"
+          onClick={() => setHasCogs(!hasCogs)}
+          style={FILTER_CHIP_STYLE(hasCogs)}
+        >
+          Has COGS
+        </button>
+        <button
+          type="button"
+          onClick={() => setInStockOnly(!inStockOnly)}
+          style={FILTER_CHIP_STYLE(inStockOnly)}
+        >
+          In Stock
+        </button>
+
+        <div style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: '4px' }}>
+          <span style={{ fontSize: '12px', color: '#6d7175' }}>Sort:</span>
+          <select
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as SortOption)}
+            style={{
+              padding: '4px 6px',
+              border: '1px solid #c9cccf',
+              borderRadius: '4px',
+              fontSize: '12px',
+              color: '#202223',
+              backgroundColor: '#ffffff',
+            }}
+          >
+            <option value="title">Name</option>
+            <option value="price-asc">Price: Low to High</option>
+            <option value="price-desc">Price: High to Low</option>
+            <option value="margin-desc">Margin: High to Low</option>
+            <option value="margin-asc">Margin: Low to High</option>
+          </select>
+        </div>
+
+        <span style={{ fontSize: '11px', color: '#6d7175' }}>
+          {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''}
+        </span>
+      </div>
 
       {/* Selected items summary */}
       {selectedItems.length > 0 && (

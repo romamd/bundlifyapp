@@ -5,6 +5,7 @@ import { useAuthenticatedFetch } from '../hooks/useAuthenticatedFetch';
 import { FunnelChart } from '../components/analytics/FunnelChart';
 import { TopBundlesCard } from '../components/analytics/TopBundlesCard';
 import { LoadingState } from '../components/common/LoadingState';
+import { ThemeSetupBanner } from '../components/common/ThemeSetupBanner';
 
 interface ProductPair {
   productA: string;
@@ -96,6 +97,8 @@ export function Dashboard() {
           ))}
         </div>
       </div>
+
+      <ThemeSetupBanner />
 
       {error && (
         <div
