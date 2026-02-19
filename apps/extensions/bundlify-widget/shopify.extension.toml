@@ -1,6 +1,7 @@
 api_version = "2025-01"
 
 [[extensions]]
+uid = "d31b4e01-99c8-b15a-b917-64ff1c3d1b6c3b20b91e"
 type = "theme"
 name = "Bundlify Widget"
 handle = "bundlify-widget"
@@ -20,15 +21,15 @@ handle = "bundlify-widget"
   name = "Exit Intent Overlay"
   target = "body"
 
-[extensions.settings]
-  [extensions.settings.fields]
-    [[extensions.settings.fields.field]]
+  [extensions.settings]
+
+    [[extensions.settings.fields]]
     key = "heading_text"
     type = "text"
     label = "Widget heading"
     default = "Complete the look"
 
-    [[extensions.settings.fields.field]]
+    [[extensions.settings.fields]]
     key = "show_savings_badge"
     type = "checkbox"
     label = "Show savings badge"

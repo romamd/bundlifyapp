@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from 'react';
-import type { ProductDto, CreateBundleDto } from '@bundlify/shared-types';
+import type { ProductDto, CreateBundleDto, BundleDto } from '@bundlify/shared-types';
 import { calculateBundleMargin } from '@bundlify/margin-engine';
 import {
   BundleProductPicker,
@@ -13,6 +13,7 @@ interface BundleWizardProps {
   onClose: () => void;
   onSubmit: (data: CreateBundleDto) => Promise<void>;
   products: ProductDto[];
+  editBundle?: BundleDto | null;
 }
 
 const BUNDLE_TYPE_OPTIONS = [
@@ -48,7 +49,9 @@ export function BundleWizard({
   onClose,
   onSubmit,
   products,
+  editBundle,
 }: BundleWizardProps) {
+  const isEditing = !!editBundle;
   const [step, setStep] = useState(0);
   const [bundleType, setBundleType] = useState<string>('FIXED');
   const [selectedItems, setSelectedItems] = useState<SelectedBundleItem[]>([]);
@@ -59,6 +62,34 @@ export function BundleWizard({
   >([]);
   const [name, setName] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [initialized, setInitialized] = useState(false);
+
+  // Pre-populate fields when editing
+  React.useEffect(() => {
+    if (open && editBundle && !initialized) {
+      setName(editBundle.name);
+      setBundleType(editBundle.type);
+      setDiscountPct(editBundle.discountPct);
+      setTriggerType(editBundle.triggerType);
+      setDisplayRules(
+        editBundle.displayRules.map((r) => ({
+          targetType: r.targetType,
+          targetId: r.targetId,
+        })),
+      );
+      setSelectedItems(
+        editBundle.items.map((item) => ({
+          productId: item.productId,
+          quantity: item.quantity,
+          isAnchor: item.isAnchor,
+        })),
+      );
+      setInitialized(true);
+    }
+    if (!open) {
+      setInitialized(false);
+    }
+  }, [open, editBundle, initialized]);
 
   const paymentProcessingPct = 2.9;
   const paymentProcessingFlat = 0.3;
@@ -198,7 +229,7 @@ export function BundleWizard({
             borderBottom: '1px solid #e1e3e5',
           }}
         >
-          <h2 style={{ margin: 0, fontSize: '18px' }}>Create Bundle</h2>
+          <h2 style={{ margin: 0, fontSize: '18px' }}>{isEditing ? 'Edit Bundle' : 'Create Bundle'}</h2>
           <button
             onClick={resetAndClose}
             style={{
@@ -223,29 +254,34 @@ export function BundleWizard({
             borderBottom: '1px solid #f1f1f1',
           }}
         >
-          {stepLabels.map((label, i) => (
-            <div
-              key={label}
-              style={{
-                flex: 1,
-                textAlign: 'center',
-                fontSize: '12px',
-                color: i === step ? '#008060' : i < step ? '#1a5632' : '#6d7175',
-                fontWeight: i === step ? 600 : 400,
-              }}
-            >
+          {stepLabels.map((label, i) => {
+            const canClick = isEditing && i !== step;
+            return (
               <div
+                key={label}
+                onClick={canClick ? () => setStep(i) : undefined}
                 style={{
-                  height: '3px',
-                  borderRadius: '2px',
-                  backgroundColor:
-                    i <= step ? '#008060' : '#e1e3e5',
-                  marginBottom: '4px',
+                  flex: 1,
+                  textAlign: 'center',
+                  fontSize: '12px',
+                  color: i === step ? '#008060' : i < step ? '#1a5632' : '#6d7175',
+                  fontWeight: i === step ? 600 : 400,
+                  cursor: canClick ? 'pointer' : 'default',
                 }}
-              />
-              {label}
-            </div>
-          ))}
+              >
+                <div
+                  style={{
+                    height: '3px',
+                    borderRadius: '2px',
+                    backgroundColor:
+                      i <= step ? '#008060' : '#e1e3e5',
+                    marginBottom: '4px',
+                  }}
+                />
+                {label}
+              </div>
+            );
+          })}
         </div>
 
         {/* Body */}
@@ -698,7 +734,7 @@ export function BundleWizard({
                 fontWeight: 600,
               }}
             >
-              {submitting ? 'Creating...' : 'Create Bundle'}
+              {submitting ? 'Saving...' : isEditing ? 'Save Changes' : 'Create Bundle'}
             </button>
           )}
         </div>

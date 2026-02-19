@@ -1,6 +1,7 @@
-api_version = "2025-01"
+api_version = "2025-04"
 
 [[extensions]]
+uid = "b93392a4-c27a-ccd2-8e87-f3b9c5226b1c1aee71d1"
 type = "ui_extension"
 name = "Bundlify Checkout Upsell"
 handle = "bundlify-checkout"

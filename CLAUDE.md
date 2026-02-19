@@ -28,6 +28,7 @@ shopify app dev                     # Extension tunnel (run from root)
 npx nx test margin-engine           # Unit tests — pure business logic
 npx nx test api                     # API tests
 npx nx test admin                   # Component tests
+npx nx e2e admin-e2e                # E2E tests (auto-starts admin dev server)
 npx nx run-many --target=lint --all # Lint everything
 npx nx run prisma-client:generate   # Regenerate Prisma client
 npx nx run prisma-client:migrate    # Run DB migrations
@@ -42,6 +43,10 @@ npx nx run prisma-client:migrate    # Run DB migrations
 - Entity fields: camelCase mapped to snake_case columns.
 - DTOs validated with `class-validator`.
 - Tests: `test/unit/*.unit-spec.ts` and `test/integration/*.integration-spec.ts`, mirroring `src/`.
+- E2E tests: `apps/admin-e2e/src/specs/*.spec.ts` using Playwright.
+- E2E tests run against the real app — **no API mocking**. Start both `admin` and `api` servers.
+- After making UI changes, always run `npx nx e2e admin-e2e` to verify they work end-to-end.
+- CDN stubs (App Bridge, Polaris) are the only allowed intercepts — they enable standalone rendering outside Shopify.
 - Margin engine tests: `libs/margin-engine/src/__tests__/`.
 - Pre-commit hook runs lint-staged — do not skip.
 

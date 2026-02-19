@@ -2,6 +2,7 @@ name = "Bundlify"
 client_id = "bc7ac1ba9e0df0671efe4a2b7f87fcb8"
 application_url = "https://dev.bundlify.io"
 embedded = true
+extension_directories = ["apps/extensions/bundlify-widget", "apps/extensions/bundlify-checkout"]
 
 [auth]
 redirect_urls = ["https://dev.bundlify.io/auth/callback"]

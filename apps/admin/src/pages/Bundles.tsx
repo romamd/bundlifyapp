@@ -5,7 +5,7 @@ import { useAuthenticatedFetch } from '../hooks/useAuthenticatedFetch';
 import { BundleTable } from '../components/bundles/BundleTable';
 import { BundleWizard } from '../components/bundles/BundleWizard';
 import { LoadingState } from '../components/common/LoadingState';
-import type { CreateBundleDto } from '@bundlify/shared-types';
+import type { BundleDto, CreateBundleDto } from '@bundlify/shared-types';
 
 export function Bundles() {
   const fetch = useAuthenticatedFetch();
@@ -16,12 +16,14 @@ export function Bundles() {
     fetchBundles,
     createBundle,
     deleteBundle,
+    updateBundle,
     setStatus,
     generateBundles,
   } = useBundlesStore();
   const { products, fetchProducts } = useProductsStore();
 
   const [wizardOpen, setWizardOpen] = useState(false);
+  const [editingBundle, setEditingBundle] = useState<BundleDto | null>(null);
   const [generating, setGenerating] = useState(false);
   const [generateResult, setGenerateResult] = useState<number | null>(null);
 
@@ -34,8 +36,18 @@ export function Bundles() {
   }, []);
 
   const handleCreate = async (data: CreateBundleDto) => {
-    await createBundle(fetch, data);
+    if (editingBundle) {
+      await updateBundle(fetch, editingBundle.id, data);
+    } else {
+      await createBundle(fetch, data);
+    }
     setWizardOpen(false);
+    setEditingBundle(null);
+  };
+
+  const handleEdit = (bundle: BundleDto) => {
+    setEditingBundle(bundle);
+    setWizardOpen(true);
   };
 
   const handleDelete = async (bundleId: string) => {
@@ -277,9 +289,7 @@ export function Bundles() {
           </div>
           <BundleTable
             bundles={allBundles}
-            onEdit={() => {
-              /* Edit opens wizard with pre-populated data - placeholder for future */
-            }}
+            onEdit={handleEdit}
             onDelete={handleDelete}
             onStatusChange={handleStatusChange}
           />
@@ -289,9 +299,10 @@ export function Bundles() {
       {/* Bundle creation wizard */}
       <BundleWizard
         open={wizardOpen}
-        onClose={() => setWizardOpen(false)}
+        onClose={() => { setWizardOpen(false); setEditingBundle(null); }}
         onSubmit={handleCreate}
         products={products}
+        editBundle={editingBundle}
       />
     </div>
   );

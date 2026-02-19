@@ -1,23 +1,17 @@
-<!-- Bundlify: Product Page Bundle Offer -->
 <div id="bundlify-product-bundles"
      data-product-id="{{ product.id }}"
      data-shop="{{ shop.permanent_domain }}"
      data-trigger="product_page"
      style="margin: 20px 0;">
-  <div class="bundlify-loading" style="text-align: center; padding: 20px; display: none;">
-    Loading bundles...
-  </div>
   <div class="bundlify-bundles"></div>
 </div>
-
-{{ 'bundlify.css' | asset_url | stylesheet_tag }}
-
-<script src="{{ 'bundlify.js' | asset_url }}" defer></script>
 
 {% schema %}
 {
   "name": "Bundlify Product Bundles",
   "target": "section",
+  "javascript": "bundlify.js",
+  "stylesheet": "bundlify.css",
   "settings": [
     {
       "type": "text",

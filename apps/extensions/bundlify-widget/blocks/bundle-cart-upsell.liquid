@@ -1,20 +1,16 @@
-<!-- Bundlify: Cart Upsell -->
 <div id="bundlify-cart-upsell"
      data-shop="{{ shop.permanent_domain }}"
      data-trigger="cart_page"
-     data-cart-value="{{ cart.total_price | money_without_currency }}"
      style="margin: 20px 0;">
   <div class="bundlify-bundles"></div>
 </div>
-
-{{ 'bundlify.css' | asset_url | stylesheet_tag }}
-
-<script src="{{ 'bundlify.js' | asset_url }}" defer></script>
 
 {% schema %}
 {
   "name": "Bundlify Cart Upsell",
   "target": "section",
+  "javascript": "bundlify.js",
+  "stylesheet": "bundlify.css",
   "settings": [
     {
       "type": "text",

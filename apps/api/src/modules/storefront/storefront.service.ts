@@ -32,7 +32,7 @@ export class StorefrontService {
       where: {
         shopId: shop.id,
         status: 'ACTIVE',
-        ...(trigger && { triggerType: trigger as any }),
+        ...(trigger && { triggerType: trigger.toUpperCase() as any }),
         OR: [
           { startsAt: null },
           { startsAt: { lte: now } },
@@ -59,8 +59,10 @@ export class StorefrontService {
     );
 
     // Filter by productId if specified
+    // Bundles with no display rules are shown on ALL products
     const filteredBundles = productId
       ? activeBundles.filter((bundle) => {
+          if (bundle.displayRules.length === 0) return true;
           const hasDisplayRule = bundle.displayRules.some(
             (rule) =>
               rule.targetType === 'PRODUCT' && rule.targetId === productId,
@@ -152,7 +154,7 @@ export class StorefrontService {
         bundleId: data.bundleId,
         event: data.event as any,
         sessionId: data.sessionId || null,
-        triggerType: data.triggerType as any,
+        triggerType: (data.triggerType?.toUpperCase() || 'PRODUCT_PAGE') as any,
         pageUrl: data.pageUrl || null,
         cartValue: data.cartValue ?? null,
         orderId: data.orderId || null,

@@ -19,6 +19,8 @@ import { AffinityModule } from '../modules/affinity/affinity.module';
 import { JobsModule } from '../jobs/jobs.module';
 import { SessionMiddleware } from '../modules/auth/session.middleware';
 import { ShopifyErrorFilter } from '../common/filters/shopify-error.filter';
+import { HealthController } from './health.controller';
+import { PrismaService } from '@bundlify/prisma-client';
 
 @Module({
   imports: [
@@ -42,7 +44,9 @@ import { ShopifyErrorFilter } from '../common/filters/shopify-error.filter';
     AffinityModule,
     JobsModule,
   ],
+  controllers: [HealthController],
   providers: [
+    PrismaService,
     {
       provide: APP_FILTER,
       useClass: ShopifyErrorFilter,
