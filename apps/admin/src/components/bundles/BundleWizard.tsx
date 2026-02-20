@@ -7,6 +7,8 @@ import {
 } from './BundleProductPicker';
 import { DiscountSlider } from './DiscountSlider';
 import { MarginImpactCard } from './MarginImpactCard';
+import { ProductSearchDropdown } from '../common/ProductSearchDropdown';
+import { CollectionSearchDropdown } from '../common/CollectionSearchDropdown';
 
 interface BundleWizardProps {
   open: boolean;
@@ -14,6 +16,7 @@ interface BundleWizardProps {
   onSubmit: (data: CreateBundleDto) => Promise<void>;
   products: ProductDto[];
   editBundle?: BundleDto | null;
+  fetch: (input: RequestInfo | URL, init?: RequestInit) => Promise<Response>;
 }
 
 const BUNDLE_TYPE_OPTIONS = [
@@ -50,6 +53,7 @@ export function BundleWizard({
   onSubmit,
   products,
   editBundle,
+  fetch: authenticatedFetch,
 }: BundleWizardProps) {
   const isEditing = !!editBundle;
   const [step, setStep] = useState(0);
@@ -403,7 +407,7 @@ export function BundleWizard({
                     marginBottom: '6px',
                   }}
                 >
-                  Display Rules (optional)
+                  Show on specific pages (optional)
                 </label>
                 <p
                   style={{
@@ -412,9 +416,8 @@ export function BundleWizard({
                     marginTop: 0,
                   }}
                 >
-                  Add product or collection targets to control where the bundle
-                  appears. Leave empty to show on all pages matching the trigger
-                  type.
+                  Pick which product or collection pages should display this
+                  bundle. Leave empty to show on all pages matching the trigger.
                 </p>
                 {displayRules.map((rule, idx) => (
                   <div
@@ -431,8 +434,8 @@ export function BundleWizard({
                       onChange={(e) => {
                         const updated = [...displayRules];
                         updated[idx] = {
-                          ...updated[idx],
                           targetType: e.target.value as 'PRODUCT' | 'COLLECTION',
+                          targetId: '',
                         };
                         setDisplayRules(updated);
                       }}
@@ -441,31 +444,41 @@ export function BundleWizard({
                         border: '1px solid #c9cccf',
                         borderRadius: '4px',
                         fontSize: '13px',
+                        minWidth: '110px',
                       }}
                     >
                       <option value="PRODUCT">Product</option>
                       <option value="COLLECTION">Collection</option>
                     </select>
-                    <input
-                      type="text"
-                      placeholder="Target ID"
-                      value={rule.targetId}
-                      onChange={(e) => {
-                        const updated = [...displayRules];
-                        updated[idx] = {
-                          ...updated[idx],
-                          targetId: e.target.value,
-                        };
-                        setDisplayRules(updated);
-                      }}
-                      style={{
-                        flex: 1,
-                        padding: '6px 8px',
-                        border: '1px solid #c9cccf',
-                        borderRadius: '4px',
-                        fontSize: '13px',
-                      }}
-                    />
+                    {rule.targetType === 'PRODUCT' ? (
+                      <ProductSearchDropdown
+                        value={rule.targetId}
+                        onChange={(shopifyProductId) => {
+                          const updated = [...displayRules];
+                          updated[idx] = {
+                            ...updated[idx],
+                            targetId: shopifyProductId,
+                          };
+                          setDisplayRules(updated);
+                        }}
+                        fetch={authenticatedFetch}
+                        placeholder="Search products..."
+                      />
+                    ) : (
+                      <CollectionSearchDropdown
+                        value={rule.targetId}
+                        onChange={(handle) => {
+                          const updated = [...displayRules];
+                          updated[idx] = {
+                            ...updated[idx],
+                            targetId: handle,
+                          };
+                          setDisplayRules(updated);
+                        }}
+                        fetch={authenticatedFetch}
+                        placeholder="Search collections..."
+                      />
+                    )}
                     <button
                       onClick={() =>
                         setDisplayRules(displayRules.filter((_, i) => i !== idx))
@@ -477,30 +490,51 @@ export function BundleWizard({
                         cursor: 'pointer',
                         fontSize: '13px',
                         backgroundColor: '#ffffff',
+                        color: '#bf0711',
                       }}
                     >
                       Remove
                     </button>
                   </div>
                 ))}
-                <button
-                  onClick={() =>
-                    setDisplayRules([
-                      ...displayRules,
-                      { targetType: 'PRODUCT', targetId: '' },
-                    ])
-                  }
-                  style={{
-                    padding: '6px 12px',
-                    border: '1px solid #c9cccf',
-                    borderRadius: '4px',
-                    cursor: 'pointer',
-                    fontSize: '13px',
-                    backgroundColor: '#ffffff',
-                  }}
-                >
-                  + Add Rule
-                </button>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <button
+                    onClick={() =>
+                      setDisplayRules([
+                        ...displayRules,
+                        { targetType: 'PRODUCT', targetId: '' },
+                      ])
+                    }
+                    style={{
+                      padding: '6px 12px',
+                      border: '1px solid #c9cccf',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '13px',
+                      backgroundColor: '#ffffff',
+                    }}
+                  >
+                    + Add Product
+                  </button>
+                  <button
+                    onClick={() =>
+                      setDisplayRules([
+                        ...displayRules,
+                        { targetType: 'COLLECTION', targetId: '' },
+                      ])
+                    }
+                    style={{
+                      padding: '6px 12px',
+                      border: '1px solid #c9cccf',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '13px',
+                      backgroundColor: '#ffffff',
+                    }}
+                  >
+                    + Add Collection
+                  </button>
+                </div>
               </div>
             </div>
           )}

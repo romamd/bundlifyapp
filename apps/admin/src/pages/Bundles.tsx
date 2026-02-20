@@ -303,6 +303,7 @@ export function Bundles() {
         onSubmit={handleCreate}
         products={products}
         editBundle={editingBundle}
+        fetch={fetch}
       />
     </div>
   );

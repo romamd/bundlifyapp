@@ -16,6 +16,7 @@ import { ABTestingModule } from '../modules/ab-testing/ab-testing.module';
 import { CurrencyModule } from '../modules/currency/currency.module';
 import { IntegrationsModule } from '../modules/integrations/integrations.module';
 import { AffinityModule } from '../modules/affinity/affinity.module';
+import { CollectionsModule } from '../modules/collections/collections.module';
 import { JobsModule } from '../jobs/jobs.module';
 import { SessionMiddleware } from '../modules/auth/session.middleware';
 import { ShopifyErrorFilter } from '../common/filters/shopify-error.filter';
@@ -42,6 +43,7 @@ import { PrismaService } from '@bundlify/prisma-client';
     CurrencyModule,
     IntegrationsModule,
     AffinityModule,
+    CollectionsModule,
     JobsModule,
   ],
   controllers: [HealthController],
