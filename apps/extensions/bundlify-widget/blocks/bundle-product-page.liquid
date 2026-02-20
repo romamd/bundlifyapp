@@ -1,8 +1,26 @@
+<style>
+  #bundlify-product-bundles {
+    --bundlify-accent: {{ block.settings.primary_color }};
+    --bundlify-accent-hover: {{ block.settings.primary_color_hover }};
+    --bundlify-text-primary: {{ block.settings.text_color }};
+    --bundlify-card-bg: {{ block.settings.card_background }};
+    --bundlify-badge-bg: {{ block.settings.badge_background }};
+    --bundlify-badge-text: {{ block.settings.badge_text_color }};
+    --bundlify-radius: {{ block.settings.border_radius }}px;
+  }
+</style>
+
 <div id="bundlify-product-bundles"
      data-product-id="{{ product.id }}"
      data-shop="{{ shop.permanent_domain }}"
      data-trigger="product_page"
+     data-button-text="{{ block.settings.button_text }}"
+     data-show-savings="{{ block.settings.show_savings }}"
+     data-layout="{{ block.settings.layout }}"
      style="margin: 20px 0;">
+  {% if block.settings.heading != blank %}
+    <h3 class="bundlify-widget-heading">{{ block.settings.heading }}</h3>
+  {% endif %}
   <div class="bundlify-bundles"></div>
 </div>
 
@@ -24,6 +42,68 @@
       "id": "show_savings",
       "label": "Show savings badge",
       "default": true
+    },
+    {
+      "type": "color",
+      "id": "primary_color",
+      "label": "Primary color",
+      "default": "#2563eb"
+    },
+    {
+      "type": "color",
+      "id": "primary_color_hover",
+      "label": "Primary hover color",
+      "default": "#1d4ed8"
+    },
+    {
+      "type": "color",
+      "id": "text_color",
+      "label": "Text color",
+      "default": "#111827"
+    },
+    {
+      "type": "color",
+      "id": "card_background",
+      "label": "Card background",
+      "default": "#ffffff"
+    },
+    {
+      "type": "color",
+      "id": "badge_background",
+      "label": "Badge background",
+      "default": "#dcfce7"
+    },
+    {
+      "type": "color",
+      "id": "badge_text_color",
+      "label": "Badge text color",
+      "default": "#166534"
+    },
+    {
+      "type": "range",
+      "id": "border_radius",
+      "label": "Border radius",
+      "default": 10,
+      "min": 0,
+      "max": 24,
+      "step": 1,
+      "unit": "px"
+    },
+    {
+      "type": "text",
+      "id": "button_text",
+      "label": "Button text",
+      "default": "Add Bundle to Cart"
+    },
+    {
+      "type": "select",
+      "id": "layout",
+      "label": "Layout",
+      "default": "vertical",
+      "options": [
+        { "value": "vertical", "label": "Vertical" },
+        { "value": "horizontal", "label": "Horizontal" }
+      ]
     }
   ]
 }

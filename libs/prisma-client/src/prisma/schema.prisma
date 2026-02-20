@@ -68,6 +68,9 @@ model ShopSettings {
   showAtCheckout    Boolean @default(true)
   showOnExitIntent  Boolean @default(false)
 
+  cartDrawerEnabled       Boolean  @default(false)
+  freeShippingThreshold   Decimal? @db.Decimal(10, 2)
+
   multiCurrencyEnabled Boolean  @default(false)
   displayCurrency      String?  @db.VarChar(3)
 
@@ -169,6 +172,7 @@ model Bundle {
   endsAt             DateTime?
 
   items            BundleItem[]
+  volumeTiers      VolumeTier[]
   views            BundleView[]
   displayRules     BundleDisplayRule[]
   abTests          ABTest[]
@@ -244,6 +248,21 @@ model BundleItem {
   sortOrder   Int     @default(0)
 
   @@unique([bundleId, productId])
+}
+
+model VolumeTier {
+  id           String       @id @default(cuid())
+  bundleId     String
+  bundle       Bundle       @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+  minQuantity  Int
+  maxQuantity  Int?
+  discountPct  Decimal      @db.Decimal(5, 2)
+  discountType DiscountType @default(PERCENTAGE)
+  pricePerUnit Decimal?     @db.Decimal(10, 2)
+  label        String?      @db.VarChar(50)
+
+  @@unique([bundleId, minQuantity])
+  @@index([bundleId])
 }
 
 // ============================================

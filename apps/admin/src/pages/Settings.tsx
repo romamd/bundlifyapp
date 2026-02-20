@@ -429,7 +429,38 @@ export function Settings() {
             />
           </div>
 
-          {/* Section 4: Multi-Currency */}
+          {/* Section 4: Cart Drawer */}
+          <div style={sectionStyle}>
+            <h2 style={sectionTitleStyle}>Cart Drawer</h2>
+            <p
+              style={{
+                fontSize: '13px',
+                color: '#6d7175',
+                marginTop: 0,
+                marginBottom: '12px',
+              }}
+            >
+              Show a slide-out cart drawer with upsell bundles when a customer
+              adds a product to cart.
+            </p>
+            <ToggleField
+              label="Enable Cart Drawer"
+              sublabel="Intercept add-to-cart and show a drawer with cart items and upsells"
+              value={form.cartDrawerEnabled}
+              onChange={(val) => updateField('cartDrawerEnabled', val)}
+            />
+            <NumberField
+              label="Free Shipping Threshold"
+              sublabel="Display a progress bar towards free shipping. Leave at 0 to disable."
+              value={form.freeShippingThreshold ?? 0}
+              onChange={(val) => updateField('freeShippingThreshold', val || null)}
+              prefix="$"
+              step={1}
+              min={0}
+            />
+          </div>
+
+          {/* Section 5: Multi-Currency */}
           <div style={sectionStyle}>
             <h2 style={sectionTitleStyle}>Multi-Currency</h2>
             <p
@@ -476,7 +507,7 @@ export function Settings() {
             </div>
           </div>
 
-          {/* Section 5: Widget Settings */}
+          {/* Section 6: Widget Settings */}
           <div style={sectionStyle}>
             <h2 style={sectionTitleStyle}>Widget Settings</h2>
             <p

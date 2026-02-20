@@ -56,6 +56,10 @@ export class SettingsService {
       settingsData.showAtCheckout = dto.showAtCheckout;
     if (dto.showOnExitIntent !== undefined)
       settingsData.showOnExitIntent = dto.showOnExitIntent;
+    if (dto.cartDrawerEnabled !== undefined)
+      settingsData.cartDrawerEnabled = dto.cartDrawerEnabled;
+    if (dto.freeShippingThreshold !== undefined)
+      settingsData.freeShippingThreshold = dto.freeShippingThreshold;
     if (dto.multiCurrencyEnabled !== undefined)
       settingsData.multiCurrencyEnabled = dto.multiCurrencyEnabled;
     if (dto.displayCurrency !== undefined)
@@ -101,6 +105,10 @@ export class SettingsService {
       showOnCartPage: settings.showOnCartPage,
       showAtCheckout: settings.showAtCheckout,
       showOnExitIntent: settings.showOnExitIntent,
+      cartDrawerEnabled: settings.cartDrawerEnabled,
+      freeShippingThreshold: settings.freeShippingThreshold
+        ? Number(settings.freeShippingThreshold)
+        : null,
       multiCurrencyEnabled: settings.multiCurrencyEnabled,
       displayCurrency: settings.displayCurrency ?? '',
       defaultShippingCost: Number(shop.defaultShippingCost),

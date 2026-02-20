@@ -17,6 +17,9 @@ export class BundlesService {
           include: { product: true },
           orderBy: { sortOrder: 'asc' },
         },
+        volumeTiers: {
+          orderBy: { minQuantity: 'asc' },
+        },
         displayRules: true,
       },
       orderBy: { createdAt: 'desc' },
@@ -32,6 +35,9 @@ export class BundlesService {
         items: {
           include: { product: true },
           orderBy: { sortOrder: 'asc' },
+        },
+        volumeTiers: {
+          orderBy: { minQuantity: 'asc' },
         },
         displayRules: true,
       },
@@ -135,11 +141,24 @@ export class BundlesService {
               })),
             }
           : undefined,
+        volumeTiers: dto.volumeTiers
+          ? {
+              create: dto.volumeTiers.map((tier) => ({
+                minQuantity: tier.minQuantity,
+                maxQuantity: tier.maxQuantity ?? null,
+                discountPct: tier.discountPct,
+                label: tier.label ?? null,
+              })),
+            }
+          : undefined,
       },
       include: {
         items: {
           include: { product: true },
           orderBy: { sortOrder: 'asc' },
+        },
+        volumeTiers: {
+          orderBy: { minQuantity: 'asc' },
         },
         displayRules: true,
       },
@@ -254,6 +273,13 @@ export class BundlesService {
       });
     }
 
+    // If volume tiers are changing, delete old tiers and create new ones
+    if (dto.volumeTiers) {
+      await this.prisma.volumeTier.deleteMany({
+        where: { bundleId },
+      });
+    }
+
     const bundle = await this.prisma.bundle.update({
       where: { id: bundleId },
       data: {
@@ -287,11 +313,24 @@ export class BundlesService {
             })),
           },
         }),
+        ...(dto.volumeTiers && {
+          volumeTiers: {
+            create: dto.volumeTiers.map((tier) => ({
+              minQuantity: tier.minQuantity,
+              maxQuantity: tier.maxQuantity ?? null,
+              discountPct: tier.discountPct,
+              label: tier.label ?? null,
+            })),
+          },
+        }),
       },
       include: {
         items: {
           include: { product: true },
           orderBy: { sortOrder: 'asc' },
+        },
+        volumeTiers: {
+          orderBy: { minQuantity: 'asc' },
         },
         displayRules: true,
       },
@@ -334,6 +373,9 @@ export class BundlesService {
         items: {
           include: { product: true },
           orderBy: { sortOrder: 'asc' },
+        },
+        volumeTiers: {
+          orderBy: { minQuantity: 'asc' },
         },
         displayRules: true,
       },
@@ -398,6 +440,15 @@ export class BundlesService {
         isAnchor: item.isAnchor,
         isDeadStock: item.isDeadStock,
         sortOrder: item.sortOrder,
+      })),
+      volumeTiers: (bundle.volumeTiers ?? []).map((tier: any) => ({
+        id: tier.id,
+        minQuantity: tier.minQuantity,
+        maxQuantity: tier.maxQuantity,
+        discountPct: Number(tier.discountPct),
+        discountType: tier.discountType,
+        pricePerUnit: tier.pricePerUnit != null ? Number(tier.pricePerUnit) : null,
+        label: tier.label,
       })),
       displayRules: (bundle.displayRules ?? []).map((rule: any) => ({
         targetType: rule.targetType,

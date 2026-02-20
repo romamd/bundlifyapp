@@ -32,6 +32,25 @@ export class StorefrontController {
     );
   }
 
+  @Get('cart-drawer')
+  async getCartDrawer(
+    @Query('shop') shop: string,
+    @Query('cart_value') cartValue?: string,
+    @Query('product_ids') productIds?: string,
+    @Query('session_id') sessionId?: string,
+  ) {
+    if (!shop) {
+      throw new BadRequestException('shop query parameter is required');
+    }
+
+    return this.storefrontService.getCartDrawerData(
+      shop,
+      cartValue ? parseFloat(cartValue) : 0,
+      productIds ? productIds.split(',').filter(Boolean) : [],
+      sessionId,
+    );
+  }
+
   @Post('events')
   async trackEvent(
     @Query('shop') shop: string,

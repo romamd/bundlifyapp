@@ -12,7 +12,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { BundleItemInputDto, DisplayRuleInputDto } from './create-bundle.dto';
+import { BundleItemInputDto, DisplayRuleInputDto, VolumeTierInputDto } from './create-bundle.dto';
 
 export class UpdateBundleDto {
   @IsOptional()
@@ -54,6 +54,12 @@ export class UpdateBundleDto {
   @ValidateNested({ each: true })
   @Type(() => DisplayRuleInputDto)
   displayRules?: DisplayRuleInputDto[];
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => VolumeTierInputDto)
+  volumeTiers?: VolumeTierInputDto[];
 
   @IsOptional()
   @IsNumber()

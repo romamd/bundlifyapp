@@ -56,6 +56,15 @@ export class UpdateSettingsDto {
 
   @IsOptional()
   @IsBoolean()
+  cartDrawerEnabled?: boolean;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  freeShippingThreshold?: number;
+
+  @IsOptional()
+  @IsBoolean()
   multiCurrencyEnabled?: boolean;
 
   @IsOptional()

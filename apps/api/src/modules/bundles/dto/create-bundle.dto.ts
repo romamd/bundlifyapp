@@ -33,6 +33,26 @@ export class DisplayRuleInputDto {
   targetId!: string;
 }
 
+export class VolumeTierInputDto {
+  @IsNumber()
+  @Min(1)
+  minQuantity!: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(1)
+  maxQuantity?: number;
+
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  discountPct!: number;
+
+  @IsOptional()
+  @IsString()
+  label?: string;
+}
+
 export class CreateBundleDto {
   @IsString()
   @MinLength(1)
@@ -63,6 +83,12 @@ export class CreateBundleDto {
   @ValidateNested({ each: true })
   @Type(() => DisplayRuleInputDto)
   displayRules?: DisplayRuleInputDto[];
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => VolumeTierInputDto)
+  volumeTiers?: VolumeTierInputDto[];
 
   @IsOptional()
   @IsNumber()

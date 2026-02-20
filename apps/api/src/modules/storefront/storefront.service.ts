@@ -26,6 +26,16 @@ export class StorefrontService {
       throw new NotFoundException(`Shop not found: ${shopDomain}`);
     }
 
+    // Server-side gate: block exit-intent bundles when disabled in settings
+    if (trigger && trigger.toUpperCase() === 'EXIT_INTENT') {
+      const settings = await this.prisma.shopSettings.findUnique({
+        where: { shopId: shop.id },
+      });
+      if (!settings || !settings.exitIntentEnabled) {
+        return [];
+      }
+    }
+
     const now = new Date();
 
     const bundles = await this.prisma.bundle.findMany({
@@ -44,6 +54,9 @@ export class StorefrontService {
             product: true,
           },
           orderBy: { sortOrder: 'asc' },
+        },
+        volumeTiers: {
+          orderBy: { minQuantity: 'asc' },
         },
         displayRules: true,
       },
@@ -114,9 +127,11 @@ export class StorefrontService {
 
       const individualTotal = Number(bundle.individualTotal);
 
-      results.push({
+      const dto: any = {
         bundleId: bundle.id,
         name: bundle.name,
+        type: bundle.type,
+        discountType: bundle.discountType,
         bundlePrice,
         individualTotal,
         savingsAmount: individualTotal - bundlePrice,
@@ -133,10 +148,69 @@ export class StorefrontService {
         })),
         abTestId,
         abVariant,
-      });
+      };
+
+      if ((bundle as any).volumeTiers && (bundle as any).volumeTiers.length > 0) {
+        dto.volumeTiers = (bundle as any).volumeTiers.map((tier: any) => ({
+          minQuantity: tier.minQuantity,
+          maxQuantity: tier.maxQuantity,
+          discountPct: Number(tier.discountPct),
+          pricePerUnit: tier.pricePerUnit != null ? Number(tier.pricePerUnit) : null,
+          label: tier.label,
+        }));
+      }
+
+      results.push(dto);
     }
 
     return results;
+  }
+
+  async getCartDrawerData(
+    shopDomain: string,
+    cartValue: number,
+    productIdsInCart: string[],
+    sessionId?: string,
+  ) {
+    const shop = await this.prisma.shop.findUnique({
+      where: { shopifyDomain: shopDomain },
+      include: { settings: true },
+    });
+
+    if (!shop || shop.uninstalledAt) {
+      throw new NotFoundException(`Shop not found: ${shopDomain}`);
+    }
+
+    const settings = shop.settings;
+    if (!settings || !settings.cartDrawerEnabled) {
+      return { enabled: false, freeShippingThreshold: null, bundles: [] };
+    }
+
+    // Fetch CART_PAGE bundles, exclude those fully in cart, limit 3
+    const bundles = await this.getBundlesForStorefront(
+      shopDomain,
+      undefined,
+      'CART_PAGE',
+      sessionId,
+    );
+
+    const filteredBundles = bundles
+      .filter((bundle) => {
+        // Exclude bundles whose items are all already in the cart
+        const allInCart = bundle.items.every((item) =>
+          productIdsInCart.includes(item.shopifyProductId),
+        );
+        return !allInCart;
+      })
+      .slice(0, 3);
+
+    return {
+      enabled: true,
+      freeShippingThreshold: settings.freeShippingThreshold
+        ? Number(settings.freeShippingThreshold)
+        : null,
+      bundles: filteredBundles,
+    };
   }
 
   async trackEvent(shopDomain: string, data: TrackEventDto): Promise<void> {

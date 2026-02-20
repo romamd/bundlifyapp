@@ -7,6 +7,33 @@
     },
     "show_savings_badge": {
       "label": "Show savings badge"
+    },
+    "primary_color": {
+      "label": "Primary color"
+    },
+    "primary_color_hover": {
+      "label": "Primary color (hover)"
+    },
+    "text_color": {
+      "label": "Text color"
+    },
+    "card_background": {
+      "label": "Card background"
+    },
+    "badge_background": {
+      "label": "Badge background"
+    },
+    "badge_text_color": {
+      "label": "Badge text color"
+    },
+    "border_radius": {
+      "label": "Border radius"
+    },
+    "button_text": {
+      "label": "Button text"
+    },
+    "layout": {
+      "label": "Layout"
     }
   }
 }

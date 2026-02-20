@@ -33,6 +33,12 @@ const BUNDLE_TYPE_OPTIONS = [
       'Recommend complementary products. Shows when the anchor product is added to cart.',
   },
   {
+    value: 'VOLUME',
+    label: 'Volume Discount',
+    description:
+      'Offer tiered discounts based on quantity purchased. "Buy more, save more" pricing for a single product.',
+  },
+  {
     value: 'DEAD_STOCK',
     label: 'Dead Stock Clearance',
     description:
@@ -65,6 +71,12 @@ export function BundleWizard({
     { targetType: 'PRODUCT' | 'COLLECTION'; targetId: string }[]
   >([]);
   const [name, setName] = useState('');
+  const [volumeTiers, setVolumeTiers] = useState<
+    { minQuantity: number; discountPct: number; label: string }[]
+  >([
+    { minQuantity: 2, discountPct: 10, label: '' },
+    { minQuantity: 3, discountPct: 20, label: '' },
+  ]);
   const [submitting, setSubmitting] = useState(false);
   const [initialized, setInitialized] = useState(false);
 
@@ -143,7 +155,7 @@ export function BundleWizard({
       await onSubmit({
         name,
         type: bundleType,
-        discountPct,
+        discountPct: isVolume ? volumeTiers[0]?.discountPct ?? 0 : discountPct,
         discountType: 'PERCENTAGE',
         triggerType,
         items: selectedItems.map((si) => ({
@@ -152,6 +164,13 @@ export function BundleWizard({
           isAnchor: si.isAnchor,
         })),
         displayRules: displayRules.length > 0 ? displayRules : undefined,
+        volumeTiers: isVolume
+          ? volumeTiers.map((t) => ({
+              minQuantity: t.minQuantity,
+              discountPct: t.discountPct,
+              label: t.label || undefined,
+            }))
+          : undefined,
       });
       resetAndClose();
     } finally {
@@ -164,19 +183,28 @@ export function BundleWizard({
     setBundleType('FIXED');
     setSelectedItems([]);
     setDiscountPct(10);
+    setVolumeTiers([
+      { minQuantity: 2, discountPct: 10, label: '' },
+      { minQuantity: 3, discountPct: 20, label: '' },
+    ]);
     setTriggerType('PRODUCT_PAGE');
     setDisplayRules([]);
     setName('');
     onClose();
   };
 
+  const isVolume = bundleType === 'VOLUME';
+
   const canProceed = (): boolean => {
     switch (step) {
       case 0:
         return !!bundleType;
       case 1:
-        return selectedItems.length >= 2;
+        return isVolume ? selectedItems.length === 1 : selectedItems.length >= 2;
       case 2:
+        if (isVolume) {
+          return volumeTiers.length >= 2 && volumeTiers.every((t) => t.minQuantity >= 1 && t.discountPct >= 0);
+        }
         return discountPct >= 0 && discountPct <= 50;
       case 3:
         return !!triggerType;
@@ -332,11 +360,15 @@ export function BundleWizard({
           {step === 1 && (
             <div>
               <p style={{ fontSize: '14px', color: '#6d7175', marginTop: 0 }}>
-                Select at least 2 products for your bundle.
+                {isVolume
+                  ? 'Select the product for volume pricing (1 product only).'
+                  : 'Select at least 2 products for your bundle.'}
               </p>
               <BundleProductPicker
                 selectedItems={selectedItems}
-                onItemsChange={setSelectedItems}
+                onItemsChange={(items) =>
+                  isVolume ? setSelectedItems(items.slice(0, 1)) : setSelectedItems(items)
+                }
                 products={products}
                 paymentProcessingPct={paymentProcessingPct}
                 paymentProcessingFlat={paymentProcessingFlat}
@@ -345,19 +377,151 @@ export function BundleWizard({
             </div>
           )}
 
-          {/* Step 2: Discount */}
+          {/* Step 2: Discount / Volume Tiers */}
           {step === 2 && (
             <div>
-              <p style={{ fontSize: '14px', color: '#6d7175', marginTop: 0 }}>
-                Set the discount percentage. The margin updates in real time.
-              </p>
-              <DiscountSlider
-                value={discountPct}
-                onChange={setDiscountPct}
-                items={marginItems}
-                paymentProcessingPct={paymentProcessingPct}
-                paymentProcessingFlat={paymentProcessingFlat}
-              />
+              {isVolume ? (
+                <>
+                  <p style={{ fontSize: '14px', color: '#6d7175', marginTop: 0 }}>
+                    Define quantity tiers and their discount percentages.
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    {volumeTiers.map((tier, idx) => (
+                      <div
+                        key={idx}
+                        style={{
+                          display: 'flex',
+                          gap: '8px',
+                          alignItems: 'center',
+                          padding: '10px 12px',
+                          border: '1px solid #e1e3e5',
+                          borderRadius: '6px',
+                        }}
+                      >
+                        <div style={{ flex: '0 0 90px' }}>
+                          <label style={{ fontSize: '11px', color: '#6d7175', display: 'block' }}>Qty</label>
+                          <input
+                            type="number"
+                            min={1}
+                            value={tier.minQuantity}
+                            onChange={(e) => {
+                              const updated = [...volumeTiers];
+                              updated[idx] = { ...updated[idx], minQuantity: parseInt(e.target.value) || 1 };
+                              setVolumeTiers(updated);
+                            }}
+                            style={{
+                              width: '100%',
+                              padding: '6px 8px',
+                              border: '1px solid #c9cccf',
+                              borderRadius: '4px',
+                              fontSize: '14px',
+                              boxSizing: 'border-box' as const,
+                            }}
+                          />
+                        </div>
+                        <div style={{ flex: '0 0 100px' }}>
+                          <label style={{ fontSize: '11px', color: '#6d7175', display: 'block' }}>Discount %</label>
+                          <input
+                            type="number"
+                            min={0}
+                            max={100}
+                            step={1}
+                            value={tier.discountPct}
+                            onChange={(e) => {
+                              const updated = [...volumeTiers];
+                              updated[idx] = { ...updated[idx], discountPct: parseFloat(e.target.value) || 0 };
+                              setVolumeTiers(updated);
+                            }}
+                            style={{
+                              width: '100%',
+                              padding: '6px 8px',
+                              border: '1px solid #c9cccf',
+                              borderRadius: '4px',
+                              fontSize: '14px',
+                              boxSizing: 'border-box' as const,
+                            }}
+                          />
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <label style={{ fontSize: '11px', color: '#6d7175', display: 'block' }}>Label (optional)</label>
+                          <input
+                            type="text"
+                            value={tier.label}
+                            onChange={(e) => {
+                              const updated = [...volumeTiers];
+                              updated[idx] = { ...updated[idx], label: e.target.value };
+                              setVolumeTiers(updated);
+                            }}
+                            placeholder="e.g., Most Popular"
+                            style={{
+                              width: '100%',
+                              padding: '6px 8px',
+                              border: '1px solid #c9cccf',
+                              borderRadius: '4px',
+                              fontSize: '14px',
+                              boxSizing: 'border-box' as const,
+                            }}
+                          />
+                        </div>
+                        {volumeTiers.length > 2 && (
+                          <button
+                            onClick={() => setVolumeTiers(volumeTiers.filter((_, i) => i !== idx))}
+                            style={{
+                              padding: '4px 8px',
+                              border: '1px solid #c9cccf',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontSize: '13px',
+                              backgroundColor: '#ffffff',
+                              color: '#bf0711',
+                              alignSelf: 'flex-end',
+                              marginBottom: '2px',
+                            }}
+                          >
+                            Remove
+                          </button>
+                        )}
+                      </div>
+                    ))}
+                    <button
+                      onClick={() =>
+                        setVolumeTiers([
+                          ...volumeTiers,
+                          {
+                            minQuantity: (volumeTiers[volumeTiers.length - 1]?.minQuantity ?? 1) + 1,
+                            discountPct: (volumeTiers[volumeTiers.length - 1]?.discountPct ?? 10) + 10,
+                            label: '',
+                          },
+                        ])
+                      }
+                      style={{
+                        padding: '8px 14px',
+                        border: '1px solid #c9cccf',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '13px',
+                        backgroundColor: '#ffffff',
+                        alignSelf: 'flex-start',
+                      }}
+                    >
+                      + Add Tier
+                    </button>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <p style={{ fontSize: '14px', color: '#6d7175', marginTop: 0 }}>
+                    Set the discount percentage. The margin updates in real time.
+                  </p>
+                  <DiscountSlider
+                    value={discountPct}
+                    onChange={setDiscountPct}
+                    items={marginItems}
+                    paymentProcessingPct={paymentProcessingPct}
+                    paymentProcessingFlat={paymentProcessingFlat}
+                  />
+                </>
+              )}
             </div>
           )}
 

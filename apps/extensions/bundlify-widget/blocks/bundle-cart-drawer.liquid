@@ -1,5 +1,5 @@
 <style>
-  #bundlify-exit-intent {
+  #bundlify-cart-drawer {
     --bundlify-accent: {{ block.settings.primary_color }};
     --bundlify-accent-hover: {{ block.settings.primary_color_hover }};
     --bundlify-text-primary: {{ block.settings.text_color }};
@@ -10,9 +10,11 @@
   }
 </style>
 
-<div id="bundlify-exit-intent"
-     data-enabled="{{ block.settings.enabled }}"
+<div id="bundlify-cart-drawer"
      data-shop="{{ shop.permanent_domain }}"
+     data-enabled="{{ block.settings.enabled }}"
+     data-upsell-heading="{{ block.settings.upsell_heading }}"
+     data-show-shipping-progress="{{ block.settings.show_shipping_progress }}"
      data-button-text="{{ block.settings.button_text }}"
      data-show-savings="{{ block.settings.show_savings }}"
      style="display:none;">
@@ -20,7 +22,7 @@
 
 {% schema %}
 {
-  "name": "Bundlify Exit-Intent",
+  "name": "Bundlify Cart Drawer",
   "target": "body",
   "javascript": "bundlify.js",
   "stylesheet": "bundlify.css",
@@ -28,8 +30,20 @@
     {
       "type": "checkbox",
       "id": "enabled",
-      "label": "Enable exit-intent bundles",
+      "label": "Enable cart drawer",
       "default": false
+    },
+    {
+      "type": "text",
+      "id": "upsell_heading",
+      "label": "Upsell heading",
+      "default": "Complete your order"
+    },
+    {
+      "type": "checkbox",
+      "id": "show_shipping_progress",
+      "label": "Show free shipping progress bar",
+      "default": true
     },
     {
       "type": "checkbox",
@@ -86,7 +100,7 @@
     {
       "type": "text",
       "id": "button_text",
-      "label": "Button text",
+      "label": "Upsell button text",
       "default": "Add Bundle to Cart"
     }
   ]

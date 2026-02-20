@@ -21,6 +21,11 @@ handle = "bundlify-widget"
   name = "Exit Intent Overlay"
   target = "body"
 
+  [[extensions.blocks]]
+  type = "bundle-cart-drawer"
+  name = "Cart Drawer Upsell"
+  target = "body"
+
   [extensions.settings]
 
     [[extensions.settings.fields]]
@@ -34,3 +39,69 @@ handle = "bundlify-widget"
     type = "checkbox"
     label = "Show savings badge"
     default = true
+
+    [[extensions.settings.fields]]
+    key = "primary_color"
+    type = "color"
+    label = "Primary color"
+    default = "#2563eb"
+
+    [[extensions.settings.fields]]
+    key = "primary_color_hover"
+    type = "color"
+    label = "Primary color (hover)"
+    default = "#1d4ed8"
+
+    [[extensions.settings.fields]]
+    key = "text_color"
+    type = "color"
+    label = "Text color"
+    default = "#111827"
+
+    [[extensions.settings.fields]]
+    key = "card_background"
+    type = "color"
+    label = "Card background"
+    default = "#ffffff"
+
+    [[extensions.settings.fields]]
+    key = "badge_background"
+    type = "color"
+    label = "Badge background"
+    default = "#dcfce7"
+
+    [[extensions.settings.fields]]
+    key = "badge_text_color"
+    type = "color"
+    label = "Badge text color"
+    default = "#166534"
+
+    [[extensions.settings.fields]]
+    key = "border_radius"
+    type = "range"
+    label = "Border radius"
+    default = 10
+    min = 0
+    max = 24
+    step = 1
+    unit = "px"
+
+    [[extensions.settings.fields]]
+    key = "button_text"
+    type = "text"
+    label = "Button text"
+    default = "Add Bundle to Cart"
+
+    [[extensions.settings.fields]]
+    key = "layout"
+    type = "select"
+    label = "Layout"
+    default = "vertical"
+
+      [[extensions.settings.fields.options]]
+      value = "vertical"
+      label = "Vertical"
+
+      [[extensions.settings.fields.options]]
+      value = "horizontal"
+      label = "Horizontal"

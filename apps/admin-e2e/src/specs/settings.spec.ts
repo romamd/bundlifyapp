@@ -7,6 +7,7 @@ test.describe('Settings', () => {
     await expect(page.getByText('Cost Defaults')).toBeVisible();
     await expect(page.getByText('Bundle Engine')).toBeVisible();
     await expect(page.getByText('Display Settings')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Cart Drawer' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Multi-Currency' })).toBeVisible();
     await expect(page.getByText('Widget Settings')).toBeVisible();
   });

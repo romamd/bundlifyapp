@@ -17,9 +17,19 @@ export interface DashboardDto {
   deadStockCount: number;
 }
 
+export interface StorefrontVolumeTierDto {
+  minQuantity: number;
+  maxQuantity: number | null;
+  discountPct: number;
+  pricePerUnit: number | null;
+  label: string | null;
+}
+
 export interface StorefrontBundleDto {
   bundleId: string;
   name: string;
+  type: string;
+  discountType: string;
   bundlePrice: number;
   individualTotal: number;
   savingsAmount: number;
@@ -34,6 +44,7 @@ export interface StorefrontBundleDto {
     quantity: number;
     isAnchor: boolean;
   }>;
+  volumeTiers?: StorefrontVolumeTierDto[];
   abTestId?: string;
   abVariant?: 'control' | 'variant';
 }

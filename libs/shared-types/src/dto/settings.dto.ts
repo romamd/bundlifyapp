@@ -11,6 +11,8 @@ export interface ShopSettingsDto {
   showOnCartPage: boolean;
   showAtCheckout: boolean;
   showOnExitIntent: boolean;
+  cartDrawerEnabled: boolean;
+  freeShippingThreshold: number | null;
   defaultShippingCost: number;
   paymentProcessingPct: number;
   paymentProcessingFlat: number;
