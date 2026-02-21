@@ -443,44 +443,77 @@ export function Settings() {
               Customize the look and feel of your storefront bundle widgets.
             </p>
 
-            {/* Color pickers */}
+            {/* Color pickers — grouped */}
             {([
-              ['widgetPrimaryColor', 'Primary Color', 'Button and accent color'],
-              ['widgetPrimaryColorHover', 'Primary Hover Color', 'Button hover state'],
-              ['widgetTextColor', 'Text Color', 'Main text color'],
-              ['widgetCardBackground', 'Card Background', 'Bundle card background'],
-              ['widgetBadgeBackground', 'Badge Background', 'Savings badge background'],
-              ['widgetBadgeTextColor', 'Badge Text Color', 'Savings badge text'],
-            ] as const).map(([key, label, sublabel]) => (
-              <div key={key} style={fieldRowStyle}>
-                <div>
-                  <div style={labelStyle}>{label}</div>
-                  <div style={sublabelStyle}>{sublabel}</div>
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <div
-                    style={{
-                      width: '24px',
-                      height: '24px',
-                      borderRadius: '4px',
-                      border: '1px solid #c9cccf',
-                      backgroundColor: (form as any)[key] || '#000000',
-                    }}
-                  />
-                  <input
-                    type="color"
-                    value={(form as any)[key] || '#000000'}
-                    onChange={(e) => updateField(key as keyof ShopSettingsDto, e.target.value as any)}
-                    style={{
-                      width: '40px',
-                      height: '32px',
-                      padding: '2px',
-                      border: '1px solid #c9cccf',
-                      borderRadius: '4px',
-                      cursor: 'pointer',
-                    }}
-                  />
-                </div>
+              { heading: 'General', items: [
+                ['widgetCardBackground', 'Card Background', 'Bundle card background'],
+                ['widgetSelectedBgColor', 'Selected Background', 'Background when a card is selected'],
+                ['widgetBorderColor', 'Border Color', 'Card border color'],
+                ['widgetBlockTitleColor', 'Block Title Color', 'Widget heading / block title'],
+              ]},
+              { heading: 'Text', items: [
+                ['widgetTitleColor', 'Title Color', 'Item title text color'],
+                ['widgetSubtitleColor', 'Subtitle Color', 'Subtitle and variant text'],
+                ['widgetPriceColor', 'Price Color', 'Bundle price text'],
+                ['widgetOriginalPriceColor', 'Original Price Color', 'Strikethrough price text'],
+              ]},
+              { heading: 'Button', items: [
+                ['widgetPrimaryColor', 'Primary Color', 'Button and accent color'],
+                ['widgetButtonTextColor', 'Button Text Color', 'Text inside buttons'],
+              ]},
+              { heading: 'Badge', items: [
+                ['widgetBadgeBackground', 'Badge Background', 'Savings badge background'],
+                ['widgetBadgeTextColor', 'Badge Text Color', 'Savings badge text'],
+                ['widgetSavingsBadgeBgColor', 'Savings Badge Background', 'Savings percentage badge bg'],
+                ['widgetSavingsBadgeTextColor', 'Savings Badge Text', 'Savings percentage badge text'],
+              ]},
+              { heading: 'Label', items: [
+                ['widgetLabelBgColor', 'Label Background', 'Tier label background'],
+                ['widgetLabelTextColor', 'Label Text Color', 'Tier label text'],
+              ]},
+              { heading: 'Other', items: [
+                ['widgetPrimaryColorHover', 'Primary Hover Color', 'Button hover state'],
+                ['widgetCardHoverBgColor', 'Card Hover Background', 'Card background on hover'],
+                ['widgetTextColor', 'Text Color', 'Main text color'],
+                ['widgetSecondaryTextColor', 'Secondary Text Color', 'Subtitle and meta text'],
+              ]},
+            ] as const).map((group) => (
+              <div key={group.heading}>
+                <h4 style={{ fontSize: '13px', fontWeight: 600, color: '#6d7175', margin: '16px 0 8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                  {group.heading}
+                </h4>
+                {group.items.map(([key, label, sublabel]) => (
+                  <div key={key} style={fieldRowStyle}>
+                    <div>
+                      <div style={labelStyle}>{label}</div>
+                      <div style={sublabelStyle}>{sublabel}</div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div
+                        style={{
+                          width: '24px',
+                          height: '24px',
+                          borderRadius: '4px',
+                          border: '1px solid #c9cccf',
+                          backgroundColor: (form as any)[key] || '#000000',
+                        }}
+                      />
+                      <input
+                        type="color"
+                        value={(form as any)[key] || '#000000'}
+                        onChange={(e) => updateField(key as keyof ShopSettingsDto, e.target.value as any)}
+                        style={{
+                          width: '40px',
+                          height: '32px',
+                          padding: '2px',
+                          border: '1px solid #c9cccf',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
               </div>
             ))}
 
@@ -547,6 +580,162 @@ export function Settings() {
                 <option value="vertical">Vertical</option>
                 <option value="horizontal">Horizontal</option>
               </select>
+            </div>
+
+            {/* Global Font Size slider (base) */}
+            <div style={fieldRowStyle}>
+              <div>
+                <div style={labelStyle}>Base Font Size</div>
+                <div style={sublabelStyle}>Widget base font size (10-24px)</div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <input
+                  type="range"
+                  min={10}
+                  max={24}
+                  step={1}
+                  value={form.widgetFontSize ?? 14}
+                  onChange={(e) => updateField('widgetFontSize', parseInt(e.target.value, 10))}
+                  style={{ width: '120px' }}
+                />
+                <span style={{ fontSize: '13px', color: '#6d7175', minWidth: '32px' }}>
+                  {form.widgetFontSize ?? 14}px
+                </span>
+              </div>
+            </div>
+
+            {/* Global Font Weight select (base) */}
+            <div style={fieldRowStyle}>
+              <div>
+                <div style={labelStyle}>Base Font Weight</div>
+                <div style={sublabelStyle}>Widget base text weight</div>
+              </div>
+              <select
+                value={form.widgetFontWeight ?? 'normal'}
+                onChange={(e) => updateField('widgetFontWeight', e.target.value)}
+                style={{
+                  padding: '6px 10px',
+                  border: '1px solid #c9cccf',
+                  borderRadius: '4px',
+                  fontSize: '14px',
+                  width: '140px',
+                }}
+              >
+                <option value="normal">Normal</option>
+                <option value="bold">Bold</option>
+              </select>
+            </div>
+
+            {/* Per-Element Typography */}
+            <h4 style={{ fontSize: '13px', fontWeight: 600, color: '#6d7175', margin: '20px 0 8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Per-Element Typography
+            </h4>
+            {([
+              ['Block Title', 'widgetBlockTitleFontSize', 'widgetBlockTitleFontWeight', 18, 'bold'] as const,
+              ['Item Title', 'widgetItemTitleFontSize', 'widgetItemTitleFontWeight', 14, 'normal'] as const,
+              ['Subtitle', 'widgetSubtitleFontSize', 'widgetSubtitleFontWeight', 13, 'normal'] as const,
+              ['Price', 'widgetPriceFontSize', 'widgetPriceFontWeight', 16, 'bold'] as const,
+              ['Badge', 'widgetBadgeFontSize', 'widgetBadgeFontWeight', 12, 'bold'] as const,
+              ['Button', 'widgetButtonFontSize', 'widgetButtonFontWeight', 14, 'bold'] as const,
+            ]).map(([label, sizeKey, weightKey, defaultSize, defaultWeight]) => (
+              <div key={sizeKey} style={{ ...fieldRowStyle, gap: '12px' }}>
+                <div style={{ flex: '0 0 120px' }}>
+                  <div style={labelStyle}>{label}</div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flex: 1, justifyContent: 'flex-end' }}>
+                  <input
+                    type="range"
+                    min={8}
+                    max={32}
+                    step={1}
+                    value={(form as any)[sizeKey] ?? defaultSize}
+                    onChange={(e) => updateField(sizeKey as keyof ShopSettingsDto, parseInt(e.target.value, 10) as any)}
+                    style={{ width: '100px' }}
+                  />
+                  <span style={{ fontSize: '13px', color: '#6d7175', minWidth: '36px', textAlign: 'right' }}>
+                    {(form as any)[sizeKey] ?? defaultSize}px
+                  </span>
+                  <select
+                    value={(form as any)[weightKey] ?? defaultWeight}
+                    onChange={(e) => updateField(weightKey as keyof ShopSettingsDto, e.target.value as any)}
+                    style={{
+                      padding: '4px 8px',
+                      border: '1px solid #c9cccf',
+                      borderRadius: '4px',
+                      fontSize: '13px',
+                      width: '90px',
+                    }}
+                  >
+                    <option value="normal">Normal</option>
+                    <option value="bold">Bold</option>
+                  </select>
+                </div>
+              </div>
+            ))}
+
+            {/* Card Shadow select */}
+            <div style={fieldRowStyle}>
+              <div>
+                <div style={labelStyle}>Card Shadow</div>
+                <div style={sublabelStyle}>Shadow intensity on bundle cards</div>
+              </div>
+              <select
+                value={form.widgetCardShadow ?? 'subtle'}
+                onChange={(e) => updateField('widgetCardShadow', e.target.value)}
+                style={{
+                  padding: '6px 10px',
+                  border: '1px solid #c9cccf',
+                  borderRadius: '4px',
+                  fontSize: '14px',
+                  width: '140px',
+                }}
+              >
+                <option value="none">None</option>
+                <option value="subtle">Subtle</option>
+                <option value="medium">Medium</option>
+                <option value="strong">Strong</option>
+              </select>
+            </div>
+
+            {/* Show Savings Badge toggle */}
+            <ToggleField
+              label="Show Savings Badge"
+              sublabel="Display the savings percentage badge on bundle cards"
+              value={form.widgetShowSavings}
+              onChange={(val) => updateField('widgetShowSavings', val)}
+            />
+
+            {/* Show Compare-At Price toggle */}
+            <ToggleField
+              label="Show Compare-At Price"
+              sublabel="Show original strikethrough price on bundle items"
+              value={form.widgetShowCompareAtPrice}
+              onChange={(val) => updateField('widgetShowCompareAtPrice', val)}
+            />
+
+            {/* Custom CSS textarea */}
+            <div style={{ ...fieldRowStyle, flexDirection: 'column', alignItems: 'stretch', gap: '8px' }}>
+              <div>
+                <div style={labelStyle}>Custom CSS</div>
+                <div style={sublabelStyle}>Add custom CSS to further customize widget appearance (max 5000 chars)</div>
+              </div>
+              <textarea
+                value={form.widgetCustomCss ?? ''}
+                onChange={(e) => updateField('widgetCustomCss', e.target.value || null)}
+                maxLength={5000}
+                rows={6}
+                placeholder={`.bundlify-card { /* your styles */ }`}
+                style={{
+                  padding: '8px 10px',
+                  border: '1px solid #c9cccf',
+                  borderRadius: '4px',
+                  fontSize: '13px',
+                  fontFamily: 'monospace',
+                  resize: 'vertical',
+                  width: '100%',
+                  boxSizing: 'border-box',
+                }}
+              />
             </div>
           </div>
 

@@ -4,4 +4,6 @@ export enum BundleType {
   VOLUME = 'VOLUME',
   CROSS_SELL = 'CROSS_SELL',
   DEAD_STOCK = 'DEAD_STOCK',
+  BOGO = 'BOGO',
+  COLLECTION = 'COLLECTION',
 }

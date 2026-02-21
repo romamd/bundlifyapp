@@ -84,6 +84,41 @@ model ShopSettings {
   widgetButtonText         String  @default("Add Bundle to Cart") @db.VarChar(50)
   widgetLayout             String  @default("vertical") @db.VarChar(20)
 
+  widgetCustomCss            String?  @db.Text
+  widgetFontSize             Int      @default(14)
+  widgetFontWeight           String   @default("normal") @db.VarChar(10)
+  widgetBorderColor          String   @default("#e5e7eb") @db.VarChar(9)
+  widgetSecondaryTextColor   String   @default("#6b7280") @db.VarChar(9)
+  widgetShowSavings          Boolean  @default(true)
+  widgetShowCompareAtPrice   Boolean  @default(true)
+  widgetCardShadow           String   @default("subtle") @db.VarChar(10)
+
+  widgetBlockTitleFontSize    Int    @default(18)
+  widgetBlockTitleFontWeight  String @default("bold") @db.VarChar(10)
+  widgetItemTitleFontSize     Int    @default(14)
+  widgetItemTitleFontWeight   String @default("normal") @db.VarChar(10)
+  widgetSubtitleFontSize      Int    @default(13)
+  widgetSubtitleFontWeight    String @default("normal") @db.VarChar(10)
+  widgetPriceFontSize         Int    @default(16)
+  widgetPriceFontWeight       String @default("bold") @db.VarChar(10)
+  widgetBadgeFontSize         Int    @default(12)
+  widgetBadgeFontWeight       String @default("bold") @db.VarChar(10)
+  widgetButtonFontSize        Int    @default(14)
+  widgetButtonFontWeight      String @default("bold") @db.VarChar(10)
+
+  widgetSelectedBgColor        String @default("#eff6ff") @db.VarChar(9)
+  widgetBlockTitleColor        String @default("#111827") @db.VarChar(9)
+  widgetTitleColor             String @default("#111827") @db.VarChar(9)
+  widgetSubtitleColor          String @default("#6b7280") @db.VarChar(9)
+  widgetPriceColor             String @default("#111827") @db.VarChar(9)
+  widgetOriginalPriceColor     String @default("#9ca3af") @db.VarChar(9)
+  widgetLabelBgColor           String @default("#e0e7ff") @db.VarChar(9)
+  widgetLabelTextColor         String @default("#3730a3") @db.VarChar(9)
+  widgetButtonTextColor        String @default("#ffffff") @db.VarChar(9)
+  widgetSavingsBadgeBgColor    String @default("#dcfce7") @db.VarChar(9)
+  widgetSavingsBadgeTextColor  String @default("#166534") @db.VarChar(9)
+  widgetCardHoverBgColor       String @default("#f9fafb") @db.VarChar(9)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -181,6 +216,17 @@ model Bundle {
   startsAt           DateTime?
   endsAt             DateTime?
 
+  bogoGetQuantity    Int?
+  bogoGetDiscountPct Decimal? @db.Decimal(5, 2)
+
+  countdownEnabled   Boolean  @default(false)
+  countdownType      String   @default("fixed") @db.VarChar(20)
+  countdownDuration  Int?
+  countdownEndDate   DateTime?
+  countdownTitle     String?  @db.VarChar(255)
+  countdownBgColor   String   @default("#111827") @db.VarChar(9)
+  countdownTextColor String   @default("#ffffff") @db.VarChar(9)
+
   items            BundleItem[]
   volumeTiers      VolumeTier[]
   views            BundleView[]
@@ -217,6 +263,8 @@ enum BundleType {
   VOLUME
   CROSS_SELL
   DEAD_STOCK
+  BOGO
+  COLLECTION
 }
 
 enum BundleStatus {

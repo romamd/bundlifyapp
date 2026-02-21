@@ -34,7 +34,7 @@ test.describe('Settings', () => {
 
   test('currency dropdown is visible', async ({ page }) => {
     await page.goto('/settings');
-    const currencySelect = page.locator('select');
+    const currencySelect = page.locator('select').filter({ has: page.locator('option[value="USD"]') });
     await expect(currencySelect).toBeVisible();
   });
 
@@ -49,14 +49,36 @@ test.describe('Settings', () => {
   test('Widget Theming has color pickers and layout dropdown', async ({ page }) => {
     await page.goto('/settings');
     const colorInputs = page.locator('input[type="color"]');
-    await expect(colorInputs).toHaveCount(6);
+    await expect(colorInputs).toHaveCount(20);
     const layoutSelect = page.locator('select').filter({ has: page.locator('option[value="horizontal"]') });
     await expect(layoutSelect).toBeVisible();
   });
 
+  test('Widget Theming has per-element typography controls', async ({ page }) => {
+    await page.goto('/settings');
+    await expect(page.getByText('Per-Element Typography')).toBeVisible();
+    // 6 element groups: Block Title, Item Title, Subtitle, Price, Badge, Button
+    await expect(page.getByText('Block Title', { exact: true })).toBeVisible();
+    await expect(page.getByText('Item Title', { exact: true })).toBeVisible();
+    await expect(page.getByText('Subtitle', { exact: true })).toBeVisible();
+    await expect(page.getByText('Price', { exact: true })).toBeVisible();
+    await expect(page.getByText('Badge', { exact: true })).toBeVisible();
+    // Each group has a range slider and a font weight select
+    // 6 per-element + 1 border radius + 1 base font size = 8 range inputs total
+    const rangeInputs = page.locator('input[type="range"]');
+    await expect(rangeInputs).toHaveCount(8);
+  });
+
+  test('Widget Theming has custom CSS textarea', async ({ page }) => {
+    await page.goto('/settings');
+    const textarea = page.locator('textarea');
+    await expect(textarea).toBeVisible();
+    await expect(textarea).toHaveAttribute('maxlength', '5000');
+  });
+
   test('Widget Theming border radius slider updates display value', async ({ page }) => {
     await page.goto('/settings');
-    const slider = page.locator('input[type="range"]');
+    const slider = page.locator('input[type="range"]').first();
     await expect(slider).toBeVisible();
     await slider.fill('16');
     await expect(page.getByText('16px')).toBeVisible();

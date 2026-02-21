@@ -5,6 +5,7 @@ import {
   BundleProductPicker,
   type SelectedBundleItem,
 } from './BundleProductPicker';
+import { BundlePreview } from './BundlePreview';
 import { DiscountSlider } from './DiscountSlider';
 import { MarginImpactCard } from './MarginImpactCard';
 import { ProductSearchDropdown } from '../common/ProductSearchDropdown';
@@ -24,25 +25,43 @@ const BUNDLE_TYPE_OPTIONS = [
     value: 'FIXED',
     label: 'Fixed Bundle',
     description:
-      'A curated set of products sold together at a discount. Customer buys all items in the bundle.',
-  },
-  {
-    value: 'CROSS_SELL',
-    label: 'Cross-Sell',
-    description:
-      'Recommend complementary products. Shows when the anchor product is added to cart.',
+      'Curate a set of specific products sold together at a fixed discount. Best for themed collections or starter kits.',
   },
   {
     value: 'VOLUME',
     label: 'Volume Discount',
     description:
-      'Offer tiered discounts based on quantity purchased. "Buy more, save more" pricing for a single product.',
+      'Offer tiered pricing \u2014 buy more, save more. Ideal for quantity breaks on single or multiple products.',
+  },
+  {
+    value: 'BOGO',
+    label: 'Buy X Get Y',
+    description:
+      'Buy one or more products and get another free or at a discount. Classic promotional mechanic.',
+  },
+  {
+    value: 'CROSS_SELL',
+    label: 'Cross-Sell',
+    description:
+      'Recommend complementary products that go well together. Boost AOV with smart pairings.',
+  },
+  {
+    value: 'COLLECTION',
+    label: 'Collection Bundle',
+    description:
+      'Let customers pick products from a collection to build their own bundle at a discount.',
+  },
+  {
+    value: 'MIX_MATCH',
+    label: 'Mix & Match',
+    description:
+      'Customers choose any combination of products to create their personalized bundle.',
   },
   {
     value: 'DEAD_STOCK',
     label: 'Dead Stock Clearance',
     description:
-      'Pair slow-moving inventory with popular products to clear dead stock profitably.',
+      'Pair slow-moving inventory with popular items to clear stock while maintaining margins.',
   },
 ] as const;
 
@@ -77,6 +96,14 @@ export function BundleWizard({
     { minQuantity: 2, discountPct: 10, label: '' },
     { minQuantity: 3, discountPct: 20, label: '' },
   ]);
+  const [countdownEnabled, setCountdownEnabled] = useState(false);
+  const [countdownType, setCountdownType] = useState('fixed');
+  const [countdownDuration, setCountdownDuration] = useState(15);
+  const [countdownTitle, setCountdownTitle] = useState('Hurry! Offer expires in {{timer}}');
+  const [countdownBgColor, setCountdownBgColor] = useState('#111827');
+  const [countdownTextColor, setCountdownTextColor] = useState('#ffffff');
+  const [bogoGetQuantity, setBogoGetQuantity] = useState(1);
+  const [bogoGetDiscountPct, setBogoGetDiscountPct] = useState(100);
   const [submitting, setSubmitting] = useState(false);
   const [initialized, setInitialized] = useState(false);
 
@@ -100,6 +127,14 @@ export function BundleWizard({
           isAnchor: item.isAnchor,
         })),
       );
+      if (editBundle.bogoGetQuantity) setBogoGetQuantity(editBundle.bogoGetQuantity);
+      if (editBundle.bogoGetDiscountPct != null) setBogoGetDiscountPct(editBundle.bogoGetDiscountPct);
+      setCountdownEnabled(editBundle.countdownEnabled ?? false);
+      setCountdownType(editBundle.countdownType ?? 'fixed');
+      setCountdownDuration(editBundle.countdownDuration ?? 15);
+      setCountdownTitle(editBundle.countdownTitle ?? 'Hurry! Offer expires in {{timer}}');
+      setCountdownBgColor(editBundle.countdownBgColor ?? '#111827');
+      setCountdownTextColor(editBundle.countdownTextColor ?? '#ffffff');
       setInitialized(true);
     }
     if (!open) {
@@ -171,6 +206,14 @@ export function BundleWizard({
               label: t.label || undefined,
             }))
           : undefined,
+        bogoGetQuantity: bundleType === 'BOGO' ? bogoGetQuantity : undefined,
+        bogoGetDiscountPct: bundleType === 'BOGO' ? bogoGetDiscountPct : undefined,
+        countdownEnabled,
+        countdownType: countdownEnabled ? countdownType : 'fixed',
+        countdownDuration: countdownEnabled && countdownType === 'fixed' ? countdownDuration : undefined,
+        countdownTitle: countdownEnabled ? countdownTitle : undefined,
+        countdownBgColor: countdownEnabled ? countdownBgColor : '#111827',
+        countdownTextColor: countdownEnabled ? countdownTextColor : '#ffffff',
       });
       resetAndClose();
     } finally {
@@ -190,20 +233,35 @@ export function BundleWizard({
     setTriggerType('PRODUCT_PAGE');
     setDisplayRules([]);
     setName('');
+    setCountdownEnabled(false);
+    setCountdownType('fixed');
+    setCountdownDuration(15);
+    setCountdownTitle('Hurry! Offer expires in {{timer}}');
+    setCountdownBgColor('#111827');
+    setCountdownTextColor('#ffffff');
+    setBogoGetQuantity(1);
+    setBogoGetDiscountPct(100);
     onClose();
   };
 
   const isVolume = bundleType === 'VOLUME';
+  const isBogo = bundleType === 'BOGO';
 
   const canProceed = (): boolean => {
     switch (step) {
       case 0:
         return !!bundleType;
       case 1:
-        return isVolume ? selectedItems.length === 1 : selectedItems.length >= 2;
+        if (isVolume) return selectedItems.length === 1;
+        if (isBogo) return selectedItems.length >= 2;
+        if (bundleType === 'COLLECTION' || bundleType === 'MIX_MATCH') return selectedItems.length >= 1;
+        return selectedItems.length >= 2;
       case 2:
         if (isVolume) {
           return volumeTiers.length >= 2 && volumeTiers.every((t) => t.minQuantity >= 1 && t.discountPct >= 0);
+        }
+        if (isBogo) {
+          return bogoGetQuantity >= 1 && bogoGetDiscountPct >= 0 && bogoGetDiscountPct <= 100;
         }
         return discountPct >= 0 && discountPct <= 50;
       case 3:
@@ -244,7 +302,7 @@ export function BundleWizard({
         style={{
           backgroundColor: '#ffffff',
           borderRadius: '12px',
-          width: '680px',
+          width: '960px',
           maxHeight: '85vh',
           display: 'flex',
           flexDirection: 'column',
@@ -317,7 +375,8 @@ export function BundleWizard({
         </div>
 
         {/* Body */}
-        <div style={{ flex: 1, overflow: 'auto', padding: '20px' }}>
+        <div style={{ flex: 1, overflow: 'auto', padding: '20px', display: 'flex', gap: '20px' }}>
+          <div style={{ flex: 1, minWidth: 0 }}>
           {/* Step 0: Bundle Type */}
           {step === 0 && (
             <div>
@@ -362,7 +421,11 @@ export function BundleWizard({
               <p style={{ fontSize: '14px', color: '#6d7175', marginTop: 0 }}>
                 {isVolume
                   ? 'Select the product for volume pricing (1 product only).'
-                  : 'Select at least 2 products for your bundle.'}
+                  : isBogo
+                    ? 'Select at least 2 products. The last product is the "get" item.'
+                    : bundleType === 'COLLECTION' || bundleType === 'MIX_MATCH'
+                      ? 'Select one or more products for your bundle.'
+                      : 'Select at least 2 products for your bundle.'}
               </p>
               <BundleProductPicker
                 selectedItems={selectedItems}
@@ -506,6 +569,70 @@ export function BundleWizard({
                     >
                       + Add Tier
                     </button>
+                  </div>
+                </>
+              ) : isBogo ? (
+                <>
+                  <p style={{ fontSize: '14px', color: '#6d7175', marginTop: 0 }}>
+                    Configure the "Get" portion of your Buy X Get Y offer.
+                  </p>
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                    <div>
+                      <label style={{ display: 'block', fontWeight: 600, fontSize: '14px', marginBottom: '6px' }}>
+                        Get Quantity
+                      </label>
+                      <input
+                        type="number"
+                        min={1}
+                        max={10}
+                        value={bogoGetQuantity}
+                        onChange={(e) => setBogoGetQuantity(Math.max(1, parseInt(e.target.value) || 1))}
+                        style={{
+                          width: '100px',
+                          padding: '8px 12px',
+                          border: '1px solid #c9cccf',
+                          borderRadius: '4px',
+                          fontSize: '14px',
+                        }}
+                      />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontWeight: 600, fontSize: '14px', marginBottom: '6px' }}>
+                        Get Discount: {bogoGetDiscountPct}%{bogoGetDiscountPct >= 100 ? ' (FREE)' : ''}
+                      </label>
+                      <input
+                        type="range"
+                        min={0}
+                        max={100}
+                        step={5}
+                        value={bogoGetDiscountPct}
+                        onChange={(e) => setBogoGetDiscountPct(parseInt(e.target.value))}
+                        style={{ width: '100%' }}
+                      />
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#6d7175' }}>
+                        <span>0%</span>
+                        <span>50%</span>
+                        <span>100% (Free)</span>
+                      </div>
+                    </div>
+                    {selectedItems.length >= 2 && (
+                      <div style={{
+                        padding: '12px',
+                        backgroundColor: '#f1f8f5',
+                        borderRadius: '8px',
+                        fontSize: '13px',
+                        color: '#1a5632',
+                      }}>
+                        Buy {selectedItems.slice(0, -1).map((si) => {
+                          const p = products.find((pr) => pr.id === si.productId);
+                          return p?.title || si.productId;
+                        }).join(', ')}, get {bogoGetQuantity} x {(() => {
+                          const lastItem = selectedItems[selectedItems.length - 1];
+                          const p = products.find((pr) => pr.id === lastItem.productId);
+                          return p?.title || lastItem.productId;
+                        })()} at {bogoGetDiscountPct >= 100 ? 'FREE' : `${bogoGetDiscountPct}% off`}
+                      </div>
+                    )}
                   </div>
                 </>
               ) : (
@@ -861,6 +988,59 @@ export function BundleWizard({
                 })}
               </div>
 
+              {/* Countdown Timer */}
+              <div style={{ marginBottom: '16px', border: '1px solid #e1e3e5', borderRadius: '8px', overflow: 'hidden' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', backgroundColor: '#f6f6f7', fontWeight: 600, fontSize: '13px' }}>
+                  <span>Countdown Timer</span>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontWeight: 400, fontSize: '13px' }}>
+                    <input type="checkbox" checked={countdownEnabled} onChange={(e) => setCountdownEnabled(e.target.checked)} style={{ cursor: 'pointer' }} />
+                    Enable
+                  </label>
+                </div>
+                {countdownEnabled && (
+                  <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div>
+                      <label style={{ display: 'block', fontWeight: 600, fontSize: '13px', marginBottom: '4px' }}>Type</label>
+                      <select value={countdownType} onChange={(e) => setCountdownType(e.target.value)} style={{ width: '100%', padding: '6px 10px', border: '1px solid #c9cccf', borderRadius: '4px', fontSize: '13px' }}>
+                        <option value="fixed">Fixed duration</option>
+                        <option value="midnight">Ends at midnight</option>
+                        <option value="end_date">Use deal end date</option>
+                      </select>
+                    </div>
+                    {countdownType === 'fixed' && (
+                      <div>
+                        <label style={{ display: 'block', fontWeight: 600, fontSize: '13px', marginBottom: '4px' }}>Duration (minutes)</label>
+                        <input type="number" min={1} max={1440} value={countdownDuration} onChange={(e) => setCountdownDuration(parseInt(e.target.value) || 15)} style={{ width: '100%', padding: '6px 10px', border: '1px solid #c9cccf', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box' as const }} />
+                      </div>
+                    )}
+                    <div>
+                      <label style={{ display: 'block', fontWeight: 600, fontSize: '13px', marginBottom: '4px' }}>Title</label>
+                      <input type="text" value={countdownTitle} onChange={(e) => setCountdownTitle(e.target.value)} maxLength={255} style={{ width: '100%', padding: '6px 10px', border: '1px solid #c9cccf', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box' as const }} />
+                      <div style={{ fontSize: '11px', color: '#6d7175', marginTop: '2px' }}>Use {'{{timer}}'} where the countdown should appear.</div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '12px' }}>
+                      <div style={{ flex: 1 }}>
+                        <label style={{ display: 'block', fontWeight: 600, fontSize: '13px', marginBottom: '4px' }}>Background color</label>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <input type="color" value={countdownBgColor} onChange={(e) => setCountdownBgColor(e.target.value)} style={{ width: '32px', height: '32px', border: '1px solid #c9cccf', borderRadius: '4px', cursor: 'pointer', padding: '2px' }} />
+                          <input type="text" value={countdownBgColor} onChange={(e) => setCountdownBgColor(e.target.value)} style={{ flex: 1, padding: '6px 10px', border: '1px solid #c9cccf', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box' as const }} />
+                        </div>
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <label style={{ display: 'block', fontWeight: 600, fontSize: '13px', marginBottom: '4px' }}>Text color</label>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                          <input type="color" value={countdownTextColor} onChange={(e) => setCountdownTextColor(e.target.value)} style={{ width: '32px', height: '32px', border: '1px solid #c9cccf', borderRadius: '4px', cursor: 'pointer', padding: '2px' }} />
+                          <input type="text" value={countdownTextColor} onChange={(e) => setCountdownTextColor(e.target.value)} style={{ flex: 1, padding: '6px 10px', border: '1px solid #c9cccf', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box' as const }} />
+                        </div>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px 16px', borderRadius: '8px', backgroundColor: countdownBgColor, color: countdownTextColor, fontSize: '14px', fontWeight: 600 }}>
+                      {countdownTitle.replace('{{timer}}', '14:59')}
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {marginResult && (
                 <MarginImpactCard
                   bundlePrice={marginResult.effectivePrice}
@@ -873,6 +1053,29 @@ export function BundleWizard({
               )}
             </div>
           )}
+          </div>
+
+          {/* Live Preview Panel */}
+          <div style={{ width: '280px', flexShrink: 0 }}>
+            <BundlePreview
+              bundleType={bundleType}
+              name={name}
+              items={selectedItems.map((si) => {
+                const product = products.find((p) => p.id === si.productId);
+                return {
+                  productId: si.productId,
+                  title: product?.title || si.productId,
+                  price: product?.price || 0,
+                  imageUrl: product?.imageUrl,
+                  quantity: si.quantity,
+                };
+              })}
+              discountPct={discountPct}
+              volumeTiers={volumeTiers}
+              bogoGetQuantity={bogoGetQuantity}
+              bogoGetDiscountPct={bogoGetDiscountPct}
+            />
+          </div>
         </div>
 
         {/* Footer */}

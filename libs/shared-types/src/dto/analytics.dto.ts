@@ -44,6 +44,13 @@ export interface StorefrontBundleDto {
     quantity: number;
     isAnchor: boolean;
   }>;
+  countdownEnabled: boolean;
+  countdownType: string;
+  countdownDuration: number | null;
+  countdownEndDate: string | null;
+  countdownTitle: string | null;
+  countdownBgColor: string;
+  countdownTextColor: string;
   volumeTiers?: StorefrontVolumeTierDto[];
   abTestId?: string;
   abVariant?: 'control' | 'variant';

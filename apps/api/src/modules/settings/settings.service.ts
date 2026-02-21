@@ -82,6 +82,70 @@ export class SettingsService {
       settingsData.widgetButtonText = dto.widgetButtonText;
     if (dto.widgetLayout !== undefined)
       settingsData.widgetLayout = dto.widgetLayout;
+    if (dto.widgetCustomCss !== undefined)
+      settingsData.widgetCustomCss = dto.widgetCustomCss;
+    if (dto.widgetFontSize !== undefined)
+      settingsData.widgetFontSize = dto.widgetFontSize;
+    if (dto.widgetFontWeight !== undefined)
+      settingsData.widgetFontWeight = dto.widgetFontWeight;
+    if (dto.widgetBorderColor !== undefined)
+      settingsData.widgetBorderColor = dto.widgetBorderColor;
+    if (dto.widgetSecondaryTextColor !== undefined)
+      settingsData.widgetSecondaryTextColor = dto.widgetSecondaryTextColor;
+    if (dto.widgetShowSavings !== undefined)
+      settingsData.widgetShowSavings = dto.widgetShowSavings;
+    if (dto.widgetShowCompareAtPrice !== undefined)
+      settingsData.widgetShowCompareAtPrice = dto.widgetShowCompareAtPrice;
+    if (dto.widgetCardShadow !== undefined)
+      settingsData.widgetCardShadow = dto.widgetCardShadow;
+    if (dto.widgetBlockTitleFontSize !== undefined)
+      settingsData.widgetBlockTitleFontSize = dto.widgetBlockTitleFontSize;
+    if (dto.widgetBlockTitleFontWeight !== undefined)
+      settingsData.widgetBlockTitleFontWeight = dto.widgetBlockTitleFontWeight;
+    if (dto.widgetItemTitleFontSize !== undefined)
+      settingsData.widgetItemTitleFontSize = dto.widgetItemTitleFontSize;
+    if (dto.widgetItemTitleFontWeight !== undefined)
+      settingsData.widgetItemTitleFontWeight = dto.widgetItemTitleFontWeight;
+    if (dto.widgetSubtitleFontSize !== undefined)
+      settingsData.widgetSubtitleFontSize = dto.widgetSubtitleFontSize;
+    if (dto.widgetSubtitleFontWeight !== undefined)
+      settingsData.widgetSubtitleFontWeight = dto.widgetSubtitleFontWeight;
+    if (dto.widgetPriceFontSize !== undefined)
+      settingsData.widgetPriceFontSize = dto.widgetPriceFontSize;
+    if (dto.widgetPriceFontWeight !== undefined)
+      settingsData.widgetPriceFontWeight = dto.widgetPriceFontWeight;
+    if (dto.widgetBadgeFontSize !== undefined)
+      settingsData.widgetBadgeFontSize = dto.widgetBadgeFontSize;
+    if (dto.widgetBadgeFontWeight !== undefined)
+      settingsData.widgetBadgeFontWeight = dto.widgetBadgeFontWeight;
+    if (dto.widgetButtonFontSize !== undefined)
+      settingsData.widgetButtonFontSize = dto.widgetButtonFontSize;
+    if (dto.widgetButtonFontWeight !== undefined)
+      settingsData.widgetButtonFontWeight = dto.widgetButtonFontWeight;
+    if (dto.widgetSelectedBgColor !== undefined)
+      settingsData.widgetSelectedBgColor = dto.widgetSelectedBgColor;
+    if (dto.widgetBlockTitleColor !== undefined)
+      settingsData.widgetBlockTitleColor = dto.widgetBlockTitleColor;
+    if (dto.widgetTitleColor !== undefined)
+      settingsData.widgetTitleColor = dto.widgetTitleColor;
+    if (dto.widgetSubtitleColor !== undefined)
+      settingsData.widgetSubtitleColor = dto.widgetSubtitleColor;
+    if (dto.widgetPriceColor !== undefined)
+      settingsData.widgetPriceColor = dto.widgetPriceColor;
+    if (dto.widgetOriginalPriceColor !== undefined)
+      settingsData.widgetOriginalPriceColor = dto.widgetOriginalPriceColor;
+    if (dto.widgetLabelBgColor !== undefined)
+      settingsData.widgetLabelBgColor = dto.widgetLabelBgColor;
+    if (dto.widgetLabelTextColor !== undefined)
+      settingsData.widgetLabelTextColor = dto.widgetLabelTextColor;
+    if (dto.widgetButtonTextColor !== undefined)
+      settingsData.widgetButtonTextColor = dto.widgetButtonTextColor;
+    if (dto.widgetSavingsBadgeBgColor !== undefined)
+      settingsData.widgetSavingsBadgeBgColor = dto.widgetSavingsBadgeBgColor;
+    if (dto.widgetSavingsBadgeTextColor !== undefined)
+      settingsData.widgetSavingsBadgeTextColor = dto.widgetSavingsBadgeTextColor;
+    if (dto.widgetCardHoverBgColor !== undefined)
+      settingsData.widgetCardHoverBgColor = dto.widgetCardHoverBgColor;
 
     // Ensure settings row exists before updating
     await this.prisma.shopSettings.upsert({
@@ -138,6 +202,38 @@ export class SettingsService {
       widgetBorderRadius: settings.widgetBorderRadius,
       widgetButtonText: settings.widgetButtonText,
       widgetLayout: settings.widgetLayout,
+      widgetCustomCss: settings.widgetCustomCss ?? null,
+      widgetFontSize: settings.widgetFontSize,
+      widgetFontWeight: settings.widgetFontWeight,
+      widgetBorderColor: settings.widgetBorderColor,
+      widgetSecondaryTextColor: settings.widgetSecondaryTextColor,
+      widgetShowSavings: settings.widgetShowSavings,
+      widgetShowCompareAtPrice: settings.widgetShowCompareAtPrice,
+      widgetCardShadow: settings.widgetCardShadow,
+      widgetBlockTitleFontSize: settings.widgetBlockTitleFontSize ?? 18,
+      widgetBlockTitleFontWeight: settings.widgetBlockTitleFontWeight ?? 'bold',
+      widgetItemTitleFontSize: settings.widgetItemTitleFontSize ?? 14,
+      widgetItemTitleFontWeight: settings.widgetItemTitleFontWeight ?? 'normal',
+      widgetSubtitleFontSize: settings.widgetSubtitleFontSize ?? 13,
+      widgetSubtitleFontWeight: settings.widgetSubtitleFontWeight ?? 'normal',
+      widgetPriceFontSize: settings.widgetPriceFontSize ?? 16,
+      widgetPriceFontWeight: settings.widgetPriceFontWeight ?? 'bold',
+      widgetBadgeFontSize: settings.widgetBadgeFontSize ?? 12,
+      widgetBadgeFontWeight: settings.widgetBadgeFontWeight ?? 'bold',
+      widgetButtonFontSize: settings.widgetButtonFontSize ?? 14,
+      widgetButtonFontWeight: settings.widgetButtonFontWeight ?? 'bold',
+      widgetSelectedBgColor: settings.widgetSelectedBgColor ?? '#eff6ff',
+      widgetBlockTitleColor: settings.widgetBlockTitleColor ?? '#111827',
+      widgetTitleColor: settings.widgetTitleColor ?? '#111827',
+      widgetSubtitleColor: settings.widgetSubtitleColor ?? '#6b7280',
+      widgetPriceColor: settings.widgetPriceColor ?? '#111827',
+      widgetOriginalPriceColor: settings.widgetOriginalPriceColor ?? '#9ca3af',
+      widgetLabelBgColor: settings.widgetLabelBgColor ?? '#e0e7ff',
+      widgetLabelTextColor: settings.widgetLabelTextColor ?? '#3730a3',
+      widgetButtonTextColor: settings.widgetButtonTextColor ?? '#ffffff',
+      widgetSavingsBadgeBgColor: settings.widgetSavingsBadgeBgColor ?? '#dcfce7',
+      widgetSavingsBadgeTextColor: settings.widgetSavingsBadgeTextColor ?? '#166534',
+      widgetCardHoverBgColor: settings.widgetCardHoverBgColor ?? '#f9fafb',
       defaultShippingCost: Number(shop.defaultShippingCost),
       paymentProcessingPct: Number(shop.paymentProcessingPct),
       paymentProcessingFlat: Number(shop.paymentProcessingFlat),

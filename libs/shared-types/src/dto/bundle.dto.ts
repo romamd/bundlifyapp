@@ -16,7 +16,16 @@ export interface BundleDto {
   items: BundleItemDto[];
   volumeTiers?: VolumeTierDto[];
   displayRules: BundleDisplayRuleDto[];
+  countdownEnabled: boolean;
+  countdownType: string;
+  countdownDuration: number | null;
+  countdownEndDate: string | null;
+  countdownTitle: string | null;
+  countdownBgColor: string;
+  countdownTextColor: string;
   currentRedemptions: number;
+  bogoGetQuantity: number | null;
+  bogoGetDiscountPct: number | null;
   startsAt: string | null;
   endsAt: string | null;
 }
@@ -55,8 +64,17 @@ export interface CreateBundleDto {
   items: { productId: string; quantity: number; isAnchor: boolean }[];
   displayRules?: { targetType: 'PRODUCT' | 'COLLECTION'; targetId: string }[];
   volumeTiers?: { minQuantity: number; maxQuantity?: number; discountPct: number; label?: string }[];
+  bogoGetQuantity?: number;
+  bogoGetDiscountPct?: number;
   minCartValue?: number;
   maxCartValue?: number;
   startsAt?: string;
   endsAt?: string;
+  countdownEnabled?: boolean;
+  countdownType?: string;
+  countdownDuration?: number;
+  countdownEndDate?: string;
+  countdownTitle?: string;
+  countdownBgColor?: string;
+  countdownTextColor?: string;
 }

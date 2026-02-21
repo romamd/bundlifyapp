@@ -73,6 +73,82 @@
   /* ------------------------------------------------------------------ */
 
   /**
+   * Render a countdown timer bar above a bundle card.
+   * Returns empty string if countdown is not enabled.
+   */
+  function renderCountdown(bundle) {
+    if (!bundle.countdownEnabled) return '';
+
+    var id = 'bundlify-countdown-' + bundle.bundleId;
+    var title = (bundle.countdownTitle || 'Offer expires in {{timer}}');
+
+    return '<div class="bundlify-countdown" id="' + id + '" ' +
+      'style="background:' + (bundle.countdownBgColor || '#111827') + ';color:' + (bundle.countdownTextColor || '#ffffff') + ';" ' +
+      'data-type="' + (bundle.countdownType || 'fixed') + '" ' +
+      'data-duration="' + (bundle.countdownDuration || 15) + '" ' +
+      'data-end-date="' + (bundle.countdownEndDate || '') + '" ' +
+      'data-title-template="' + title.replace(/"/g, '&quot;') + '">' +
+      '<span class="bundlify-countdown__text">' + title.replace('{{timer}}', '<span class="bundlify-countdown__timer">--:--</span>') + '</span>' +
+      '</div>';
+  }
+
+  /**
+   * Start all countdown timers on the page. Calculates end time
+   * based on type (fixed duration, midnight, or specific end date)
+   * and updates the timer span every second.
+   */
+  function startCountdowns() {
+    var countdowns = document.querySelectorAll('.bundlify-countdown');
+    countdowns.forEach(function(el) {
+      var type = el.dataset.type;
+      var template = el.dataset.titleTemplate;
+      var endTime;
+
+      if (type === 'fixed') {
+        var duration = parseInt(el.dataset.duration, 10) || 15;
+        var storageKey = 'bundlify_cd_' + el.id;
+        var stored = sessionStorage.getItem(storageKey);
+        if (stored) {
+          endTime = parseInt(stored, 10);
+        } else {
+          endTime = Date.now() + duration * 60 * 1000;
+          sessionStorage.setItem(storageKey, String(endTime));
+        }
+      } else if (type === 'midnight') {
+        var now = new Date();
+        endTime = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 0).getTime();
+      } else if (type === 'end_date' && el.dataset.endDate) {
+        endTime = new Date(el.dataset.endDate).getTime();
+      } else {
+        return;
+      }
+
+      var timerSpan = el.querySelector('.bundlify-countdown__timer');
+      if (!timerSpan) return;
+
+      function tick() {
+        var remaining = endTime - Date.now();
+        if (remaining <= 0) {
+          timerSpan.textContent = '00:00';
+          el.classList.add('bundlify-countdown--expired');
+          return;
+        }
+        var hours = Math.floor(remaining / 3600000);
+        var minutes = Math.floor((remaining % 3600000) / 60000);
+        var seconds = Math.floor((remaining % 60000) / 1000);
+        if (hours > 0) {
+          timerSpan.textContent = String(hours).padStart(2, '0') + ':' + String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
+        } else {
+          timerSpan.textContent = String(minutes).padStart(2, '0') + ':' + String(seconds).padStart(2, '0');
+        }
+      }
+
+      tick();
+      setInterval(tick, 1000);
+    });
+  }
+
+  /**
    * Build the HTML for every bundle card and inject it into the
    * container's .bundlify-bundles wrapper. Also wires up event
    * tracking and add-to-cart click handlers.
@@ -88,7 +164,11 @@
 
     // Read theming data attributes from container
     var buttonText = container.dataset.buttonText || 'Add Bundle to Cart';
-    var showSavings = container.dataset.showSavings !== 'false';
+    // Container data-attr wins (Liquid per-block override), else use API theme value
+    var showSavings = container.dataset.showSavings != null
+      ? container.dataset.showSavings !== 'false'
+      : (themeConfig.showSavings !== false);
+    var showCompareAtPrice = themeConfig.showCompareAtPrice !== false;
     var layout = container.dataset.layout || 'vertical';
 
     if (layout === 'horizontal') {
@@ -99,14 +179,18 @@
 
     var html = bundles
       .map(function (bundle) {
+        var countdown = renderCountdown(bundle);
         if (bundle.type === 'VOLUME' && bundle.volumeTiers && bundle.volumeTiers.length) {
-          return renderVolumeTable(bundle, buttonText, showSavings);
+          return countdown + renderVolumeTable(bundle, buttonText, showSavings);
         }
-        return renderBundleCard(bundle, buttonText, showSavings);
+        return countdown + renderBundleCard(bundle, buttonText, showSavings, showCompareAtPrice);
       })
       .join('');
 
     wrapper.innerHTML = html;
+
+    // Start any countdown timers that were just rendered
+    startCountdowns();
 
     // Track VIEWED impressions for every bundle
     bundles.forEach(function (b) {
@@ -139,7 +223,7 @@
   /**
    * Render a standard bundle card (FIXED, CROSS_SELL, DEAD_STOCK, MIX_MATCH).
    */
-  function renderBundleCard(bundle, buttonText, showSavings) {
+  function renderBundleCard(bundle, buttonText, showSavings, showCompareAtPrice) {
     var badgeHtml = showSavings
       ? '    <span class="bundlify-card__badge">Save ' + Math.round(bundle.savingsPct) + '%</span>'
       : '';
@@ -155,7 +239,7 @@
       badgeHtml +
       '  </div>' +
       '  <div class="bundlify-card__items">' +
-      bundle.items.map(renderItem).join('') +
+      bundle.items.map(function (item) { return renderItem(item, showCompareAtPrice); }).join('') +
       '  </div>' +
       '  <div class="bundlify-card__footer">' +
       '    <div class="bundlify-card__pricing">' +
@@ -281,7 +365,7 @@
   /**
    * Render a single item row inside a bundle card.
    */
-  function renderItem(item) {
+  function renderItem(item, showCompareAtPrice) {
     var img = item.imageUrl
       ? '<img src="' +
         escapeAttr(item.imageUrl) +
@@ -298,6 +382,10 @@
     var price = '$' + item.price.toFixed(2);
     if (item.quantity > 1) {
       price += ' &times; ' + item.quantity;
+    }
+
+    if (showCompareAtPrice && item.compareAtPrice && item.compareAtPrice > item.price) {
+      price = '<span class="bundlify-card__item-compare-at">$' + item.compareAtPrice.toFixed(2) + '</span> ' + price;
     }
 
     return (
@@ -822,6 +910,18 @@
   /*  Theme                                                              */
   /* ------------------------------------------------------------------ */
 
+  var SHADOW_MAP = {
+    none: { normal: 'none', hover: 'none' },
+    subtle: { normal: '0 1px 3px rgba(0,0,0,0.08)', hover: '0 4px 12px rgba(0,0,0,0.12)' },
+    medium: { normal: '0 2px 8px rgba(0,0,0,0.12)', hover: '0 8px 24px rgba(0,0,0,0.16)' },
+    strong: { normal: '0 4px 16px rgba(0,0,0,0.18)', hover: '0 12px 32px rgba(0,0,0,0.22)' },
+  };
+
+  var themeConfig = {
+    showSavings: true,
+    showCompareAtPrice: true,
+  };
+
   var THEME_CACHE_KEY = 'bundlify_theme';
 
   /**
@@ -886,7 +986,58 @@
       if (theme.badgeBackground) s.setProperty('--bundlify-badge-bg', theme.badgeBackground);
       if (theme.badgeTextColor) s.setProperty('--bundlify-badge-text', theme.badgeTextColor);
       if (theme.borderRadius != null) s.setProperty('--bundlify-radius', theme.borderRadius + 'px');
+      if (theme.borderColor) s.setProperty('--bundlify-card-border', theme.borderColor);
+      if (theme.secondaryTextColor) s.setProperty('--bundlify-text-secondary', theme.secondaryTextColor);
+      if (theme.fontSize != null) s.setProperty('--bundlify-font-size', theme.fontSize + 'px');
+      if (theme.fontWeight) s.setProperty('--bundlify-font-weight', theme.fontWeight);
+      if (theme.cardShadow && SHADOW_MAP[theme.cardShadow]) {
+        var shadow = SHADOW_MAP[theme.cardShadow];
+        s.setProperty('--bundlify-card-shadow', shadow.normal);
+        s.setProperty('--bundlify-card-shadow-hover', shadow.hover);
+      }
+
+      // Per-element typography
+      if (theme.blockTitleFontSize != null) s.setProperty('--bundlify-block-title-font-size', theme.blockTitleFontSize + 'px');
+      if (theme.blockTitleFontWeight) s.setProperty('--bundlify-block-title-font-weight', theme.blockTitleFontWeight);
+      if (theme.itemTitleFontSize != null) s.setProperty('--bundlify-item-title-font-size', theme.itemTitleFontSize + 'px');
+      if (theme.itemTitleFontWeight) s.setProperty('--bundlify-item-title-font-weight', theme.itemTitleFontWeight);
+      if (theme.subtitleFontSize != null) s.setProperty('--bundlify-subtitle-font-size', theme.subtitleFontSize + 'px');
+      if (theme.subtitleFontWeight) s.setProperty('--bundlify-subtitle-font-weight', theme.subtitleFontWeight);
+      if (theme.priceFontSize != null) s.setProperty('--bundlify-price-font-size', theme.priceFontSize + 'px');
+      if (theme.priceFontWeight) s.setProperty('--bundlify-price-font-weight', theme.priceFontWeight);
+      if (theme.badgeFontSize != null) s.setProperty('--bundlify-badge-font-size', theme.badgeFontSize + 'px');
+      if (theme.badgeFontWeight) s.setProperty('--bundlify-badge-font-weight', theme.badgeFontWeight);
+      if (theme.buttonFontSize != null) s.setProperty('--bundlify-button-font-size', theme.buttonFontSize + 'px');
+      if (theme.buttonFontWeight) s.setProperty('--bundlify-button-font-weight', theme.buttonFontWeight);
+
+      // Extended color controls
+      if (theme.selectedBgColor) s.setProperty('--bundlify-selected-bg', theme.selectedBgColor);
+      if (theme.blockTitleColor) s.setProperty('--bundlify-block-title-color', theme.blockTitleColor);
+      if (theme.titleColor) s.setProperty('--bundlify-title-color', theme.titleColor);
+      if (theme.subtitleColor) s.setProperty('--bundlify-subtitle-color', theme.subtitleColor);
+      if (theme.priceColor) s.setProperty('--bundlify-price-color', theme.priceColor);
+      if (theme.originalPriceColor) s.setProperty('--bundlify-original-price-color', theme.originalPriceColor);
+      if (theme.labelBgColor) s.setProperty('--bundlify-label-bg', theme.labelBgColor);
+      if (theme.labelTextColor) s.setProperty('--bundlify-label-text', theme.labelTextColor);
+      if (theme.buttonTextColor) s.setProperty('--bundlify-button-text', theme.buttonTextColor);
+      if (theme.savingsBadgeBgColor) s.setProperty('--bundlify-savings-badge-bg', theme.savingsBadgeBgColor);
+      if (theme.savingsBadgeTextColor) s.setProperty('--bundlify-savings-badge-text', theme.savingsBadgeTextColor);
+      if (theme.cardHoverBgColor) s.setProperty('--bundlify-card-hover-bg', theme.cardHoverBgColor);
     }
+
+    // Inject custom CSS
+    if (theme.customCss) {
+      var existing = document.getElementById('bundlify-custom-css');
+      if (existing) existing.remove();
+      var style = document.createElement('style');
+      style.id = 'bundlify-custom-css';
+      style.textContent = theme.customCss;
+      document.head.appendChild(style);
+    }
+
+    // Store toggle config for rendering
+    themeConfig.showSavings = theme.showSavings !== false;
+    themeConfig.showCompareAtPrice = theme.showCompareAtPrice !== false;
   }
 
   /* ------------------------------------------------------------------ */
