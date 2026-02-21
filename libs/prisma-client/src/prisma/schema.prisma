@@ -74,6 +74,16 @@ model ShopSettings {
   multiCurrencyEnabled Boolean  @default(false)
   displayCurrency      String?  @db.VarChar(3)
 
+  widgetPrimaryColor       String  @default("#2563eb") @db.VarChar(9)
+  widgetPrimaryColorHover  String  @default("#1d4ed8") @db.VarChar(9)
+  widgetTextColor          String  @default("#111827") @db.VarChar(9)
+  widgetCardBackground     String  @default("#ffffff") @db.VarChar(9)
+  widgetBadgeBackground    String  @default("#dcfce7") @db.VarChar(9)
+  widgetBadgeTextColor     String  @default("#166534") @db.VarChar(9)
+  widgetBorderRadius       Int     @default(10)
+  widgetButtonText         String  @default("Add Bundle to Cart") @db.VarChar(50)
+  widgetLayout             String  @default("vertical") @db.VarChar(20)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }

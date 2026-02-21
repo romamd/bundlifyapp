@@ -819,6 +819,77 @@
   }
 
   /* ------------------------------------------------------------------ */
+  /*  Theme                                                              */
+  /* ------------------------------------------------------------------ */
+
+  var THEME_CACHE_KEY = 'bundlify_theme';
+
+  /**
+   * Fetch theme settings from the app proxy and apply CSS custom
+   * properties to every bundlify container element. We apply to
+   * each container directly (inline style) so the values override
+   * the Liquid <style> block that also targets #container-id.
+   * Cached in sessionStorage to avoid repeated fetches.
+   */
+  async function applyTheme(shop) {
+    if (!shop) return;
+
+    var cached = sessionStorage.getItem(THEME_CACHE_KEY);
+    if (cached) {
+      try {
+        setThemeVars(JSON.parse(cached));
+        return;
+      } catch (_) {
+        // bad cache — re-fetch
+      }
+    }
+
+    try {
+      var res = await fetch(
+        PROXY_BASE + '/theme?shop=' + encodeURIComponent(shop)
+      );
+      if (!res.ok) return;
+      var theme = await res.json();
+      sessionStorage.setItem(THEME_CACHE_KEY, JSON.stringify(theme));
+      setThemeVars(theme);
+    } catch (e) {
+      console.error('Bundlify: Failed to load theme', e);
+    }
+  }
+
+  var CONTAINER_IDS = [
+    'bundlify-product-bundles',
+    'bundlify-cart-upsell',
+    'bundlify-exit-intent',
+    'bundlify-cart-drawer',
+  ];
+
+  function setThemeVars(theme) {
+    var targets = [];
+    for (var i = 0; i < CONTAINER_IDS.length; i++) {
+      var el = document.getElementById(CONTAINER_IDS[i]);
+      if (el) targets.push(el);
+    }
+
+    // Fallback: if no containers found yet, apply to :root so
+    // dynamically created elements (exit-intent modal) still inherit.
+    if (targets.length === 0) {
+      targets.push(document.documentElement);
+    }
+
+    for (var t = 0; t < targets.length; t++) {
+      var s = targets[t].style;
+      if (theme.primaryColor) s.setProperty('--bundlify-accent', theme.primaryColor);
+      if (theme.primaryColorHover) s.setProperty('--bundlify-accent-hover', theme.primaryColorHover);
+      if (theme.textColor) s.setProperty('--bundlify-text-primary', theme.textColor);
+      if (theme.cardBackground) s.setProperty('--bundlify-card-bg', theme.cardBackground);
+      if (theme.badgeBackground) s.setProperty('--bundlify-badge-bg', theme.badgeBackground);
+      if (theme.badgeTextColor) s.setProperty('--bundlify-badge-text', theme.badgeTextColor);
+      if (theme.borderRadius != null) s.setProperty('--bundlify-radius', theme.borderRadius + 'px');
+    }
+  }
+
+  /* ------------------------------------------------------------------ */
   /*  Initialization                                                     */
   /* ------------------------------------------------------------------ */
 
@@ -826,6 +897,18 @@
     var containers = document.querySelectorAll(
       '#bundlify-product-bundles, #bundlify-cart-upsell'
     );
+
+    // Determine shop domain from any container or Shopify global
+    var shop = '';
+    if (containers.length > 0) {
+      shop = containers[0].dataset.shop || '';
+    }
+    if (!shop && window.Shopify) {
+      shop = window.Shopify.shop || '';
+    }
+
+    applyTheme(shop);
+
     containers.forEach(fetchBundles);
     initExitIntent();
     initCartDrawer();

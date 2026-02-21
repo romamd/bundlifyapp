@@ -41,13 +41,14 @@ test.describe('Theming Controls', () => {
   });
 
   test.describe('Settings sections', () => {
-    test('all 6 settings sections are visible', async ({ page }) => {
+    test('all 7 settings sections are visible', async ({ page }) => {
       await page.goto('/settings');
 
       const sections = [
         'Cost Defaults',
         'Bundle Engine',
         'Display Settings',
+        'Widget Theming',
         'Cart Drawer',
         'Multi-Currency',
         'Widget Settings',

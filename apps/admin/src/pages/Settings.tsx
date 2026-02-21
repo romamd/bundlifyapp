@@ -429,7 +429,128 @@ export function Settings() {
             />
           </div>
 
-          {/* Section 4: Cart Drawer */}
+          {/* Section 4: Widget Theming */}
+          <div style={sectionStyle}>
+            <h2 style={sectionTitleStyle}>Widget Theming</h2>
+            <p
+              style={{
+                fontSize: '13px',
+                color: '#6d7175',
+                marginTop: 0,
+                marginBottom: '12px',
+              }}
+            >
+              Customize the look and feel of your storefront bundle widgets.
+            </p>
+
+            {/* Color pickers */}
+            {([
+              ['widgetPrimaryColor', 'Primary Color', 'Button and accent color'],
+              ['widgetPrimaryColorHover', 'Primary Hover Color', 'Button hover state'],
+              ['widgetTextColor', 'Text Color', 'Main text color'],
+              ['widgetCardBackground', 'Card Background', 'Bundle card background'],
+              ['widgetBadgeBackground', 'Badge Background', 'Savings badge background'],
+              ['widgetBadgeTextColor', 'Badge Text Color', 'Savings badge text'],
+            ] as const).map(([key, label, sublabel]) => (
+              <div key={key} style={fieldRowStyle}>
+                <div>
+                  <div style={labelStyle}>{label}</div>
+                  <div style={sublabelStyle}>{sublabel}</div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div
+                    style={{
+                      width: '24px',
+                      height: '24px',
+                      borderRadius: '4px',
+                      border: '1px solid #c9cccf',
+                      backgroundColor: (form as any)[key] || '#000000',
+                    }}
+                  />
+                  <input
+                    type="color"
+                    value={(form as any)[key] || '#000000'}
+                    onChange={(e) => updateField(key as keyof ShopSettingsDto, e.target.value as any)}
+                    style={{
+                      width: '40px',
+                      height: '32px',
+                      padding: '2px',
+                      border: '1px solid #c9cccf',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                    }}
+                  />
+                </div>
+              </div>
+            ))}
+
+            {/* Border Radius slider */}
+            <div style={fieldRowStyle}>
+              <div>
+                <div style={labelStyle}>Border Radius</div>
+                <div style={sublabelStyle}>Corner roundness (0–24px)</div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <input
+                  type="range"
+                  min={0}
+                  max={24}
+                  step={1}
+                  value={form.widgetBorderRadius ?? 10}
+                  onChange={(e) => updateField('widgetBorderRadius', parseInt(e.target.value, 10))}
+                  style={{ width: '120px' }}
+                />
+                <span style={{ fontSize: '13px', color: '#6d7175', minWidth: '32px' }}>
+                  {form.widgetBorderRadius ?? 10}px
+                </span>
+              </div>
+            </div>
+
+            {/* Button Text */}
+            <div style={fieldRowStyle}>
+              <div>
+                <div style={labelStyle}>Button Text</div>
+                <div style={sublabelStyle}>Call-to-action text on bundle cards</div>
+              </div>
+              <input
+                type="text"
+                value={form.widgetButtonText ?? 'Add Bundle to Cart'}
+                onChange={(e) => updateField('widgetButtonText', e.target.value)}
+                maxLength={50}
+                style={{
+                  padding: '6px 10px',
+                  border: '1px solid #c9cccf',
+                  borderRadius: '4px',
+                  fontSize: '14px',
+                  width: '200px',
+                }}
+              />
+            </div>
+
+            {/* Layout select */}
+            <div style={fieldRowStyle}>
+              <div>
+                <div style={labelStyle}>Layout</div>
+                <div style={sublabelStyle}>Bundle card arrangement direction</div>
+              </div>
+              <select
+                value={form.widgetLayout ?? 'vertical'}
+                onChange={(e) => updateField('widgetLayout', e.target.value)}
+                style={{
+                  padding: '6px 10px',
+                  border: '1px solid #c9cccf',
+                  borderRadius: '4px',
+                  fontSize: '14px',
+                  width: '140px',
+                }}
+              >
+                <option value="vertical">Vertical</option>
+                <option value="horizontal">Horizontal</option>
+              </select>
+            </div>
+          </div>
+
+          {/* Section 5: Cart Drawer */}
           <div style={sectionStyle}>
             <h2 style={sectionTitleStyle}>Cart Drawer</h2>
             <p

@@ -51,6 +51,15 @@ export class StorefrontController {
     );
   }
 
+  @Get('theme')
+  async getThemeSettings(@Query('shop') shop: string) {
+    if (!shop) {
+      throw new BadRequestException('shop query parameter is required');
+    }
+
+    return this.storefrontService.getThemeSettings(shop);
+  }
+
   @Post('events')
   async trackEvent(
     @Query('shop') shop: string,

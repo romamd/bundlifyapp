@@ -12,6 +12,31 @@ export class StorefrontService {
     private readonly abTestingService: ABTestingService,
   ) {}
 
+  async getThemeSettings(shopDomain: string) {
+    const shop = await this.prisma.shop.findUnique({
+      where: { shopifyDomain: shopDomain },
+      include: { settings: true },
+    });
+
+    if (!shop || shop.uninstalledAt) {
+      throw new NotFoundException(`Shop not found: ${shopDomain}`);
+    }
+
+    const s = shop.settings;
+
+    return {
+      primaryColor: s?.widgetPrimaryColor ?? '#2563eb',
+      primaryColorHover: s?.widgetPrimaryColorHover ?? '#1d4ed8',
+      textColor: s?.widgetTextColor ?? '#111827',
+      cardBackground: s?.widgetCardBackground ?? '#ffffff',
+      badgeBackground: s?.widgetBadgeBackground ?? '#dcfce7',
+      badgeTextColor: s?.widgetBadgeTextColor ?? '#166534',
+      borderRadius: s?.widgetBorderRadius ?? 10,
+      buttonText: s?.widgetButtonText ?? 'Add Bundle to Cart',
+      layout: s?.widgetLayout ?? 'vertical',
+    };
+  }
+
   async getBundlesForStorefront(
     shopDomain: string,
     productId?: string,

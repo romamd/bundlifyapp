@@ -64,6 +64,24 @@ export class SettingsService {
       settingsData.multiCurrencyEnabled = dto.multiCurrencyEnabled;
     if (dto.displayCurrency !== undefined)
       settingsData.displayCurrency = dto.displayCurrency;
+    if (dto.widgetPrimaryColor !== undefined)
+      settingsData.widgetPrimaryColor = dto.widgetPrimaryColor;
+    if (dto.widgetPrimaryColorHover !== undefined)
+      settingsData.widgetPrimaryColorHover = dto.widgetPrimaryColorHover;
+    if (dto.widgetTextColor !== undefined)
+      settingsData.widgetTextColor = dto.widgetTextColor;
+    if (dto.widgetCardBackground !== undefined)
+      settingsData.widgetCardBackground = dto.widgetCardBackground;
+    if (dto.widgetBadgeBackground !== undefined)
+      settingsData.widgetBadgeBackground = dto.widgetBadgeBackground;
+    if (dto.widgetBadgeTextColor !== undefined)
+      settingsData.widgetBadgeTextColor = dto.widgetBadgeTextColor;
+    if (dto.widgetBorderRadius !== undefined)
+      settingsData.widgetBorderRadius = dto.widgetBorderRadius;
+    if (dto.widgetButtonText !== undefined)
+      settingsData.widgetButtonText = dto.widgetButtonText;
+    if (dto.widgetLayout !== undefined)
+      settingsData.widgetLayout = dto.widgetLayout;
 
     // Ensure settings row exists before updating
     await this.prisma.shopSettings.upsert({
@@ -111,6 +129,15 @@ export class SettingsService {
         : null,
       multiCurrencyEnabled: settings.multiCurrencyEnabled,
       displayCurrency: settings.displayCurrency ?? '',
+      widgetPrimaryColor: settings.widgetPrimaryColor,
+      widgetPrimaryColorHover: settings.widgetPrimaryColorHover,
+      widgetTextColor: settings.widgetTextColor,
+      widgetCardBackground: settings.widgetCardBackground,
+      widgetBadgeBackground: settings.widgetBadgeBackground,
+      widgetBadgeTextColor: settings.widgetBadgeTextColor,
+      widgetBorderRadius: settings.widgetBorderRadius,
+      widgetButtonText: settings.widgetButtonText,
+      widgetLayout: settings.widgetLayout,
       defaultShippingCost: Number(shop.defaultShippingCost),
       paymentProcessingPct: Number(shop.paymentProcessingPct),
       paymentProcessingFlat: Number(shop.paymentProcessingFlat),

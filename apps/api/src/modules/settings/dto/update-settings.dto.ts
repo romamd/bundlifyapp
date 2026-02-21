@@ -1,4 +1,4 @@
-import { IsOptional, IsBoolean, IsNumber, IsString, Min, Max } from 'class-validator';
+import { IsOptional, IsBoolean, IsNumber, IsString, IsIn, Matches, Min, Max, MinLength, MaxLength } from 'class-validator';
 
 export class UpdateSettingsDto {
   @IsOptional()
@@ -86,4 +86,51 @@ export class UpdateSettingsDto {
   @IsNumber()
   @Min(0)
   paymentProcessingFlat?: number;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^#[0-9a-fA-F]{3,8}$/)
+  widgetPrimaryColor?: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^#[0-9a-fA-F]{3,8}$/)
+  widgetPrimaryColorHover?: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^#[0-9a-fA-F]{3,8}$/)
+  widgetTextColor?: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^#[0-9a-fA-F]{3,8}$/)
+  widgetCardBackground?: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^#[0-9a-fA-F]{3,8}$/)
+  widgetBadgeBackground?: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^#[0-9a-fA-F]{3,8}$/)
+  widgetBadgeTextColor?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(24)
+  widgetBorderRadius?: number;
+
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(50)
+  widgetButtonText?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(['vertical', 'horizontal'])
+  widgetLayout?: string;
 }

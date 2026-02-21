@@ -18,4 +18,13 @@ export interface ShopSettingsDto {
   paymentProcessingFlat: number;
   multiCurrencyEnabled: boolean;
   displayCurrency: string;
+  widgetPrimaryColor: string;
+  widgetPrimaryColorHover: string;
+  widgetTextColor: string;
+  widgetCardBackground: string;
+  widgetBadgeBackground: string;
+  widgetBadgeTextColor: string;
+  widgetBorderRadius: number;
+  widgetButtonText: string;
+  widgetLayout: string;
 }
