@@ -55,13 +55,18 @@ export const toggleKnobStyle = (active: boolean): React.CSSProperties => ({
 export function Toggle({
   value,
   onChange,
+  label,
 }: {
   value: boolean;
   onChange: (val: boolean) => void;
+  label?: string;
 }) {
   return (
     <button
       type="button"
+      role="switch"
+      aria-checked={value}
+      aria-label={label}
       onClick={() => onChange(!value)}
       style={toggleStyle(value)}
     >
@@ -176,7 +181,7 @@ export function ToggleField({
         <div style={labelStyle}>{label}</div>
         {sublabel && <div style={sublabelStyle}>{sublabel}</div>}
       </div>
-      <Toggle value={value ?? false} onChange={onChange} />
+      <Toggle value={value ?? false} onChange={onChange} label={label} />
     </div>
   );
 }

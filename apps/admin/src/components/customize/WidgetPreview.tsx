@@ -70,6 +70,7 @@ export function WidgetPreview({ settings }: WidgetPreviewProps) {
   const showSavings = s.widgetShowSavings !== false;
   const showCompareAt = s.widgetShowCompareAtPrice !== false;
   const buttonText = s.widgetButtonText || 'Add Bundle to Cart';
+  const layout = (s.widgetLayout as string) || 'vertical';
 
   const blockTitleFs = s.widgetBlockTitleFontSize ?? 18;
   const blockTitleFw = s.widgetBlockTitleFontWeight ?? 'bold';
@@ -135,31 +136,42 @@ export function WidgetPreview({ settings }: WidgetPreviewProps) {
         </div>
 
         {/* Products */}
-        <div style={{ padding: `${spacing}px ${spacing + 4}px`, display: 'flex', flexDirection: 'column', gap: `${spacing}px` }}>
-          {MOCK_PRODUCTS.map((product, i) => (
+        <div style={{
+          padding: `${spacing}px ${spacing + 4}px`,
+          ...(layout === 'grid'
+            ? { display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: `${spacing}px` }
+            : { display: 'flex', flexDirection: layout === 'horizontal' ? 'row' as const : 'column' as const, gap: layout === 'compact' ? `${Math.max(spacing - 6, 4)}px` : `${spacing}px` }),
+          ...(layout === 'horizontal' ? { overflowX: 'auto' as const } : {}),
+        }}>
+          {MOCK_PRODUCTS.map((product, i) => {
+            const isCompact = layout === 'compact';
+            const imgSize = isCompact ? 32 : 48;
+            return (
             <div
               key={i}
               style={{
                 display: 'flex',
                 alignItems: 'center',
-                gap: `${spacing}px`,
-                padding: `${spacing - 4}px`,
+                gap: isCompact ? `${Math.max(spacing - 4, 4)}px` : `${spacing}px`,
+                padding: isCompact ? `${Math.max(spacing - 8, 2)}px` : `${spacing - 4}px`,
                 borderRadius: `${Math.max(radius - 2, 0)}px`,
                 backgroundColor: i === 0 ? 'var(--bundlify-selected-bg)' : 'transparent',
                 border: i === 0 ? '1px solid var(--bundlify-accent)' : '1px solid transparent',
+                ...(layout === 'horizontal' ? { minWidth: '160px', flexShrink: 0, flexDirection: 'column' as const, textAlign: 'center' as const } : {}),
+                ...(layout === 'grid' ? { flexDirection: 'column' as const, textAlign: 'center' as const } : {}),
               }}
             >
               {/* Placeholder image */}
               <div style={{
-                width: '48px',
-                height: '48px',
+                width: `${imgSize}px`,
+                height: `${imgSize}px`,
                 borderRadius: `${Math.max(radius - 4, 0)}px`,
                 backgroundColor: '#f3f4f6',
                 flexShrink: 0,
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                fontSize: '20px',
+                fontSize: isCompact ? '14px' : '20px',
                 color: '#9ca3af',
               }}>
                 {'\u{1F9F4}'}
@@ -202,7 +214,8 @@ export function WidgetPreview({ settings }: WidgetPreviewProps) {
                 )}
               </div>
             </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Footer */}

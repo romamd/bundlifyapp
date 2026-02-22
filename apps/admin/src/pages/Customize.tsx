@@ -3,6 +3,8 @@ import { useSettingsStore } from '../stores/settings.store';
 import { useAuthenticatedFetch } from '../hooks/useAuthenticatedFetch';
 import { LoadingState } from '../components/common/LoadingState';
 import { WidgetPreview } from '../components/customize/WidgetPreview';
+import { useToast } from '../components/common/Toast';
+import { Button } from '../components/common/Button';
 import {
   ToggleField,
   fieldRowStyle,
@@ -16,8 +18,8 @@ export function Customize() {
   const { settings, loading, saving, error, fetchSettings, updateSettings } =
     useSettingsStore();
 
+  const { showToast } = useToast();
   const [form, setForm] = useState<Partial<ShopSettingsDto>>({});
-  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     fetchSettings(fetch);
@@ -38,9 +40,8 @@ export function Customize() {
   };
 
   const handleSave = async () => {
-    setSaved(false);
     await updateSettings(fetch, form);
-    setSaved(true);
+    showToast('Settings saved');
   };
 
   const sectionStyle: React.CSSProperties = {
@@ -75,10 +76,11 @@ export function Customize() {
   }
 
   return (
-    <div style={{ display: 'flex', height: 'calc(100vh - 60px)' }}>
+    <div className="bundlify-customize-layout" style={{ display: 'flex', height: 'calc(100vh - 60px)' }}>
       {/* Left panel: controls */}
-      <div style={{
+      <div className="bundlify-customize-controls" style={{
         width: '480px',
+        maxWidth: '480px',
         flexShrink: 0,
         overflowY: 'auto',
         padding: '20px',
@@ -91,29 +93,9 @@ export function Customize() {
           marginBottom: '20px',
         }}>
           <h1 style={{ fontSize: '24px', margin: 0 }}>Customize</h1>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-            {saved && (
-              <span style={{ fontSize: '13px', color: '#1a5632', fontWeight: 500 }}>
-                Saved
-              </span>
-            )}
-            <button
-              onClick={handleSave}
-              disabled={saving || loading}
-              style={{
-                padding: '8px 20px',
-                backgroundColor: saving || loading ? '#e4e5e7' : '#008060',
-                color: saving || loading ? '#6d7175' : '#ffffff',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: saving || loading ? 'not-allowed' : 'pointer',
-                fontSize: '14px',
-                fontWeight: 600,
-              }}
-            >
-              {saving ? 'Saving...' : 'Save'}
-            </button>
-          </div>
+          <Button onClick={handleSave} disabled={saving || loading}>
+            {saving ? 'Saving...' : 'Save'}
+          </Button>
         </div>
 
         {error && (
@@ -195,10 +177,12 @@ export function Customize() {
                         borderRadius: '4px',
                         border: '1px solid #c9cccf',
                         backgroundColor: (form as any)[key] || '#000000',
+                        transition: 'background-color 0.2s ease',
                       }}
                     />
                     <input
                       type="color"
+                      aria-label={`${label} color`}
                       value={(form as any)[key] || '#000000'}
                       onChange={(e) => updateField(key as keyof ShopSettingsDto, e.target.value as any)}
                       style={{
@@ -223,35 +207,43 @@ export function Customize() {
 
           {/* Layout presets */}
           <div style={{ marginBottom: '16px' }}>
-            <label style={{ display: 'block', fontWeight: 600, fontSize: '14px', marginBottom: '8px' }}>Layout</label>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+            <label id="layout-label" style={{ display: 'block', fontWeight: 600, fontSize: '14px', marginBottom: '8px' }}>Layout</label>
+            <div role="radiogroup" aria-labelledby="layout-label" style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
               {[
                 { value: 'vertical', label: 'Vertical', icon: '\u25ad\n\u25ad\n\u25ad' },
                 { value: 'horizontal', label: 'Horizontal', icon: '\u25ad \u25ad \u25ad' },
                 { value: 'compact', label: 'Compact', icon: '\u2500\n\u2500\n\u2500' },
                 { value: 'grid', label: 'Grid', icon: '\u25ad \u25ad\n\u25ad \u25ad' },
-              ].map((opt) => (
+              ].map((opt) => {
+                const selected = form.widgetLayout === opt.value;
+                return (
                 <div
                   key={opt.value}
+                  role="radio"
+                  aria-checked={selected}
+                  aria-label={`${opt.label} layout`}
+                  tabIndex={0}
                   onClick={() => updateField('widgetLayout', opt.value)}
+                  onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); updateField('widgetLayout', opt.value); } }}
                   style={{
-                    border: form.widgetLayout === opt.value ? '2px solid #2563eb' : '1px solid #d1d5db',
+                    border: selected ? '2px solid #2563eb' : '1px solid #d1d5db',
                     borderRadius: '8px',
                     padding: '12px 8px',
                     textAlign: 'center' as const,
                     cursor: 'pointer',
-                    background: form.widgetLayout === opt.value ? '#eff6ff' : '#fff',
+                    background: selected ? '#eff6ff' : '#fff',
                     transition: 'all 0.15s ease',
                   }}
                 >
                   <div style={{ fontFamily: 'monospace', fontSize: '11px', lineHeight: '1.4', marginBottom: '6px', whiteSpace: 'pre' as const, color: '#6b7280' }}>
                     {opt.icon}
                   </div>
-                  <div style={{ fontSize: '12px', fontWeight: form.widgetLayout === opt.value ? 600 : 400 }}>
+                  <div style={{ fontSize: '12px', fontWeight: selected ? 600 : 400 }}>
                     {opt.label}
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </div>
 
@@ -706,29 +698,36 @@ export function Customize() {
         </div>
       </div>
 
-      {/* Right panel: live preview */}
-      <div style={{
+      {/* Right panel: live preview (sticky) */}
+      <div className="bundlify-customize-preview" style={{
         flex: 1,
-        padding: '20px 32px',
         backgroundColor: '#f6f6f7',
-        overflowY: 'auto',
-        display: 'flex',
-        flexDirection: 'column',
-        alignItems: 'center',
+        position: 'relative',
       }}>
         <div style={{
-          fontSize: '13px',
-          fontWeight: 600,
-          color: '#6d7175',
-          textTransform: 'uppercase',
-          letterSpacing: '0.5px',
-          marginBottom: '16px',
-          alignSelf: 'flex-start',
+          position: 'sticky',
+          top: 0,
+          padding: '20px 32px',
+          height: 'calc(100vh - 60px)',
+          overflowY: 'auto',
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
         }}>
-          Live Preview
-        </div>
-        <div style={{ width: '100%', maxWidth: '440px' }}>
-          <WidgetPreview settings={form} />
+          <div style={{
+            fontSize: '13px',
+            fontWeight: 600,
+            color: '#6d7175',
+            textTransform: 'uppercase',
+            letterSpacing: '0.5px',
+            marginBottom: '16px',
+            alignSelf: 'flex-start',
+          }}>
+            Live Preview
+          </div>
+          <div style={{ width: '100%', maxWidth: '440px' }}>
+            <WidgetPreview settings={form} />
+          </div>
         </div>
       </div>
     </div>

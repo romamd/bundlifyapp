@@ -10,6 +10,7 @@ import { DiscountSlider } from './DiscountSlider';
 import { MarginImpactCard } from './MarginImpactCard';
 import { ProductSearchDropdown } from '../common/ProductSearchDropdown';
 import { CollectionSearchDropdown } from '../common/CollectionSearchDropdown';
+import { useSettingsStore } from '../../stores/settings.store';
 
 interface BundleWizardProps {
   onCancel: () => void;
@@ -94,6 +95,7 @@ export function BundleWizard({
   editBundle,
   fetch: authenticatedFetch,
 }: BundleWizardProps) {
+  const { settings: shopSettings } = useSettingsStore();
   const isEditing = !!editBundle;
   const [step, setStep] = useState(0);
   const [bundleType, setBundleType] = useState<string>('FIXED');
@@ -1850,6 +1852,24 @@ export function BundleWizard({
               volumeTiers={volumeTiers}
               bogoGetQuantity={bogoGetQuantity}
               bogoGetDiscountPct={bogoGetDiscountPct}
+              countdownEnabled={countdownEnabled}
+              countdownTitle={countdownTitle}
+              countdownBgColor={countdownBgColor}
+              countdownTextColor={countdownTextColor}
+              countdownTitleFontSize={countdownTitleFontSize}
+              countdownTitleFontWeight={countdownTitleFontWeight}
+              countdownTitleAlignment={countdownTitleAlignment}
+              upsells={upsells.map(u => ({ title: u.title, subtitle: u.subtitle, selectedByDefault: u.selectedByDefault, discountType: u.discountType, discountValue: u.discountValue }))}
+              giftsEnabled={giftsEnabled}
+              giftsTitle={giftsTitle}
+              giftTiers={giftTiers.map(g => ({ label: g.label, unlockQuantity: g.unlockQuantity, giftType: g.giftType, lockedTitle: g.lockedTitle }))}
+              lowStockAlertEnabled={lowStockAlertEnabled}
+              skipToCheckout={skipToCheckout}
+              customCss={customCss}
+              accentColor={shopSettings?.widgetPrimaryColor}
+              cardBg={shopSettings?.widgetCardBackground}
+              textColor={shopSettings?.widgetTitleColor}
+              borderColor={shopSettings?.widgetBorderColor}
             />
           </div>
         </div>

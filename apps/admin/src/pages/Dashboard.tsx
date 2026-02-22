@@ -41,7 +41,7 @@ export function Dashboard() {
 
   const kpiCardStyle: React.CSSProperties = {
     flex: '1 1 0',
-    minWidth: '160px',
+    minWidth: 'calc(50% - 12px)',
     padding: '16px',
     border: '1px solid #e1e3e5',
     borderRadius: '8px',
@@ -50,7 +50,7 @@ export function Dashboard() {
 
   const kpiLabelStyle: React.CSSProperties = {
     fontSize: '12px',
-    color: '#6d7175',
+    color: '#5c5f62',
     marginBottom: '4px',
   };
 
@@ -195,9 +195,10 @@ export function Dashboard() {
 
           {/* Top Bundles + Dead Stock row */}
           <div
+            className="bundlify-dashboard-grid"
             style={{
               display: 'grid',
-              gridTemplateColumns: '1fr 1fr',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))',
               gap: '16px',
               marginBottom: '20px',
             }}

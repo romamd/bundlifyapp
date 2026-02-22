@@ -1,0 +1,76 @@
+/* Global styles — focus, transitions, animations */
+
+/* Focus ring for accessibility */
+input:focus,
+select:focus,
+textarea:focus,
+button:focus-visible {
+  outline: 2px solid #008060;
+  outline-offset: 2px;
+}
+
+/* Spinner keyframe */
+@keyframes bundlify-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Skeleton shimmer */
+@keyframes bundlify-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Toast slide-in */
+@keyframes bundlify-toast-in {
+  from { transform: translateX(100%); opacity: 0; }
+  to { transform: translateX(0); opacity: 1; }
+}
+
+@keyframes bundlify-toast-out {
+  from { transform: translateX(0); opacity: 1; }
+  to { transform: translateX(100%); opacity: 0; }
+}
+
+/* Card fade-in stagger */
+@keyframes bundlify-fade-up {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Confirm dialog overlay */
+@keyframes bundlify-overlay-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes bundlify-dialog-in {
+  from { opacity: 0; transform: scale(0.95) translateY(8px); }
+  to { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+/* Section collapse/expand */
+.bundlify-collapsible {
+  overflow: hidden;
+  transition: max-height 0.25s ease, opacity 0.2s ease;
+}
+
+/* Responsive utilities */
+@media (max-width: 768px) {
+  .bundlify-customize-layout {
+    flex-direction: column !important;
+  }
+  .bundlify-customize-controls {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-right: none !important;
+    border-bottom: 1px solid #e1e3e5 !important;
+    height: auto !important;
+    max-height: 60vh !important;
+  }
+  .bundlify-customize-preview {
+    height: 40vh !important;
+  }
+  .bundlify-dashboard-grid {
+    grid-template-columns: 1fr !important;
+  }
+}

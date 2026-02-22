@@ -3,6 +3,8 @@ import { Link } from 'react-router-dom';
 import { useSettingsStore } from '../stores/settings.store';
 import { useAuthenticatedFetch } from '../hooks/useAuthenticatedFetch';
 import { LoadingState } from '../components/common/LoadingState';
+import { useToast } from '../components/common/Toast';
+import { Button } from '../components/common/Button';
 import {
   NumberField,
   ToggleField,
@@ -17,8 +19,8 @@ export function Settings() {
   const { settings, loading, saving, error, fetchSettings, updateSettings } =
     useSettingsStore();
 
+  const { showToast } = useToast();
   const [form, setForm] = useState<Partial<ShopSettingsDto>>({});
-  const [saved, setSaved] = useState(false);
 
   useEffect(() => {
     fetchSettings(fetch);
@@ -39,9 +41,8 @@ export function Settings() {
   };
 
   const handleSave = async () => {
-    setSaved(false);
     await updateSettings(fetch, form);
-    setSaved(true);
+    showToast('Settings saved');
   };
 
   const sectionStyle: React.CSSProperties = {
@@ -59,6 +60,17 @@ export function Settings() {
     marginBottom: '16px',
   };
 
+  const sections = [
+    { id: 'cost-defaults', label: 'Cost Defaults' },
+    { id: 'bundle-engine', label: 'Bundle Engine' },
+    { id: 'display-settings', label: 'Display Settings' },
+    { id: 'cart-drawer', label: 'Cart Drawer' },
+    { id: 'multi-currency', label: 'Multi-Currency' },
+    { id: 'widget-settings', label: 'Widget Settings' },
+    { id: 'price-override', label: 'Price Override' },
+    { id: 'access-control', label: 'Access Control' },
+  ];
+
   return (
     <div style={{ maxWidth: '800px', margin: '0 auto', padding: '20px' }}>
       <div
@@ -70,31 +82,9 @@ export function Settings() {
         }}
       >
         <h1 style={{ fontSize: '24px', margin: 0 }}>Settings</h1>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          {saved && (
-            <span style={{ fontSize: '13px', color: '#1a5632', fontWeight: 500 }}>
-              Settings saved
-            </span>
-          )}
-          <button
-            onClick={handleSave}
-            disabled={saving || loading}
-            style={{
-              padding: '8px 20px',
-              backgroundColor:
-                saving || loading ? '#e4e5e7' : '#008060',
-              color: saving || loading ? '#6d7175' : '#ffffff',
-              border: 'none',
-              borderRadius: '4px',
-              cursor:
-                saving || loading ? 'not-allowed' : 'pointer',
-              fontSize: '14px',
-              fontWeight: 600,
-            }}
-          >
-            {saving ? 'Saving...' : 'Save Settings'}
-          </button>
-        </div>
+        <Button onClick={handleSave} disabled={saving || loading}>
+          {saving ? 'Saving...' : 'Save Settings'}
+        </Button>
       </div>
 
       {error && (
@@ -108,6 +98,41 @@ export function Settings() {
           }}
         >
           Error: {error}
+        </div>
+      )}
+
+      {/* Quick navigation */}
+      {!loading && settings && (
+        <div style={{
+          display: 'flex',
+          gap: '4px',
+          flexWrap: 'wrap',
+          marginBottom: '16px',
+          padding: '10px 12px',
+          backgroundColor: '#f6f6f7',
+          borderRadius: '8px',
+        }}>
+          {sections.map((s) => (
+            <button
+              key={s.id}
+              onClick={() => document.getElementById(s.id)?.scrollIntoView({ behavior: 'smooth', block: 'start' })}
+              style={{
+                padding: '4px 10px',
+                fontSize: '12px',
+                color: '#5c5f62',
+                backgroundColor: '#ffffff',
+                border: '1px solid #e1e3e5',
+                borderRadius: '4px',
+                cursor: 'pointer',
+                fontWeight: 500,
+                transition: 'all 0.15s ease',
+              }}
+              onMouseEnter={(e) => { (e.target as HTMLElement).style.backgroundColor = '#f1f8f5'; (e.target as HTMLElement).style.color = '#008060'; }}
+              onMouseLeave={(e) => { (e.target as HTMLElement).style.backgroundColor = '#ffffff'; (e.target as HTMLElement).style.color = '#5c5f62'; }}
+            >
+              {s.label}
+            </button>
+          ))}
         </div>
       )}
 
@@ -126,7 +151,7 @@ export function Settings() {
       ) : (
         <>
           {/* Section 1: Cost Defaults */}
-          <div style={sectionStyle}>
+          <div id="cost-defaults" style={sectionStyle}>
             <h2 style={sectionTitleStyle}>Cost Defaults</h2>
             <p
               style={{
@@ -164,7 +189,7 @@ export function Settings() {
           </div>
 
           {/* Section 2: Bundle Engine */}
-          <div style={sectionStyle}>
+          <div id="bundle-engine" style={sectionStyle}>
             <h2 style={sectionTitleStyle}>Bundle Engine</h2>
             <p
               style={{
@@ -218,7 +243,7 @@ export function Settings() {
           </div>
 
           {/* Section 3: Display Settings */}
-          <div style={sectionStyle}>
+          <div id="display-settings" style={sectionStyle}>
             <h2 style={sectionTitleStyle}>Display Settings</h2>
             <p
               style={{
@@ -289,7 +314,7 @@ export function Settings() {
           </div>
 
           {/* Section 5: Cart Drawer */}
-          <div style={sectionStyle}>
+          <div id="cart-drawer" style={sectionStyle}>
             <h2 style={sectionTitleStyle}>Cart Drawer</h2>
             <p
               style={{
@@ -353,7 +378,7 @@ export function Settings() {
           </div>
 
           {/* Section 5: Multi-Currency */}
-          <div style={sectionStyle}>
+          <div id="multi-currency" style={sectionStyle}>
             <h2 style={sectionTitleStyle}>Multi-Currency</h2>
             <p
               style={{
@@ -400,7 +425,7 @@ export function Settings() {
           </div>
 
           {/* Section 6: Widget Settings */}
-          <div style={sectionStyle}>
+          <div id="widget-settings" style={sectionStyle}>
             <h2 style={sectionTitleStyle}>Widget Settings</h2>
             <p
               style={{
@@ -433,7 +458,7 @@ export function Settings() {
           </div>
 
           {/* Section 7: Product Price Override */}
-          <div style={sectionStyle}>
+          <div id="price-override" style={sectionStyle}>
             <h2 style={sectionTitleStyle}>Product Price Override</h2>
             <p
               style={{
@@ -476,7 +501,7 @@ export function Settings() {
           </div>
 
           {/* Section 8: Access Control */}
-          <div style={sectionStyle}>
+          <div id="access-control" style={sectionStyle}>
             <h2 style={sectionTitleStyle}>Access Control</h2>
             <p
               style={{
@@ -503,28 +528,10 @@ export function Settings() {
           </div>
 
           {/* Bottom save button */}
-          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', alignItems: 'center' }}>
-            {saved && (
-              <span style={{ fontSize: '13px', color: '#1a5632', fontWeight: 500 }}>
-                Settings saved
-              </span>
-            )}
-            <button
-              onClick={handleSave}
-              disabled={saving}
-              style={{
-                padding: '8px 20px',
-                backgroundColor: saving ? '#e4e5e7' : '#008060',
-                color: saving ? '#6d7175' : '#ffffff',
-                border: 'none',
-                borderRadius: '4px',
-                cursor: saving ? 'not-allowed' : 'pointer',
-                fontSize: '14px',
-                fontWeight: 600,
-              }}
-            >
+          <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+            <Button onClick={handleSave} disabled={saving}>
               {saving ? 'Saving...' : 'Save Settings'}
-            </button>
+            </Button>
           </div>
         </>
       )}

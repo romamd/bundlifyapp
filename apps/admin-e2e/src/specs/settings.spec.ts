@@ -4,12 +4,12 @@ test.describe('Settings', () => {
   test('renders settings heading and all sections', async ({ page }) => {
     await page.goto('/settings');
     await expect(page.getByRole('heading', { name: 'Settings', level: 1 })).toBeVisible();
-    await expect(page.getByText('Cost Defaults')).toBeVisible();
-    await expect(page.getByText('Bundle Engine')).toBeVisible();
-    await expect(page.getByText('Display Settings')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Cost Defaults' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Bundle Engine' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Display Settings' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Cart Drawer' })).toBeVisible();
     await expect(page.getByRole('heading', { name: 'Multi-Currency' })).toBeVisible();
-    await expect(page.getByText('Widget Settings')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Widget Settings' })).toBeVisible();
   });
 
   test('displays link to Customize page', async ({ page }) => {

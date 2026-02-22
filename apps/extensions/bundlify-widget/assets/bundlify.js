@@ -41,11 +41,22 @@
       params.set('product_id', productId);
     }
 
-    // Show the loading indicator while fetching
+    // Show skeleton loading while fetching
     var loader = container.querySelector('.bundlify-loading');
     if (loader) {
       loader.style.display = 'block';
     }
+    // Inject skeleton placeholder
+    var skeleton = document.createElement('div');
+    skeleton.className = 'bundlify-skeleton';
+    skeleton.innerHTML = '<div class="bundlify-skeleton__card">' +
+      '<div class="bundlify-skeleton__bar bundlify-skeleton__bar--title"></div>' +
+      '<div class="bundlify-skeleton__bar bundlify-skeleton__bar--item"></div>' +
+      '<div class="bundlify-skeleton__bar bundlify-skeleton__bar--item" style="width:70%"></div>' +
+      '<div class="bundlify-skeleton__bar bundlify-skeleton__bar--price"></div>' +
+      '<div class="bundlify-skeleton__bar bundlify-skeleton__bar--btn"></div>' +
+      '</div>';
+    container.appendChild(skeleton);
 
     // B2B exclusion: skip rendering if customer is tagged b2b/wholesale
     if (themeConfig.excludeB2B && window.Shopify && window.Shopify.customer && window.Shopify.customer.tags) {
@@ -74,6 +85,11 @@
   function hideLoader(loader) {
     if (loader) {
       loader.style.display = 'none';
+    }
+    // Remove skeleton placeholders
+    var skeletons = document.querySelectorAll('.bundlify-skeleton');
+    for (var i = 0; i < skeletons.length; i++) {
+      skeletons[i].remove();
     }
   }
 
@@ -423,6 +439,8 @@
       html += '<div class="bundlify-gift__label">' + escapeHtml(labelText) + '</div>';
       if (isLocked && bundle.giftsShowLockedLabels !== false) {
         html += '<div class="bundlify-gift__locked">' + escapeHtml(gift.lockedTitle || 'Locked') + '</div>';
+        var progressPct = Math.min(100, Math.round((totalQuantity / gift.unlockQuantity) * 100));
+        html += '<div class="bundlify-gift__progress"><div class="bundlify-gift__progress-fill" style="width:' + progressPct + '%"></div></div>';
       }
       html += '</div>';
     });
