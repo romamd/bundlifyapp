@@ -119,11 +119,43 @@ model ShopSettings {
   widgetSavingsBadgeTextColor  String @default("#166534") @db.VarChar(9)
   widgetCardHoverBgColor       String @default("#f9fafb") @db.VarChar(9)
 
-  stickyBarEnabled        Boolean @default(false)
-  stickyBarBgColor        String  @default("#ffffff") @db.VarChar(9)
-  stickyBarTextColor      String  @default("#111827") @db.VarChar(9)
-  stickyBarButtonBgColor  String  @default("#2563eb") @db.VarChar(9)
-  stickyBarButtonTextColor String @default("#ffffff") @db.VarChar(9)
+  // Gift element colors
+  widgetGiftBgColor            String @default("#fef9c3") @db.VarChar(9)
+  widgetGiftTextColor          String @default("#854d0e") @db.VarChar(9)
+  widgetGiftSelectedBgColor    String @default("#fef08a") @db.VarChar(9)
+  widgetGiftSelectedTextColor  String @default("#713f12") @db.VarChar(9)
+
+  // Upsell element colors
+  widgetUpsellBgColor            String @default("#f0fdf4") @db.VarChar(9)
+  widgetUpsellTextColor          String @default("#166534") @db.VarChar(9)
+  widgetUpsellSelectedBgColor    String @default("#dcfce7") @db.VarChar(9)
+  widgetUpsellSelectedTextColor  String @default("#14532d") @db.VarChar(9)
+
+  // Missing typography groups
+  widgetLabelFontSize       Int    @default(11)
+  widgetLabelFontWeight     String @default("bold") @db.VarChar(10)
+  widgetGiftFontSize        Int    @default(13)
+  widgetGiftFontWeight      String @default("normal") @db.VarChar(10)
+  widgetUpsellFontSize      Int    @default(13)
+  widgetUpsellFontWeight    String @default("normal") @db.VarChar(10)
+  widgetUnitLabelFontSize   Int    @default(13)
+  widgetUnitLabelFontWeight String @default("bold") @db.VarChar(10)
+
+  // Spacing
+  widgetSpacing Int @default(12)
+
+  stickyBarEnabled         Boolean @default(false)
+  stickyBarBgColor         String  @default("#ffffff") @db.VarChar(9)
+  stickyBarTextColor       String  @default("#111827") @db.VarChar(9)
+  stickyBarButtonBgColor   String  @default("#2563eb") @db.VarChar(9)
+  stickyBarButtonTextColor String  @default("#ffffff") @db.VarChar(9)
+  stickyBarButtonText        String @default("Choose Bundle") @db.VarChar(100)
+  stickyBarTitleFontSize     Int    @default(14)
+  stickyBarTitleFontWeight   String @default("normal") @db.VarChar(10)
+  stickyBarButtonFontSize    Int    @default(14)
+  stickyBarButtonFontWeight  String @default("bold") @db.VarChar(10)
+  stickyBarButtonPadding     Int    @default(15)
+  stickyBarButtonBorderRadius Int   @default(8)
 
   cartTimerMinutes  Int    @default(0)
   cartTimerText     String @default("Your cart will expire in {{timer}}") @db.VarChar(255)
@@ -236,20 +268,29 @@ model Bundle {
   bogoGetQuantity    Int?
   bogoGetDiscountPct Decimal? @db.Decimal(5, 2)
 
-  giftsEnabled   Boolean @default(false)
-  giftsTitle     String  @default("Free gifts with your order") @db.VarChar(255)
-  giftsSubtitle  String? @db.VarChar(255)
+  giftsEnabled            Boolean @default(false)
+  giftsTitle              String  @default("Free gifts with your order") @db.VarChar(255)
+  giftsSubtitle           String? @db.VarChar(255)
+  giftsLayout             String  @default("vertical") @db.VarChar(20)
+  giftsHideUntilUnlocked  Boolean @default(false)
+  giftsShowLockedLabels   Boolean @default(true)
 
   countdownEnabled   Boolean  @default(false)
   countdownType      String   @default("fixed") @db.VarChar(20)
   countdownDuration  Int?
   countdownEndDate   DateTime?
   countdownTitle     String?  @db.VarChar(255)
-  countdownBgColor   String   @default("#111827") @db.VarChar(9)
-  countdownTextColor String   @default("#ffffff") @db.VarChar(9)
+  countdownBgColor          String   @default("#111827") @db.VarChar(9)
+  countdownTextColor        String   @default("#ffffff") @db.VarChar(9)
+  countdownTitleFontSize    Int?
+  countdownTitleFontWeight  String?  @db.VarChar(10)
+  countdownTitleAlignment   String   @default("center") @db.VarChar(10)
 
   customCss      String? @db.Text
   translations   String? @db.Text
+
+  lowStockAlertEnabled Boolean @default(false)
+  skipToCheckout       Boolean @default(false)
 
   items            BundleItem[]
   upsells          BundleUpsell[]

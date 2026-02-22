@@ -49,7 +49,7 @@ test.describe('Settings', () => {
   test('Widget Theming has color pickers and layout dropdown', async ({ page }) => {
     await page.goto('/settings');
     const colorInputs = page.locator('input[type="color"]');
-    await expect(colorInputs).toHaveCount(20);
+    await expect(colorInputs).toHaveCount(32);
     const layoutSelect = page.locator('select').filter({ has: page.locator('option[value="horizontal"]') });
     await expect(layoutSelect).toBeVisible();
   });
@@ -57,16 +57,20 @@ test.describe('Settings', () => {
   test('Widget Theming has per-element typography controls', async ({ page }) => {
     await page.goto('/settings');
     await expect(page.getByText('Per-Element Typography')).toBeVisible();
-    // 6 element groups: Block Title, Item Title, Subtitle, Price, Badge, Button
+    // 10 element groups: Block Title, Item Title, Subtitle, Price, Badge, Button, Label, Free Gift, Upsell, Unit Label
     await expect(page.getByText('Block Title', { exact: true })).toBeVisible();
     await expect(page.getByText('Item Title', { exact: true })).toBeVisible();
     await expect(page.getByText('Subtitle', { exact: true })).toBeVisible();
     await expect(page.getByText('Price', { exact: true })).toBeVisible();
     await expect(page.getByText('Badge', { exact: true })).toBeVisible();
-    // Each group has a range slider and a font weight select
-    // 6 per-element + 1 border radius + 1 base font size = 8 range inputs total
+    await expect(page.getByText('Label', { exact: true })).toBeVisible();
+    await expect(page.getByText('Free Gift', { exact: true })).toBeVisible();
+    await expect(page.getByText('Upsell', { exact: true })).toBeVisible();
+    await expect(page.getByText('Unit Label', { exact: true })).toBeVisible();
+    // 10 per-element + 1 border radius + 1 base font size + 1 spacing
+    // + 4 sticky bar (title font, button font, button padding, button border radius) = 17 range inputs
     const rangeInputs = page.locator('input[type="range"]');
-    await expect(rangeInputs).toHaveCount(8);
+    await expect(rangeInputs).toHaveCount(17);
   });
 
   test('Widget Theming has custom CSS textarea', async ({ page }) => {

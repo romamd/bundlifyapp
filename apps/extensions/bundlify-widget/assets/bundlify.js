@@ -116,13 +116,18 @@
     var id = 'bundlify-countdown-' + bundle.bundleId;
     var title = t(bundle, 'countdownTitle', bundle.countdownTitle || 'Offer expires in {{timer}}');
 
+    var titleStyle = '';
+    if (bundle.countdownTitleFontSize) titleStyle += 'font-size:' + bundle.countdownTitleFontSize + 'px;';
+    if (bundle.countdownTitleFontWeight) titleStyle += 'font-weight:' + bundle.countdownTitleFontWeight + ';';
+    titleStyle += 'text-align:' + (bundle.countdownTitleAlignment || 'center') + ';';
+
     return '<div class="bundlify-countdown" id="' + id + '" ' +
       'style="background:' + (bundle.countdownBgColor || '#111827') + ';color:' + (bundle.countdownTextColor || '#ffffff') + ';" ' +
       'data-type="' + (bundle.countdownType || 'fixed') + '" ' +
       'data-duration="' + (bundle.countdownDuration || 15) + '" ' +
       'data-end-date="' + (bundle.countdownEndDate || '') + '" ' +
       'data-title-template="' + title.replace(/"/g, '&quot;') + '">' +
-      '<span class="bundlify-countdown__text">' + title.replace('{{timer}}', '<span class="bundlify-countdown__timer">--:--</span>') + '</span>' +
+      '<span class="bundlify-countdown__text" style="' + titleStyle + '">' + title.replace('{{timer}}', '<span class="bundlify-countdown__timer">--:--</span>') + '</span>' +
       '</div>';
   }
 
@@ -339,6 +344,18 @@
       else if (upsell.discountType === 'PERCENTAGE') finalPrice = upsell.price * (1 - upsell.discountValue / 100);
       else if (upsell.discountType === 'FIXED_AMOUNT') finalPrice = Math.max(0, upsell.price - upsell.discountValue);
 
+      // Calculate saved amount for subtitle variable substitution
+      var savedAmount = '0';
+      if (upsell.discountType === 'PERCENTAGE' && upsell.discountValue > 0) {
+        savedAmount = formatPrice(upsell.price * upsell.discountValue / 100);
+      } else if (upsell.discountType === 'FIXED_AMOUNT' && upsell.discountValue > 0) {
+        savedAmount = formatPrice(upsell.discountValue);
+      } else if (upsell.discountType === 'FREE') {
+        savedAmount = formatPrice(upsell.price);
+      }
+
+      var subtitleText = upsell.subtitle ? upsell.subtitle.replace('{{saved_amount}}', savedAmount) : '';
+
       var checked = upsell.selectedByDefault ? ' checked' : '';
       var imgHtml = upsell.imageUrl ? '<img src="' + escapeAttr(upsell.imageUrl) + '" alt="" class="bundlify-upsell__img" />' : '';
 
@@ -347,7 +364,7 @@
         imgHtml +
         '<div class="bundlify-upsell__info">' +
           '<div class="bundlify-upsell__title">' + escapeHtml(upsell.title) + '</div>' +
-          (upsell.subtitle ? '<div class="bundlify-upsell__subtitle">' + escapeHtml(upsell.subtitle) + '</div>' : '') +
+          (subtitleText ? '<div class="bundlify-upsell__subtitle">' + escapeHtml(subtitleText) + '</div>' : '') +
         '</div>' +
         '<div class="bundlify-upsell__price">' +
           (discountLabel ? '<span class="bundlify-upsell__discount">' + discountLabel + '</span>' : '') +
@@ -366,7 +383,16 @@
   function renderGifts(bundle) {
     if (!bundle.giftsEnabled || !bundle.giftTiers || !bundle.giftTiers.length) return '';
 
-    var html = '<div class="bundlify-gifts">';
+    // Calculate total quantity of items in the bundle
+    var totalQuantity = 0;
+    if (bundle.items && bundle.items.length) {
+      for (var qi = 0; qi < bundle.items.length; qi++) {
+        totalQuantity += (bundle.items[qi].quantity || 1);
+      }
+    }
+
+    var layoutClass = bundle.giftsLayout === 'horizontal' ? ' bundlify-gifts--horizontal' : ' bundlify-gifts--vertical';
+    var html = '<div class="bundlify-gifts' + layoutClass + '">';
     html += '<div class="bundlify-gifts__header">';
     html += '<div class="bundlify-gifts__title">' + escapeHtml(bundle.giftsTitle || 'Free gifts with your order') + '</div>';
     if (bundle.giftsSubtitle) {
@@ -376,13 +402,26 @@
     html += '<div class="bundlify-gifts__grid">';
 
     bundle.giftTiers.forEach(function(gift) {
-      var isLocked = true;
+      var isLocked = totalQuantity < gift.unlockQuantity;
+
+      // If hideUntilUnlocked is true, skip locked gifts entirely
+      if (isLocked && bundle.giftsHideUntilUnlocked) return;
+
       var imgHtml = gift.imageUrl ? '<img src="' + escapeAttr(gift.imageUrl) + '" alt="" class="bundlify-gift__img" />' : '<div class="bundlify-gift__img bundlify-gift__img--placeholder"></div>';
+
+      // Variable substitution in label
+      var labelText = gift.label || gift.productTitle || (gift.giftType === 'FREE_SHIPPING' ? 'Free Shipping' : 'Free Gift');
+      if (gift.productTitle) {
+        labelText = labelText.replace('{{product}}', gift.productTitle);
+      }
+      if (gift.price != null) {
+        labelText = labelText.replace('{{original_price}}', formatPrice(gift.price));
+      }
 
       html += '<div class="bundlify-gift' + (isLocked ? ' bundlify-gift--locked' : '') + '" data-unlock-qty="' + gift.unlockQuantity + '">';
       html += imgHtml;
-      html += '<div class="bundlify-gift__label">' + escapeHtml(gift.label || gift.productTitle || (gift.giftType === 'FREE_SHIPPING' ? 'Free Shipping' : 'Free Gift')) + '</div>';
-      if (isLocked) {
+      html += '<div class="bundlify-gift__label">' + escapeHtml(labelText) + '</div>';
+      if (isLocked && bundle.giftsShowLockedLabels !== false) {
         html += '<div class="bundlify-gift__locked">' + escapeHtml(gift.lockedTitle || 'Locked') + '</div>';
       }
       html += '</div>';
@@ -411,7 +450,7 @@
       badgeHtml +
       '  </div>' +
       '  <div class="bundlify-card__items">' +
-      bundle.items.map(function (item) { return renderItem(item, showCompareAtPrice); }).join('') +
+      bundle.items.map(function (item) { return renderItem(item, showCompareAtPrice, bundle.lowStockAlertEnabled); }).join('') +
       '  </div>' +
       '  <div class="bundlify-card__footer">' +
       '    <div class="bundlify-card__pricing">' +
@@ -628,6 +667,13 @@
       .catch(function() { return null; })
       .then(function() {
         addBtn.textContent = 'Added!';
+
+        // Skip to checkout if enabled
+        if (bundle.skipToCheckout) {
+          window.location.href = '/checkout';
+          return;
+        }
+
         setTimeout(function() {
           addBtn.disabled = false;
           updateSummary();
@@ -679,6 +725,13 @@
         btn.classList.add('bundlify-card__btn--success');
         trackEvent(shop, bundleId, 'ADDED_TO_CART', trigger);
 
+        // Skip to checkout if enabled
+        var volumeBundle = bundles.find(function (b) { return b.bundleId === bundleId; });
+        if (volumeBundle && volumeBundle.skipToCheckout) {
+          window.location.href = '/checkout';
+          return;
+        }
+
         document.dispatchEvent(
           new CustomEvent('bundlify:added-to-cart', {
             detail: { bundleId: bundleId, quantity: quantity },
@@ -701,8 +754,9 @@
 
   /**
    * Render a single item row inside a bundle card.
+   * lowStockEnabled: whether the bundle has low stock alerts enabled.
    */
-  function renderItem(item, showCompareAtPrice) {
+  function renderItem(item, showCompareAtPrice, lowStockEnabled) {
     var img = item.imageUrl
       ? '<img src="' +
         escapeAttr(item.imageUrl) +
@@ -725,6 +779,11 @@
       price = '<span class="bundlify-card__item-compare-at">' + formatPrice(item.compareAtPrice) + '</span> ' + price;
     }
 
+    var lowStockHtml = '';
+    if (lowStockEnabled && item.inventoryQuantity != null && item.inventoryQuantity < 10) {
+      lowStockHtml = '<span class="bundlify-low-stock">Only ' + item.inventoryQuantity + ' left!</span>';
+    }
+
     return (
       '<div class="bundlify-card__item">' +
       img +
@@ -735,6 +794,7 @@
       '    <span class="bundlify-card__item-price">' +
       price +
       '</span>' +
+      lowStockHtml +
       '  </div>' +
       '</div>'
     );
@@ -801,6 +861,12 @@
         btn.classList.remove('bundlify-card__btn--loading');
         btn.classList.add('bundlify-card__btn--success');
         trackEvent(shop, bundleId, 'ADDED_TO_CART', trigger);
+
+        // Skip to checkout if enabled
+        if (bundle.skipToCheckout) {
+          window.location.href = '/checkout';
+          return;
+        }
 
         // Trigger Shopify theme cart refresh if available
         if (typeof window.Shopify !== 'undefined' && typeof window.Shopify.onCartUpdate === 'function') {
@@ -1332,6 +1398,13 @@
             if (res.ok) {
               btn.textContent = 'Added!';
               trackEvent(shop, bundleId, 'ADDED_TO_CART', 'cart_page');
+
+              // Skip to checkout if enabled
+              if (bundle.skipToCheckout) {
+                window.location.href = '/checkout';
+                return;
+              }
+
               setTimeout(function () {
                 btn.textContent = 'Add to Cart';
                 btn.disabled = false;
@@ -1398,6 +1471,7 @@
     themePriceMode: 'per_item',
     excludeB2B: false,
     discountOnlyViaWidget: false,
+    stickyBarButtonText: 'Choose Bundle',
   };
 
   /**
@@ -1512,6 +1586,40 @@
       if (theme.savingsBadgeBgColor) s.setProperty('--bundlify-savings-badge-bg', theme.savingsBadgeBgColor);
       if (theme.savingsBadgeTextColor) s.setProperty('--bundlify-savings-badge-text', theme.savingsBadgeTextColor);
       if (theme.cardHoverBgColor) s.setProperty('--bundlify-card-hover-bg', theme.cardHoverBgColor);
+
+      // Gift colors
+      if (theme.giftBgColor) s.setProperty('--bundlify-gift-bg', theme.giftBgColor);
+      if (theme.giftTextColor) s.setProperty('--bundlify-gift-text', theme.giftTextColor);
+      if (theme.giftSelectedBgColor) s.setProperty('--bundlify-gift-selected-bg', theme.giftSelectedBgColor);
+      if (theme.giftSelectedTextColor) s.setProperty('--bundlify-gift-selected-text', theme.giftSelectedTextColor);
+
+      // Upsell colors
+      if (theme.upsellBgColor) s.setProperty('--bundlify-upsell-bg', theme.upsellBgColor);
+      if (theme.upsellTextColor) s.setProperty('--bundlify-upsell-text', theme.upsellTextColor);
+      if (theme.upsellSelectedBgColor) s.setProperty('--bundlify-upsell-selected-bg', theme.upsellSelectedBgColor);
+      if (theme.upsellSelectedTextColor) s.setProperty('--bundlify-upsell-selected-text', theme.upsellSelectedTextColor);
+
+      // Typography for label, gift, upsell, unit label
+      if (theme.labelFontSize != null) s.setProperty('--bundlify-label-font-size', theme.labelFontSize + 'px');
+      if (theme.labelFontWeight) s.setProperty('--bundlify-label-font-weight', theme.labelFontWeight);
+      if (theme.giftFontSize != null) s.setProperty('--bundlify-gift-font-size', theme.giftFontSize + 'px');
+      if (theme.giftFontWeight) s.setProperty('--bundlify-gift-font-weight', theme.giftFontWeight);
+      if (theme.upsellFontSize != null) s.setProperty('--bundlify-upsell-font-size', theme.upsellFontSize + 'px');
+      if (theme.upsellFontWeight) s.setProperty('--bundlify-upsell-font-weight', theme.upsellFontWeight);
+      if (theme.unitLabelFontSize != null) s.setProperty('--bundlify-unit-label-font-size', theme.unitLabelFontSize + 'px');
+      if (theme.unitLabelFontWeight) s.setProperty('--bundlify-unit-label-font-weight', theme.unitLabelFontWeight);
+
+      // Spacing
+      if (theme.spacing != null) s.setProperty('--bundlify-spacing', theme.spacing + 'px');
+
+      // Sticky bar extended
+      if (theme.stickyBarButtonText) themeConfig.stickyBarButtonText = theme.stickyBarButtonText;
+      if (theme.stickyBarTitleFontSize != null) s.setProperty('--bundlify-sticky-title-font-size', theme.stickyBarTitleFontSize + 'px');
+      if (theme.stickyBarTitleFontWeight) s.setProperty('--bundlify-sticky-title-font-weight', theme.stickyBarTitleFontWeight);
+      if (theme.stickyBarButtonFontSize != null) s.setProperty('--bundlify-sticky-btn-font-size', theme.stickyBarButtonFontSize + 'px');
+      if (theme.stickyBarButtonFontWeight) s.setProperty('--bundlify-sticky-btn-font-weight', theme.stickyBarButtonFontWeight);
+      if (theme.stickyBarButtonPadding != null) s.setProperty('--bundlify-sticky-btn-padding', theme.stickyBarButtonPadding + 'px');
+      if (theme.stickyBarButtonBorderRadius != null) s.setProperty('--bundlify-sticky-btn-radius', theme.stickyBarButtonBorderRadius + 'px');
     }
 
     // Inject custom CSS
@@ -1565,7 +1673,7 @@
 
     bar.innerHTML = '<div class="bundlify-sticky-bar__content">' +
       '<span class="bundlify-sticky-bar__title">' + escapeHtml(productTitle) + '</span>' +
-      '<button class="bundlify-sticky-bar__btn" style="background:' + (themeConfig.stickyBarButtonBgColor || '#2563eb') + ';color:' + (themeConfig.stickyBarButtonTextColor || '#ffffff') + ';">Choose Bundle</button>' +
+      '<button class="bundlify-sticky-bar__btn" style="background:' + (themeConfig.stickyBarButtonBgColor || '#2563eb') + ';color:' + (themeConfig.stickyBarButtonTextColor || '#ffffff') + ';">' + escapeHtml(themeConfig.stickyBarButtonText) + '</button>' +
       '</div>';
 
     document.body.appendChild(bar);

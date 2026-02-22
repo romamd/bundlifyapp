@@ -52,6 +52,14 @@ export interface BundleDto {
   countdownTitle: string | null;
   countdownBgColor: string;
   countdownTextColor: string;
+  countdownTitleFontSize: number | null;
+  countdownTitleFontWeight: string | null;
+  countdownTitleAlignment: string;
+  giftsLayout: string;
+  giftsHideUntilUnlocked: boolean;
+  giftsShowLockedLabels: boolean;
+  lowStockAlertEnabled: boolean;
+  skipToCheckout: boolean;
   customCss: string | null;
   translations: Record<string, Record<string, string>> | null;
   currentRedemptions: number;
@@ -113,6 +121,14 @@ export interface CreateBundleDto {
   countdownTitle?: string;
   countdownBgColor?: string;
   countdownTextColor?: string;
+  countdownTitleFontSize?: number;
+  countdownTitleFontWeight?: string;
+  countdownTitleAlignment?: string;
+  giftsLayout?: string;
+  giftsHideUntilUnlocked?: boolean;
+  giftsShowLockedLabels?: boolean;
+  lowStockAlertEnabled?: boolean;
+  skipToCheckout?: boolean;
   customCss?: string;
   translations?: Record<string, Record<string, string>>;
 }

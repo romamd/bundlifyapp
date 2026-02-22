@@ -118,6 +118,9 @@ export function BundleWizard({
   const [countdownTitle, setCountdownTitle] = useState('Hurry! Offer expires in {{timer}}');
   const [countdownBgColor, setCountdownBgColor] = useState('#111827');
   const [countdownTextColor, setCountdownTextColor] = useState('#ffffff');
+  const [countdownTitleFontSize, setCountdownTitleFontSize] = useState<number>(editBundle?.countdownTitleFontSize ?? 14);
+  const [countdownTitleFontWeight, setCountdownTitleFontWeight] = useState<string>(editBundle?.countdownTitleFontWeight ?? 'normal');
+  const [countdownTitleAlignment, setCountdownTitleAlignment] = useState<string>(editBundle?.countdownTitleAlignment ?? 'center');
   const [bogoGetQuantity, setBogoGetQuantity] = useState(1);
   const [bogoGetDiscountPct, setBogoGetDiscountPct] = useState(100);
   const [upsells, setUpsells] = useState<Array<{
@@ -132,6 +135,9 @@ export function BundleWizard({
   const [giftsEnabled, setGiftsEnabled] = useState(false);
   const [giftsTitle, setGiftsTitle] = useState('Free gifts with your order');
   const [giftsSubtitle, setGiftsSubtitle] = useState('');
+  const [giftsLayout, setGiftsLayout] = useState<string>(editBundle?.giftsLayout ?? 'vertical');
+  const [giftsHideUntilUnlocked, setGiftsHideUntilUnlocked] = useState(editBundle?.giftsHideUntilUnlocked ?? false);
+  const [giftsShowLockedLabels, setGiftsShowLockedLabels] = useState(editBundle?.giftsShowLockedLabels ?? true);
   const [giftTiers, setGiftTiers] = useState<Array<{
     productId: string;
     giftType: string;
@@ -142,6 +148,10 @@ export function BundleWizard({
   const [customCss, setCustomCss] = useState('');
   const [translations, setTranslations] = useState<Record<string, Record<string, string>>>({});
   const [newLocale, setNewLocale] = useState('');
+  const [startsAt, setStartsAt] = useState<string>(editBundle?.startsAt ?? '');
+  const [endsAt, setEndsAt] = useState<string>(editBundle?.endsAt ?? '');
+  const [lowStockAlertEnabled, setLowStockAlertEnabled] = useState(editBundle?.lowStockAlertEnabled ?? false);
+  const [skipToCheckout, setSkipToCheckout] = useState(editBundle?.skipToCheckout ?? false);
   const [submitting, setSubmitting] = useState(false);
   const [initialized, setInitialized] = useState(false);
 
@@ -173,6 +183,9 @@ export function BundleWizard({
       setCountdownTitle(editBundle.countdownTitle ?? 'Hurry! Offer expires in {{timer}}');
       setCountdownBgColor(editBundle.countdownBgColor ?? '#111827');
       setCountdownTextColor(editBundle.countdownTextColor ?? '#ffffff');
+      setCountdownTitleFontSize(editBundle.countdownTitleFontSize ?? 14);
+      setCountdownTitleFontWeight(editBundle.countdownTitleFontWeight ?? 'normal');
+      setCountdownTitleAlignment(editBundle.countdownTitleAlignment ?? 'center');
       if (editBundle.upsells?.length) {
         setUpsells(editBundle.upsells.map((u) => ({
           productId: u.productId,
@@ -187,6 +200,9 @@ export function BundleWizard({
       setGiftsEnabled(editBundle.giftsEnabled ?? false);
       setGiftsTitle(editBundle.giftsTitle ?? 'Free gifts with your order');
       setGiftsSubtitle(editBundle.giftsSubtitle ?? '');
+      setGiftsLayout(editBundle.giftsLayout ?? 'vertical');
+      setGiftsHideUntilUnlocked(editBundle.giftsHideUntilUnlocked ?? false);
+      setGiftsShowLockedLabels(editBundle.giftsShowLockedLabels ?? true);
       if (editBundle.giftTiers?.length) {
         setGiftTiers(editBundle.giftTiers.map((g) => ({
           productId: g.productId ?? '',
@@ -198,6 +214,10 @@ export function BundleWizard({
       }
       if (editBundle.customCss) setCustomCss(editBundle.customCss);
       if (editBundle.translations) setTranslations(editBundle.translations);
+      setStartsAt(editBundle.startsAt ?? '');
+      setEndsAt(editBundle.endsAt ?? '');
+      setLowStockAlertEnabled(editBundle.lowStockAlertEnabled ?? false);
+      setSkipToCheckout(editBundle.skipToCheckout ?? false);
       setInitialized(true);
     }
     if (!open) {
@@ -277,9 +297,15 @@ export function BundleWizard({
         countdownTitle: countdownEnabled ? countdownTitle : undefined,
         countdownBgColor: countdownEnabled ? countdownBgColor : '#111827',
         countdownTextColor: countdownEnabled ? countdownTextColor : '#ffffff',
+        countdownTitleFontSize,
+        countdownTitleFontWeight,
+        countdownTitleAlignment,
         giftsEnabled,
         giftsTitle: giftsEnabled ? giftsTitle : undefined,
         giftsSubtitle: giftsEnabled && giftsSubtitle ? giftsSubtitle : undefined,
+        giftsLayout,
+        giftsHideUntilUnlocked,
+        giftsShowLockedLabels,
         giftTiers: giftsEnabled && giftTiers.length > 0 ? giftTiers.map((g) => ({
           productId: g.productId || undefined,
           giftType: g.giftType,
@@ -296,6 +322,10 @@ export function BundleWizard({
           selectedByDefault: u.selectedByDefault,
           matchQuantity: u.matchQuantity,
         })) : undefined,
+        startsAt: startsAt || undefined,
+        endsAt: endsAt || undefined,
+        lowStockAlertEnabled,
+        skipToCheckout,
         customCss: customCss || undefined,
         translations: Object.keys(translations).length > 0 ? JSON.stringify(translations) : undefined,
       });
@@ -323,13 +353,23 @@ export function BundleWizard({
     setCountdownTitle('Hurry! Offer expires in {{timer}}');
     setCountdownBgColor('#111827');
     setCountdownTextColor('#ffffff');
+    setCountdownTitleFontSize(14);
+    setCountdownTitleFontWeight('normal');
+    setCountdownTitleAlignment('center');
     setBogoGetQuantity(1);
     setBogoGetDiscountPct(100);
     setUpsells([]);
     setGiftsEnabled(false);
     setGiftsTitle('Free gifts with your order');
     setGiftsSubtitle('');
+    setGiftsLayout('vertical');
+    setGiftsHideUntilUnlocked(false);
+    setGiftsShowLockedLabels(true);
     setGiftTiers([]);
+    setStartsAt('');
+    setEndsAt('');
+    setLowStockAlertEnabled(false);
+    setSkipToCheckout(false);
     setCustomCss('');
     setTranslations({});
     setNewLocale('');
@@ -363,6 +403,16 @@ export function BundleWizard({
       default:
         return false;
     }
+  };
+
+  const moveUpsell = (idx: number, direction: 'up' | 'down') => {
+    const targetIdx = direction === 'up' ? idx - 1 : idx + 1;
+    if (targetIdx < 0 || targetIdx >= upsells.length) return;
+    const updated = [...upsells];
+    const temp = updated[idx];
+    updated[idx] = updated[targetIdx];
+    updated[targetIdx] = temp;
+    setUpsells(updated);
   };
 
   if (!open) return null;
@@ -1109,6 +1159,35 @@ export function BundleWizard({
                 })}
               </div>
 
+              {/* Scheduling */}
+              <div style={{ marginBottom: '16px', border: '1px solid #e1e3e5', borderRadius: '8px', overflow: 'hidden' }}>
+                <div style={{ padding: '10px 12px', backgroundColor: '#f6f6f7', fontWeight: 600, fontSize: '13px' }}>
+                  Scheduling
+                </div>
+                <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div>
+                    <label style={{ display: 'block', fontWeight: 600, fontSize: '13px', marginBottom: '4px' }}>Start Date</label>
+                    <input
+                      type="datetime-local"
+                      value={startsAt}
+                      onChange={(e) => setStartsAt(e.target.value)}
+                      style={{ width: '100%', padding: '6px 10px', border: '1px solid #c9cccf', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box' as const }}
+                    />
+                    <div style={{ fontSize: '11px', color: '#6d7175', marginTop: '2px' }}>Leave empty for immediate activation</div>
+                  </div>
+                  <div>
+                    <label style={{ display: 'block', fontWeight: 600, fontSize: '13px', marginBottom: '4px' }}>End Date</label>
+                    <input
+                      type="datetime-local"
+                      value={endsAt}
+                      onChange={(e) => setEndsAt(e.target.value)}
+                      style={{ width: '100%', padding: '6px 10px', border: '1px solid #c9cccf', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box' as const }}
+                    />
+                    <div style={{ fontSize: '11px', color: '#6d7175', marginTop: '2px' }}>Leave empty for no expiration</div>
+                  </div>
+                </div>
+              </div>
+
               {/* Countdown Timer */}
               <div style={{ marginBottom: '16px', border: '1px solid #e1e3e5', borderRadius: '8px', overflow: 'hidden' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', backgroundColor: '#f6f6f7', fontWeight: 600, fontSize: '13px' }}>
@@ -1175,7 +1254,62 @@ export function BundleWizard({
                         </div>
                       </div>
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '10px 16px', borderRadius: '8px', backgroundColor: countdownBgColor, color: countdownTextColor, fontSize: '14px', fontWeight: 600 }}>
+                    {/* Font Size */}
+                    <div>
+                      <label style={{ display: 'block', fontWeight: 600, fontSize: '13px', marginBottom: '4px' }}>Font Size: {countdownTitleFontSize}px</label>
+                      <input
+                        type="range"
+                        min={8}
+                        max={32}
+                        step={1}
+                        value={countdownTitleFontSize}
+                        onChange={(e) => setCountdownTitleFontSize(parseInt(e.target.value))}
+                        style={{ width: '100%' }}
+                      />
+                      <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#6d7175' }}>
+                        <span>8px</span>
+                        <span>32px</span>
+                      </div>
+                    </div>
+                    {/* Font Weight */}
+                    <div>
+                      <label style={{ display: 'block', fontWeight: 600, fontSize: '13px', marginBottom: '4px' }}>Font Weight</label>
+                      <select
+                        value={countdownTitleFontWeight}
+                        onChange={(e) => setCountdownTitleFontWeight(e.target.value)}
+                        style={{ width: '100%', padding: '6px 10px', border: '1px solid #c9cccf', borderRadius: '4px', fontSize: '13px' }}
+                      >
+                        <option value="normal">Normal</option>
+                        <option value="bold">Bold</option>
+                      </select>
+                    </div>
+                    {/* Text Alignment */}
+                    <div>
+                      <label style={{ display: 'block', fontWeight: 600, fontSize: '13px', marginBottom: '4px' }}>Text Alignment</label>
+                      <div style={{ display: 'flex', gap: '4px' }}>
+                        {(['left', 'center', 'right'] as const).map((align) => (
+                          <button
+                            key={align}
+                            type="button"
+                            onClick={() => setCountdownTitleAlignment(align)}
+                            style={{
+                              flex: 1,
+                              padding: '6px 10px',
+                              border: countdownTitleAlignment === align ? '2px solid #008060' : '1px solid #c9cccf',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontSize: '13px',
+                              backgroundColor: countdownTitleAlignment === align ? '#f1f8f5' : '#ffffff',
+                              fontWeight: countdownTitleAlignment === align ? 600 : 400,
+                              textTransform: 'capitalize' as const,
+                            }}
+                          >
+                            {align}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: countdownTitleAlignment as 'left' | 'center' | 'right', padding: '10px 16px', borderRadius: '8px', backgroundColor: countdownBgColor, color: countdownTextColor, fontSize: `${countdownTitleFontSize}px`, fontWeight: countdownTitleFontWeight === 'bold' ? 700 : 400, textAlign: countdownTitleAlignment as 'left' | 'center' | 'right' }}>
                       {countdownTitle.replace('{{timer}}', '14:59')}
                     </div>
                   </div>
@@ -1216,6 +1350,42 @@ export function BundleWizard({
                 {upsells.map((upsell, idx) => (
                   <div key={idx} style={{ padding: '12px', borderTop: '1px solid #f1f1f1', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', flexShrink: 0 }}>
+                        <button
+                          type="button"
+                          onClick={() => moveUpsell(idx, 'up')}
+                          disabled={idx === 0}
+                          style={{
+                            padding: '2px 6px',
+                            border: '1px solid #c9cccf',
+                            borderRadius: '3px',
+                            cursor: idx === 0 ? 'not-allowed' : 'pointer',
+                            fontSize: '11px',
+                            backgroundColor: '#ffffff',
+                            color: idx === 0 ? '#c9cccf' : '#202223',
+                            lineHeight: 1,
+                          }}
+                        >
+                          &#9650;
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => moveUpsell(idx, 'down')}
+                          disabled={idx === upsells.length - 1}
+                          style={{
+                            padding: '2px 6px',
+                            border: '1px solid #c9cccf',
+                            borderRadius: '3px',
+                            cursor: idx === upsells.length - 1 ? 'not-allowed' : 'pointer',
+                            fontSize: '11px',
+                            backgroundColor: '#ffffff',
+                            color: idx === upsells.length - 1 ? '#c9cccf' : '#202223',
+                            lineHeight: 1,
+                          }}
+                        >
+                          &#9660;
+                        </button>
+                      </div>
                       <div style={{ flex: 1 }}>
                         <label style={{ fontSize: '11px', color: '#6d7175', display: 'block' }}>Product ID</label>
                         <input
@@ -1364,6 +1534,54 @@ export function BundleWizard({
                       <label style={{ display: 'block', fontWeight: 600, fontSize: '13px', marginBottom: '4px' }}>Subtitle (optional)</label>
                       <input type="text" value={giftsSubtitle} onChange={(e) => setGiftsSubtitle(e.target.value)} maxLength={255} style={{ width: '100%', padding: '6px 10px', border: '1px solid #c9cccf', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box' as const }} />
                     </div>
+                    {/* Gifts Layout */}
+                    <div>
+                      <label style={{ display: 'block', fontWeight: 600, fontSize: '13px', marginBottom: '4px' }}>Layout</label>
+                      <div style={{ display: 'flex', gap: '4px' }}>
+                        {([
+                          { value: 'vertical', label: 'Vertical' },
+                          { value: 'horizontal', label: 'Horizontal' },
+                        ] as const).map((opt) => (
+                          <button
+                            key={opt.value}
+                            type="button"
+                            onClick={() => setGiftsLayout(opt.value)}
+                            style={{
+                              flex: 1,
+                              padding: '8px 10px',
+                              border: giftsLayout === opt.value ? '2px solid #008060' : '1px solid #c9cccf',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontSize: '13px',
+                              backgroundColor: giftsLayout === opt.value ? '#f1f8f5' : '#ffffff',
+                              fontWeight: giftsLayout === opt.value ? 600 : 400,
+                            }}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    {/* Hide gifts until unlocked */}
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px' }}>
+                      <input
+                        type="checkbox"
+                        checked={giftsHideUntilUnlocked}
+                        onChange={(e) => setGiftsHideUntilUnlocked(e.target.checked)}
+                        style={{ cursor: 'pointer' }}
+                      />
+                      Hide gifts until unlocked
+                    </label>
+                    {/* Show labels for locked gifts */}
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontSize: '13px' }}>
+                      <input
+                        type="checkbox"
+                        checked={giftsShowLockedLabels}
+                        onChange={(e) => setGiftsShowLockedLabels(e.target.checked)}
+                        style={{ cursor: 'pointer' }}
+                      />
+                      Show labels for locked gifts
+                    </label>
                     {giftTiers.map((gift, idx) => (
                       <div key={idx} style={{ padding: '10px', border: '1px solid #e1e3e5', borderRadius: '6px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
                         <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -1467,6 +1685,34 @@ export function BundleWizard({
                     </button>
                   </div>
                 )}
+              </div>
+
+              {/* Low Stock Alert */}
+              <div style={{ marginBottom: '16px', border: '1px solid #e1e3e5', borderRadius: '8px', overflow: 'hidden' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', backgroundColor: '#f6f6f7', fontWeight: 600, fontSize: '13px' }}>
+                  <span>Low Stock Alert</span>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontWeight: 400, fontSize: '13px' }}>
+                    <input type="checkbox" checked={lowStockAlertEnabled} onChange={(e) => setLowStockAlertEnabled(e.target.checked)} style={{ cursor: 'pointer' }} />
+                    Enable
+                  </label>
+                </div>
+                <div style={{ padding: '12px', fontSize: '13px', color: '#6d7175' }}>
+                  Show urgency indicator when product stock is low
+                </div>
+              </div>
+
+              {/* Skip to Checkout */}
+              <div style={{ marginBottom: '16px', border: '1px solid #e1e3e5', borderRadius: '8px', overflow: 'hidden' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', backgroundColor: '#f6f6f7', fontWeight: 600, fontSize: '13px' }}>
+                  <span>Skip Cart</span>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontWeight: 400, fontSize: '13px' }}>
+                    <input type="checkbox" checked={skipToCheckout} onChange={(e) => setSkipToCheckout(e.target.checked)} style={{ cursor: 'pointer' }} />
+                    Enable
+                  </label>
+                </div>
+                <div style={{ padding: '12px', fontSize: '13px', color: '#6d7175' }}>
+                  Skip cart and go directly to checkout
+                </div>
               </div>
 
               {/* Custom CSS */}

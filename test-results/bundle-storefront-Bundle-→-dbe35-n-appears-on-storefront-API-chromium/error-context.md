@@ -1,0 +1,66 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - navigation [ref=e4]:
+    - link "Dashboard" [ref=e5] [cursor=pointer]:
+      - /url: /
+    - link "Products" [ref=e6] [cursor=pointer]:
+      - /url: /products
+    - link "Bundles" [ref=e7] [cursor=pointer]:
+      - /url: /bundles
+    - link "Analytics" [ref=e8] [cursor=pointer]:
+      - /url: /analytics
+    - link "A/B Tests" [ref=e9] [cursor=pointer]:
+      - /url: /ab-tests
+    - link "Integrations" [ref=e10] [cursor=pointer]:
+      - /url: /integrations
+    - link "Settings" [ref=e11] [cursor=pointer]:
+      - /url: /settings
+  - generic [ref=e12]:
+    - generic [ref=e13]:
+      - heading "Bundles" [level=1] [ref=e14]
+      - generic [ref=e15]:
+        - button "Generate Bundles" [ref=e16] [cursor=pointer]
+        - button "Create Bundle" [ref=e17] [cursor=pointer]
+    - generic [ref=e18]: "Error: Failed to execute 'json' on 'Response': Unexpected end of JSON input"
+    - generic [ref=e20]: 0 bundles total
+    - generic [ref=e21]: No bundles found. Create your first bundle or generate bundles automatically.
+    - generic [ref=e23]:
+      - generic [ref=e24]:
+        - heading "Create Bundle" [level=2] [ref=e25]
+        - button "x" [ref=e26] [cursor=pointer]
+      - generic [ref=e27]:
+        - generic [ref=e28]: Bundle Type
+        - generic [ref=e30]: Select Products
+        - generic [ref=e32]: Set Discount
+        - generic [ref=e34]: Display Rules
+        - generic [ref=e36]: Review & Create
+      - generic [ref=e38]:
+        - generic [ref=e40]:
+          - paragraph [ref=e41]: Select at least 2 products for your bundle.
+          - generic [ref=e42]:
+            - textbox "Search products by title or SKU..." [ref=e43]
+            - generic [ref=e44]:
+              - button "Dead Stock" [ref=e45] [cursor=pointer]
+              - button "Has COGS" [ref=e46] [cursor=pointer]
+              - button "In Stock" [ref=e47] [cursor=pointer]
+              - generic [ref=e48]:
+                - generic [ref=e49]: "Sort:"
+                - combobox [ref=e50]:
+                  - option "Name" [selected]
+                  - 'option "Price: Low to High"'
+                  - 'option "Price: High to Low"'
+                  - 'option "Margin: High to Low"'
+                  - 'option "Margin: Low to High"'
+              - generic [ref=e51]: 0 products
+            - generic [ref=e53]: No products found
+        - generic [ref=e55]:
+          - generic [ref=e56]: Preview
+          - generic [ref=e57]:
+            - generic [ref=e58]: Select products to see preview
+            - button "Add Bundle to Cart" [ref=e59]
+      - generic [ref=e60]:
+        - button "Back" [ref=e61] [cursor=pointer]
+        - button "Next" [disabled] [ref=e62]
+```

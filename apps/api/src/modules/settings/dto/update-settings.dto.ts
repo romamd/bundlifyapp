@@ -299,6 +299,100 @@ export class UpdateSettingsDto {
   @Matches(/^#[0-9a-fA-F]{3,8}$/)
   widgetCardHoverBgColor?: string;
 
+  // Gift element colors
+  @IsOptional()
+  @IsString()
+  @Matches(/^#[0-9a-fA-F]{3,8}$/)
+  widgetGiftBgColor?: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^#[0-9a-fA-F]{3,8}$/)
+  widgetGiftTextColor?: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^#[0-9a-fA-F]{3,8}$/)
+  widgetGiftSelectedBgColor?: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^#[0-9a-fA-F]{3,8}$/)
+  widgetGiftSelectedTextColor?: string;
+
+  // Upsell element colors
+  @IsOptional()
+  @IsString()
+  @Matches(/^#[0-9a-fA-F]{3,8}$/)
+  widgetUpsellBgColor?: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^#[0-9a-fA-F]{3,8}$/)
+  widgetUpsellTextColor?: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^#[0-9a-fA-F]{3,8}$/)
+  widgetUpsellSelectedBgColor?: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^#[0-9a-fA-F]{3,8}$/)
+  widgetUpsellSelectedTextColor?: string;
+
+  // Missing typography groups
+  @IsOptional()
+  @IsNumber()
+  @Min(8)
+  @Max(32)
+  widgetLabelFontSize?: number;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(['normal', 'bold'])
+  widgetLabelFontWeight?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(8)
+  @Max(32)
+  widgetGiftFontSize?: number;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(['normal', 'bold'])
+  widgetGiftFontWeight?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(8)
+  @Max(32)
+  widgetUpsellFontSize?: number;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(['normal', 'bold'])
+  widgetUpsellFontWeight?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(8)
+  @Max(32)
+  widgetUnitLabelFontSize?: number;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(['normal', 'bold'])
+  widgetUnitLabelFontWeight?: string;
+
+  // Spacing
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(40)
+  widgetSpacing?: number;
+
   @IsOptional()
   @IsBoolean()
   stickyBarEnabled?: boolean;
@@ -322,6 +416,45 @@ export class UpdateSettingsDto {
   @IsString()
   @Matches(/^#[0-9a-fA-F]{3,8}$/)
   stickyBarButtonTextColor?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(100)
+  stickyBarButtonText?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(8)
+  @Max(32)
+  stickyBarTitleFontSize?: number;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(['normal', 'bold'])
+  stickyBarTitleFontWeight?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(8)
+  @Max(32)
+  stickyBarButtonFontSize?: number;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(['normal', 'bold'])
+  stickyBarButtonFontWeight?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(4)
+  @Max(30)
+  stickyBarButtonPadding?: number;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(24)
+  stickyBarButtonBorderRadius?: number;
 
   @IsOptional()
   @IsNumber()

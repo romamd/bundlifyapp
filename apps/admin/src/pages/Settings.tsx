@@ -477,6 +477,18 @@ export function Settings() {
                 ['widgetTextColor', 'Text Color', 'Main text color'],
                 ['widgetSecondaryTextColor', 'Secondary Text Color', 'Subtitle and meta text'],
               ]},
+              { heading: 'Free Gift', items: [
+                ['widgetGiftBgColor', 'Gift Background', 'Gift card background'],
+                ['widgetGiftTextColor', 'Gift Text', 'Gift card text'],
+                ['widgetGiftSelectedBgColor', 'Gift Selected Bg', 'Gift selected state'],
+                ['widgetGiftSelectedTextColor', 'Gift Selected Text', 'Gift selected text'],
+              ]},
+              { heading: 'Upsell', items: [
+                ['widgetUpsellBgColor', 'Upsell Background', 'Upsell card background'],
+                ['widgetUpsellTextColor', 'Upsell Text', 'Upsell card text'],
+                ['widgetUpsellSelectedBgColor', 'Upsell Selected Bg', 'Upsell selected state'],
+                ['widgetUpsellSelectedTextColor', 'Upsell Selected Text', 'Upsell selected text'],
+              ]},
             ] as const).map((group) => (
               <div key={group.heading}>
                 <h4 style={{ fontSize: '13px', fontWeight: 600, color: '#6d7175', margin: '16px 0 8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
@@ -535,6 +547,28 @@ export function Settings() {
                 />
                 <span style={{ fontSize: '13px', color: '#6d7175', minWidth: '32px' }}>
                   {form.widgetBorderRadius ?? 10}px
+                </span>
+              </div>
+            </div>
+
+            {/* Spacing slider */}
+            <div style={fieldRowStyle}>
+              <div>
+                <div style={labelStyle}>Spacing</div>
+                <div style={sublabelStyle}>Element spacing (0-40px)</div>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <input
+                  type="range"
+                  min={0}
+                  max={40}
+                  step={1}
+                  value={form.widgetSpacing ?? 12}
+                  onChange={(e) => updateField('widgetSpacing', parseInt(e.target.value, 10))}
+                  style={{ width: '120px' }}
+                />
+                <span style={{ fontSize: '13px', color: '#6d7175', minWidth: '32px' }}>
+                  {form.widgetSpacing ?? 12}px
                 </span>
               </div>
             </div>
@@ -649,6 +683,10 @@ export function Settings() {
               ['Price', 'widgetPriceFontSize', 'widgetPriceFontWeight', 16, 'bold'] as const,
               ['Badge', 'widgetBadgeFontSize', 'widgetBadgeFontWeight', 12, 'bold'] as const,
               ['Button', 'widgetButtonFontSize', 'widgetButtonFontWeight', 14, 'bold'] as const,
+              ['Label', 'widgetLabelFontSize', 'widgetLabelFontWeight', 11, 'bold'] as const,
+              ['Free Gift', 'widgetGiftFontSize', 'widgetGiftFontWeight', 13, 'normal'] as const,
+              ['Upsell', 'widgetUpsellFontSize', 'widgetUpsellFontWeight', 13, 'normal'] as const,
+              ['Unit Label', 'widgetUnitLabelFontSize', 'widgetUnitLabelFontWeight', 13, 'bold'] as const,
             ]).map(([label, sizeKey, weightKey, defaultSize, defaultWeight]) => (
               <div key={sizeKey} style={{ ...fieldRowStyle, gap: '12px' }}>
                 <div style={{ flex: '0 0 120px' }}>
@@ -782,6 +820,7 @@ export function Settings() {
               onChange={(val) => updateField('stickyBarEnabled', val)}
             />
             {form.stickyBarEnabled && (
+              <>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '12px' }}>
                 {([
                   ['stickyBarBgColor', 'Background', '#ffffff'] as const,
@@ -820,6 +859,160 @@ export function Settings() {
                   </div>
                 ))}
               </div>
+
+              {/* Button Text */}
+              <div style={{ ...fieldRowStyle, marginTop: '12px' }}>
+                <div>
+                  <div style={labelStyle}>Button Text</div>
+                  <div style={sublabelStyle}>Call-to-action text on sticky bar</div>
+                </div>
+                <input
+                  type="text"
+                  value={form.stickyBarButtonText ?? 'Choose Bundle'}
+                  onChange={(e) => updateField('stickyBarButtonText', e.target.value)}
+                  maxLength={100}
+                  style={{
+                    padding: '6px 10px',
+                    border: '1px solid #c9cccf',
+                    borderRadius: '4px',
+                    fontSize: '14px',
+                    width: '200px',
+                  }}
+                />
+              </div>
+
+              {/* Title Font Size slider */}
+              <div style={fieldRowStyle}>
+                <div>
+                  <div style={labelStyle}>Title Font Size</div>
+                  <div style={sublabelStyle}>Sticky bar title size (8-32px)</div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <input
+                    type="range"
+                    min={8}
+                    max={32}
+                    step={1}
+                    value={form.stickyBarTitleFontSize ?? 14}
+                    onChange={(e) => updateField('stickyBarTitleFontSize', parseInt(e.target.value, 10))}
+                    style={{ width: '120px' }}
+                  />
+                  <span style={{ fontSize: '13px', color: '#6d7175', minWidth: '32px' }}>
+                    {form.stickyBarTitleFontSize ?? 14}px
+                  </span>
+                </div>
+              </div>
+
+              {/* Title Font Weight */}
+              <div style={fieldRowStyle}>
+                <div>
+                  <div style={labelStyle}>Title Font Weight</div>
+                  <div style={sublabelStyle}>Sticky bar title weight</div>
+                </div>
+                <select
+                  value={form.stickyBarTitleFontWeight ?? 'normal'}
+                  onChange={(e) => updateField('stickyBarTitleFontWeight', e.target.value)}
+                  style={{
+                    padding: '6px 10px',
+                    border: '1px solid #c9cccf',
+                    borderRadius: '4px',
+                    fontSize: '14px',
+                    width: '140px',
+                  }}
+                >
+                  <option value="normal">Normal</option>
+                  <option value="bold">Bold</option>
+                </select>
+              </div>
+
+              {/* Button Font Size slider */}
+              <div style={fieldRowStyle}>
+                <div>
+                  <div style={labelStyle}>Button Font Size</div>
+                  <div style={sublabelStyle}>Sticky bar button text size (8-32px)</div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <input
+                    type="range"
+                    min={8}
+                    max={32}
+                    step={1}
+                    value={form.stickyBarButtonFontSize ?? 14}
+                    onChange={(e) => updateField('stickyBarButtonFontSize', parseInt(e.target.value, 10))}
+                    style={{ width: '120px' }}
+                  />
+                  <span style={{ fontSize: '13px', color: '#6d7175', minWidth: '32px' }}>
+                    {form.stickyBarButtonFontSize ?? 14}px
+                  </span>
+                </div>
+              </div>
+
+              {/* Button Font Weight */}
+              <div style={fieldRowStyle}>
+                <div>
+                  <div style={labelStyle}>Button Font Weight</div>
+                  <div style={sublabelStyle}>Sticky bar button text weight</div>
+                </div>
+                <select
+                  value={form.stickyBarButtonFontWeight ?? 'bold'}
+                  onChange={(e) => updateField('stickyBarButtonFontWeight', e.target.value)}
+                  style={{
+                    padding: '6px 10px',
+                    border: '1px solid #c9cccf',
+                    borderRadius: '4px',
+                    fontSize: '14px',
+                    width: '140px',
+                  }}
+                >
+                  <option value="normal">Normal</option>
+                  <option value="bold">Bold</option>
+                </select>
+              </div>
+
+              {/* Button Padding slider */}
+              <div style={fieldRowStyle}>
+                <div>
+                  <div style={labelStyle}>Button Padding</div>
+                  <div style={sublabelStyle}>Sticky bar button padding (4-30px)</div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <input
+                    type="range"
+                    min={4}
+                    max={30}
+                    step={1}
+                    value={form.stickyBarButtonPadding ?? 15}
+                    onChange={(e) => updateField('stickyBarButtonPadding', parseInt(e.target.value, 10))}
+                    style={{ width: '120px' }}
+                  />
+                  <span style={{ fontSize: '13px', color: '#6d7175', minWidth: '32px' }}>
+                    {form.stickyBarButtonPadding ?? 15}px
+                  </span>
+                </div>
+              </div>
+
+              {/* Button Border Radius slider */}
+              <div style={fieldRowStyle}>
+                <div>
+                  <div style={labelStyle}>Button Border Radius</div>
+                  <div style={sublabelStyle}>Sticky bar button corner roundness (0-24px)</div>
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <input
+                    type="range"
+                    min={0}
+                    max={24}
+                    step={1}
+                    value={form.stickyBarButtonBorderRadius ?? 8}
+                    onChange={(e) => updateField('stickyBarButtonBorderRadius', parseInt(e.target.value, 10))}
+                    style={{ width: '120px' }}
+                  />
+                  <span style={{ fontSize: '13px', color: '#6d7175', minWidth: '32px' }}>
+                    {form.stickyBarButtonBorderRadius ?? 8}px
+                  </span>
+                </div>
+              </div>
+              </>
             )}
           </div>
 

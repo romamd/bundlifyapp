@@ -1,0 +1,70 @@
+# Page snapshot
+
+```yaml
+- generic [ref=e3]:
+  - navigation [ref=e4]:
+    - link "Dashboard" [ref=e5] [cursor=pointer]:
+      - /url: /
+    - link "Products" [ref=e6] [cursor=pointer]:
+      - /url: /products
+    - link "Bundles" [ref=e7] [cursor=pointer]:
+      - /url: /bundles
+    - link "Analytics" [ref=e8] [cursor=pointer]:
+      - /url: /analytics
+    - link "A/B Tests" [ref=e9] [cursor=pointer]:
+      - /url: /ab-tests
+    - link "Integrations" [ref=e10] [cursor=pointer]:
+      - /url: /integrations
+    - link "Settings" [ref=e11] [cursor=pointer]:
+      - /url: /settings
+  - generic [ref=e12]:
+    - generic [ref=e13]:
+      - heading "Bundles" [level=1] [ref=e14]
+      - generic [ref=e15]:
+        - button "Generate Bundles" [ref=e16] [cursor=pointer]
+        - button "Create Bundle" [active] [ref=e17] [cursor=pointer]
+    - generic [ref=e18]: Loading...
+    - generic [ref=e20]:
+      - generic [ref=e21]:
+        - heading "Create Bundle" [level=2] [ref=e22]
+        - button "x" [ref=e23] [cursor=pointer]
+      - generic [ref=e24]:
+        - generic [ref=e25]: Bundle Type
+        - generic [ref=e27]: Select Products
+        - generic [ref=e29]: Set Discount
+        - generic [ref=e31]: Display Rules
+        - generic [ref=e33]: Review & Create
+      - generic [ref=e35]:
+        - generic [ref=e37]:
+          - paragraph [ref=e38]: Choose the type of bundle you want to create.
+          - generic [ref=e39]:
+            - generic [ref=e40] [cursor=pointer]:
+              - generic [ref=e41]: Fixed Bundle
+              - generic [ref=e42]: Curate a set of specific products sold together at a fixed discount. Best for themed collections or starter kits.
+            - generic [ref=e43] [cursor=pointer]:
+              - generic [ref=e44]: Volume Discount
+              - generic [ref=e45]: Offer tiered pricing — buy more, save more. Ideal for quantity breaks on single or multiple products.
+            - generic [ref=e46] [cursor=pointer]:
+              - generic [ref=e47]: Buy X Get Y
+              - generic [ref=e48]: Buy one or more products and get another free or at a discount. Classic promotional mechanic.
+            - generic [ref=e49] [cursor=pointer]:
+              - generic [ref=e50]: Cross-Sell
+              - generic [ref=e51]: Recommend complementary products that go well together. Boost AOV with smart pairings.
+            - generic [ref=e52] [cursor=pointer]:
+              - generic [ref=e53]: Collection Bundle
+              - generic [ref=e54]: Let customers pick products from a collection to build their own bundle at a discount.
+            - generic [ref=e55] [cursor=pointer]:
+              - generic [ref=e56]: Mix & Match
+              - generic [ref=e57]: Customers choose any combination of products to create their personalized bundle.
+            - generic [ref=e58] [cursor=pointer]:
+              - generic [ref=e59]: Dead Stock Clearance
+              - generic [ref=e60]: Pair slow-moving inventory with popular items to clear stock while maintaining margins.
+        - generic [ref=e62]:
+          - generic [ref=e63]: Preview
+          - generic [ref=e64]:
+            - generic [ref=e65]: Select products to see preview
+            - button "Add Bundle to Cart" [ref=e66]
+      - generic [ref=e67]:
+        - button "Cancel" [ref=e68] [cursor=pointer]
+        - button "Next" [ref=e69] [cursor=pointer]
+```

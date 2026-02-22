@@ -241,6 +241,43 @@ export class CreateBundleDto {
   countdownTextColor?: string;
 
   @IsOptional()
+  @IsNumber()
+  @Min(8)
+  @Max(32)
+  countdownTitleFontSize?: number;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(['normal', 'bold'])
+  countdownTitleFontWeight?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(['left', 'center', 'right'])
+  countdownTitleAlignment?: string;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(['vertical', 'horizontal'])
+  giftsLayout?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  giftsHideUntilUnlocked?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  giftsShowLockedLabels?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  lowStockAlertEnabled?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  skipToCheckout?: boolean;
+
+  @IsOptional()
   @IsString()
   @MaxLength(10000)
   customCss?: string;

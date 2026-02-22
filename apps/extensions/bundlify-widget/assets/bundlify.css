@@ -51,6 +51,39 @@
   --bundlify-savings-badge-bg: #dcfce7;
   --bundlify-savings-badge-text: #166534;
   --bundlify-card-hover-bg: #f9fafb;
+
+  /* Gift element colors */
+  --bundlify-gift-bg: #fef9c3;
+  --bundlify-gift-text: #854d0e;
+  --bundlify-gift-selected-bg: #fef08a;
+  --bundlify-gift-selected-text: #713f12;
+
+  /* Upsell element colors */
+  --bundlify-upsell-bg: #f0fdf4;
+  --bundlify-upsell-text: #166534;
+  --bundlify-upsell-selected-bg: #dcfce7;
+  --bundlify-upsell-selected-text: #14532d;
+
+  /* Missing typography */
+  --bundlify-label-font-size: 11px;
+  --bundlify-label-font-weight: bold;
+  --bundlify-gift-font-size: 13px;
+  --bundlify-gift-font-weight: normal;
+  --bundlify-upsell-font-size: 13px;
+  --bundlify-upsell-font-weight: normal;
+  --bundlify-unit-label-font-size: 13px;
+  --bundlify-unit-label-font-weight: bold;
+
+  /* Spacing */
+  --bundlify-spacing: 12px;
+
+  /* Sticky bar extended */
+  --bundlify-sticky-title-font-size: 14px;
+  --bundlify-sticky-title-font-weight: normal;
+  --bundlify-sticky-btn-font-size: 14px;
+  --bundlify-sticky-btn-font-weight: bold;
+  --bundlify-sticky-btn-padding: 15px;
+  --bundlify-sticky-btn-radius: 8px;
 }
 
 /* ── Container ───────────────────────────────────────────────────────── */
@@ -67,7 +100,7 @@
 .bundlify-bundles {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--bundlify-spacing);
 }
 
 /* ── Loading indicator ───────────────────────────────────────────────── */
@@ -84,6 +117,7 @@
   border: 1px solid var(--bundlify-card-border);
   border-radius: var(--bundlify-radius);
   box-shadow: var(--bundlify-card-shadow);
+  padding: var(--bundlify-spacing);
   overflow: hidden;
   transition: box-shadow 0.2s ease, transform 0.2s ease;
   cursor: default;
@@ -427,7 +461,7 @@
 .bundlify-bundles--grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  gap: var(--bundlify-spacing);
 }
 
 .bundlify-bundles--grid .bundlify-card {
@@ -462,7 +496,7 @@
 
 .bundlify-volume-tiers {
   display: flex;
-  gap: 12px;
+  gap: var(--bundlify-spacing);
 }
 
 .bundlify-volume-tier {
@@ -502,17 +536,17 @@
 }
 
 .bundlify-volume-tier__label {
-  font-size: var(--bundlify-badge-font-size);
+  font-size: var(--bundlify-label-font-size);
+  font-weight: var(--bundlify-label-font-weight);
   color: var(--bundlify-label-text);
-  font-weight: 500;
   background: var(--bundlify-label-bg);
   padding: 2px 8px;
   border-radius: 100px;
 }
 
 .bundlify-volume-tier__qty {
-  font-size: 18px;
-  font-weight: 700;
+  font-size: var(--bundlify-unit-label-font-size);
+  font-weight: var(--bundlify-unit-label-font-weight);
   color: var(--bundlify-text-primary);
 }
 
@@ -969,19 +1003,19 @@
 }
 
 .bundlify-sticky-bar__title {
-  font-size: 14px;
-  font-weight: 500;
+  font-size: var(--bundlify-sticky-title-font-size);
+  font-weight: var(--bundlify-sticky-title-font-weight);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .bundlify-sticky-bar__btn {
-  padding: 10px 24px;
+  padding: var(--bundlify-sticky-btn-padding) calc(var(--bundlify-sticky-btn-padding) * 1.5);
   border: none;
-  border-radius: 8px;
-  font-size: 14px;
-  font-weight: 600;
+  border-radius: var(--bundlify-sticky-btn-radius);
+  font-size: var(--bundlify-sticky-btn-font-size);
+  font-weight: var(--bundlify-sticky-btn-font-weight);
   cursor: pointer;
   white-space: nowrap;
   transition: opacity 0.15s ease;
@@ -1004,9 +1038,18 @@
   gap: 10px;
   padding: 8px;
   border-radius: 8px;
+  background: var(--bundlify-upsell-bg);
+  color: var(--bundlify-upsell-text);
+  font-size: var(--bundlify-upsell-font-size);
+  font-weight: var(--bundlify-upsell-font-weight);
   cursor: pointer;
   transition: background 0.15s ease;
   margin-bottom: 6px;
+}
+
+.bundlify-upsell input:checked + .bundlify-upsell__label {
+  background: var(--bundlify-upsell-selected-bg);
+  color: var(--bundlify-upsell-selected-text);
 }
 
 .bundlify-upsell:hover {
@@ -1098,8 +1141,16 @@
   padding: 10px;
   border-radius: 8px;
   border: 1px solid var(--bundlify-card-border);
-  background: var(--bundlify-card-bg);
+  background: var(--bundlify-gift-bg);
+  color: var(--bundlify-gift-text);
+  font-size: var(--bundlify-gift-font-size);
+  font-weight: var(--bundlify-gift-font-weight);
   transition: all 0.2s ease;
+}
+
+.bundlify-gift.unlocked {
+  background: var(--bundlify-gift-selected-bg);
+  color: var(--bundlify-gift-selected-text);
 }
 
 .bundlify-gift--locked {
@@ -1121,8 +1172,8 @@
 }
 
 .bundlify-gift__label {
-  font-size: 12px;
-  font-weight: 500;
+  font-size: var(--bundlify-label-font-size);
+  font-weight: var(--bundlify-label-font-weight);
   color: var(--bundlify-text-primary);
 }
 
@@ -1131,6 +1182,37 @@
   color: var(--bundlify-text-secondary);
   margin-top: 4px;
   font-style: italic;
+}
+
+/* ─── Gift Layout Variants ─── */
+.bundlify-gifts--horizontal {
+  display: flex;
+  flex-direction: row;
+  gap: var(--bundlify-spacing);
+  overflow-x: auto;
+}
+
+.bundlify-gifts--horizontal .bundlify-gift {
+  min-width: 140px;
+  flex-shrink: 0;
+}
+
+.bundlify-gifts--vertical {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: var(--bundlify-spacing);
+}
+
+/* ─── Low Stock Alert ─── */
+.bundlify-low-stock {
+  display: inline-block;
+  padding: 2px 6px;
+  font-size: 11px;
+  font-weight: bold;
+  color: #dc2626;
+  background: #fef2f2;
+  border-radius: 4px;
+  margin-top: 4px;
 }
 
 /* ── Print: hide the widget entirely ──────────────────────────────────── */

@@ -146,6 +146,40 @@ export class SettingsService {
       settingsData.widgetSavingsBadgeTextColor = dto.widgetSavingsBadgeTextColor;
     if (dto.widgetCardHoverBgColor !== undefined)
       settingsData.widgetCardHoverBgColor = dto.widgetCardHoverBgColor;
+    if (dto.widgetGiftBgColor !== undefined)
+      settingsData.widgetGiftBgColor = dto.widgetGiftBgColor;
+    if (dto.widgetGiftTextColor !== undefined)
+      settingsData.widgetGiftTextColor = dto.widgetGiftTextColor;
+    if (dto.widgetGiftSelectedBgColor !== undefined)
+      settingsData.widgetGiftSelectedBgColor = dto.widgetGiftSelectedBgColor;
+    if (dto.widgetGiftSelectedTextColor !== undefined)
+      settingsData.widgetGiftSelectedTextColor = dto.widgetGiftSelectedTextColor;
+    if (dto.widgetUpsellBgColor !== undefined)
+      settingsData.widgetUpsellBgColor = dto.widgetUpsellBgColor;
+    if (dto.widgetUpsellTextColor !== undefined)
+      settingsData.widgetUpsellTextColor = dto.widgetUpsellTextColor;
+    if (dto.widgetUpsellSelectedBgColor !== undefined)
+      settingsData.widgetUpsellSelectedBgColor = dto.widgetUpsellSelectedBgColor;
+    if (dto.widgetUpsellSelectedTextColor !== undefined)
+      settingsData.widgetUpsellSelectedTextColor = dto.widgetUpsellSelectedTextColor;
+    if (dto.widgetLabelFontSize !== undefined)
+      settingsData.widgetLabelFontSize = dto.widgetLabelFontSize;
+    if (dto.widgetLabelFontWeight !== undefined)
+      settingsData.widgetLabelFontWeight = dto.widgetLabelFontWeight;
+    if (dto.widgetGiftFontSize !== undefined)
+      settingsData.widgetGiftFontSize = dto.widgetGiftFontSize;
+    if (dto.widgetGiftFontWeight !== undefined)
+      settingsData.widgetGiftFontWeight = dto.widgetGiftFontWeight;
+    if (dto.widgetUpsellFontSize !== undefined)
+      settingsData.widgetUpsellFontSize = dto.widgetUpsellFontSize;
+    if (dto.widgetUpsellFontWeight !== undefined)
+      settingsData.widgetUpsellFontWeight = dto.widgetUpsellFontWeight;
+    if (dto.widgetUnitLabelFontSize !== undefined)
+      settingsData.widgetUnitLabelFontSize = dto.widgetUnitLabelFontSize;
+    if (dto.widgetUnitLabelFontWeight !== undefined)
+      settingsData.widgetUnitLabelFontWeight = dto.widgetUnitLabelFontWeight;
+    if (dto.widgetSpacing !== undefined)
+      settingsData.widgetSpacing = dto.widgetSpacing;
     if (dto.stickyBarEnabled !== undefined)
       settingsData.stickyBarEnabled = dto.stickyBarEnabled;
     if (dto.stickyBarBgColor !== undefined)
@@ -156,6 +190,20 @@ export class SettingsService {
       settingsData.stickyBarButtonBgColor = dto.stickyBarButtonBgColor;
     if (dto.stickyBarButtonTextColor !== undefined)
       settingsData.stickyBarButtonTextColor = dto.stickyBarButtonTextColor;
+    if (dto.stickyBarButtonText !== undefined)
+      settingsData.stickyBarButtonText = dto.stickyBarButtonText;
+    if (dto.stickyBarTitleFontSize !== undefined)
+      settingsData.stickyBarTitleFontSize = dto.stickyBarTitleFontSize;
+    if (dto.stickyBarTitleFontWeight !== undefined)
+      settingsData.stickyBarTitleFontWeight = dto.stickyBarTitleFontWeight;
+    if (dto.stickyBarButtonFontSize !== undefined)
+      settingsData.stickyBarButtonFontSize = dto.stickyBarButtonFontSize;
+    if (dto.stickyBarButtonFontWeight !== undefined)
+      settingsData.stickyBarButtonFontWeight = dto.stickyBarButtonFontWeight;
+    if (dto.stickyBarButtonPadding !== undefined)
+      settingsData.stickyBarButtonPadding = dto.stickyBarButtonPadding;
+    if (dto.stickyBarButtonBorderRadius !== undefined)
+      settingsData.stickyBarButtonBorderRadius = dto.stickyBarButtonBorderRadius;
     if (dto.cartTimerMinutes !== undefined)
       settingsData.cartTimerMinutes = dto.cartTimerMinutes;
     if (dto.cartTimerText !== undefined)
@@ -258,11 +306,35 @@ export class SettingsService {
       widgetSavingsBadgeBgColor: settings.widgetSavingsBadgeBgColor ?? '#dcfce7',
       widgetSavingsBadgeTextColor: settings.widgetSavingsBadgeTextColor ?? '#166534',
       widgetCardHoverBgColor: settings.widgetCardHoverBgColor ?? '#f9fafb',
+      widgetGiftBgColor: settings.widgetGiftBgColor ?? '#fef9c3',
+      widgetGiftTextColor: settings.widgetGiftTextColor ?? '#854d0e',
+      widgetGiftSelectedBgColor: settings.widgetGiftSelectedBgColor ?? '#fef08a',
+      widgetGiftSelectedTextColor: settings.widgetGiftSelectedTextColor ?? '#713f12',
+      widgetUpsellBgColor: settings.widgetUpsellBgColor ?? '#f0fdf4',
+      widgetUpsellTextColor: settings.widgetUpsellTextColor ?? '#166534',
+      widgetUpsellSelectedBgColor: settings.widgetUpsellSelectedBgColor ?? '#dcfce7',
+      widgetUpsellSelectedTextColor: settings.widgetUpsellSelectedTextColor ?? '#14532d',
+      widgetLabelFontSize: settings.widgetLabelFontSize ?? 11,
+      widgetLabelFontWeight: settings.widgetLabelFontWeight ?? 'bold',
+      widgetGiftFontSize: settings.widgetGiftFontSize ?? 13,
+      widgetGiftFontWeight: settings.widgetGiftFontWeight ?? 'normal',
+      widgetUpsellFontSize: settings.widgetUpsellFontSize ?? 13,
+      widgetUpsellFontWeight: settings.widgetUpsellFontWeight ?? 'normal',
+      widgetUnitLabelFontSize: settings.widgetUnitLabelFontSize ?? 13,
+      widgetUnitLabelFontWeight: settings.widgetUnitLabelFontWeight ?? 'bold',
+      widgetSpacing: settings.widgetSpacing ?? 12,
       stickyBarEnabled: settings.stickyBarEnabled ?? false,
       stickyBarBgColor: settings.stickyBarBgColor ?? '#ffffff',
       stickyBarTextColor: settings.stickyBarTextColor ?? '#111827',
       stickyBarButtonBgColor: settings.stickyBarButtonBgColor ?? '#2563eb',
       stickyBarButtonTextColor: settings.stickyBarButtonTextColor ?? '#ffffff',
+      stickyBarButtonText: settings.stickyBarButtonText ?? 'Choose Bundle',
+      stickyBarTitleFontSize: settings.stickyBarTitleFontSize ?? 14,
+      stickyBarTitleFontWeight: settings.stickyBarTitleFontWeight ?? 'normal',
+      stickyBarButtonFontSize: settings.stickyBarButtonFontSize ?? 14,
+      stickyBarButtonFontWeight: settings.stickyBarButtonFontWeight ?? 'bold',
+      stickyBarButtonPadding: settings.stickyBarButtonPadding ?? 15,
+      stickyBarButtonBorderRadius: settings.stickyBarButtonBorderRadius ?? 8,
       cartTimerMinutes: settings.cartTimerMinutes ?? 0,
       cartTimerText: settings.cartTimerText ?? 'Your cart will expire in {{timer}}',
       priceRoundingEnabled: settings.priceRoundingEnabled ?? false,
