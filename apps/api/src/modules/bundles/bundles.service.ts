@@ -162,6 +162,7 @@ export class BundlesService {
         skipToCheckout: dto.skipToCheckout ?? false,
         customCss: dto.customCss ?? null,
         translations: dto.translations ?? null,
+        themeOverrides: dto.themeOverrides ? JSON.stringify(dto.themeOverrides) : null,
         items: {
           create: dto.items.map((item, index) => ({
             productId: item.productId,
@@ -429,6 +430,11 @@ export class BundlesService {
         ...(dto.skipToCheckout !== undefined && { skipToCheckout: dto.skipToCheckout }),
         ...(dto.customCss !== undefined && { customCss: dto.customCss }),
         ...(dto.translations !== undefined && { translations: dto.translations }),
+        ...(dto.themeOverrides !== undefined && {
+          themeOverrides: dto.themeOverrides && Object.keys(dto.themeOverrides).length > 0
+            ? JSON.stringify(dto.themeOverrides)
+            : null,
+        }),
         ...marginData,
         ...(dto.items && {
           items: {
@@ -709,6 +715,7 @@ export class BundlesService {
       skipToCheckout: bundle.skipToCheckout ?? false,
       customCss: bundle.customCss ?? null,
       translations: bundle.translations ? JSON.parse(bundle.translations) : null,
+      themeOverrides: bundle.themeOverrides ? JSON.parse(bundle.themeOverrides) : null,
       currentRedemptions: bundle.currentRedemptions,
       startsAt: bundle.startsAt ? bundle.startsAt.toISOString() : null,
       endsAt: bundle.endsAt ? bundle.endsAt.toISOString() : null,

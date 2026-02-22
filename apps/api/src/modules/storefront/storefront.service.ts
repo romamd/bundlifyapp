@@ -254,6 +254,7 @@ export class StorefrontService {
         skipToCheckout: bundle.skipToCheckout ?? false,
         customCss: bundle.customCss ?? null,
         translations: bundle.translations ? JSON.parse(bundle.translations) : null,
+        themeOverrides: bundle.themeOverrides ? JSON.parse(bundle.themeOverrides) : null,
         items: bundle.items.map((item) => ({
           shopifyProductId: item.product.shopifyProductId,
           shopifyVariantId: item.product.shopifyVariantId,

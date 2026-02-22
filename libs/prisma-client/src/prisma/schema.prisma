@@ -286,8 +286,9 @@ model Bundle {
   countdownTitleFontWeight  String?  @db.VarChar(10)
   countdownTitleAlignment   String   @default("center") @db.VarChar(10)
 
-  customCss      String? @db.Text
-  translations   String? @db.Text
+  customCss        String? @db.Text
+  translations     String? @db.Text
+  themeOverrides   String? @db.Text
 
   lowStockAlertEnabled Boolean @default(false)
   skipToCheckout       Boolean @default(false)

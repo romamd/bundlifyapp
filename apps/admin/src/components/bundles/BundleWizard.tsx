@@ -152,6 +152,8 @@ export function BundleWizard({
   const [endsAt, setEndsAt] = useState<string>(editBundle?.endsAt ?? '');
   const [lowStockAlertEnabled, setLowStockAlertEnabled] = useState(editBundle?.lowStockAlertEnabled ?? false);
   const [skipToCheckout, setSkipToCheckout] = useState(editBundle?.skipToCheckout ?? false);
+  const [themeOverrides, setThemeOverrides] = useState<Record<string, any>>(editBundle?.themeOverrides ?? {});
+  const [stylingExpanded, setStylingExpanded] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [initialized, setInitialized] = useState(false);
 
@@ -218,6 +220,7 @@ export function BundleWizard({
       setEndsAt(editBundle.endsAt ?? '');
       setLowStockAlertEnabled(editBundle.lowStockAlertEnabled ?? false);
       setSkipToCheckout(editBundle.skipToCheckout ?? false);
+      if (editBundle.themeOverrides) setThemeOverrides(editBundle.themeOverrides);
       setInitialized(true);
     }
   }, [editBundle, initialized]);
@@ -263,6 +266,60 @@ export function BundleWizard({
     (sum, i) => sum + i.price * i.quantity,
     0,
   );
+
+  const effectiveTheme = useMemo(() => {
+    const g = shopSettings ?? {} as any;
+    const global: Record<string, any> = {
+      primaryColor: g.widgetPrimaryColor,
+      primaryColorHover: g.widgetPrimaryColorHover,
+      textColor: g.widgetTextColor,
+      cardBackground: g.widgetCardBackground,
+      borderColor: g.widgetBorderColor,
+      badgeBackground: g.widgetBadgeBackground,
+      badgeTextColor: g.widgetBadgeTextColor,
+      selectedBgColor: g.widgetSelectedBgColor,
+      blockTitleColor: g.widgetBlockTitleColor,
+      titleColor: g.widgetTitleColor,
+      subtitleColor: g.widgetSubtitleColor,
+      priceColor: g.widgetPriceColor,
+      originalPriceColor: g.widgetOriginalPriceColor,
+      labelBgColor: g.widgetLabelBgColor,
+      labelTextColor: g.widgetLabelTextColor,
+      buttonTextColor: g.widgetButtonTextColor,
+      savingsBadgeBgColor: g.widgetSavingsBadgeBgColor,
+      savingsBadgeTextColor: g.widgetSavingsBadgeTextColor,
+      giftBgColor: g.widgetGiftBgColor,
+      giftTextColor: g.widgetGiftTextColor,
+      upsellBgColor: g.widgetUpsellBgColor,
+      upsellTextColor: g.widgetUpsellTextColor,
+      fontSize: g.widgetFontSize,
+      fontWeight: g.widgetFontWeight,
+      blockTitleFontSize: g.widgetBlockTitleFontSize,
+      blockTitleFontWeight: g.widgetBlockTitleFontWeight,
+      itemTitleFontSize: g.widgetItemTitleFontSize,
+      itemTitleFontWeight: g.widgetItemTitleFontWeight,
+      priceFontSize: g.widgetPriceFontSize,
+      priceFontWeight: g.widgetPriceFontWeight,
+      badgeFontSize: g.widgetBadgeFontSize,
+      badgeFontWeight: g.widgetBadgeFontWeight,
+      buttonFontSize: g.widgetButtonFontSize,
+      buttonFontWeight: g.widgetButtonFontWeight,
+      giftFontSize: g.widgetGiftFontSize,
+      giftFontWeight: g.widgetGiftFontWeight,
+      upsellFontSize: g.widgetUpsellFontSize,
+      upsellFontWeight: g.widgetUpsellFontWeight,
+      layout: g.widgetLayout,
+      spacing: g.widgetSpacing,
+      borderRadius: g.widgetBorderRadius,
+      cardShadow: g.widgetCardShadow,
+      buttonText: g.widgetButtonText,
+      showSavings: g.widgetShowSavings,
+      showCompareAtPrice: g.widgetShowCompareAtPrice,
+    };
+    // Remove undefined values from global
+    Object.keys(global).forEach((k) => { if (global[k] === undefined) delete global[k]; });
+    return { ...global, ...themeOverrides };
+  }, [shopSettings, themeOverrides]);
 
   const handleSubmit = async () => {
     setSubmitting(true);
@@ -325,6 +382,7 @@ export function BundleWizard({
         skipToCheckout,
         customCss: customCss || undefined,
         translations: Object.keys(translations).length > 0 ? JSON.stringify(translations) : undefined,
+        themeOverrides: Object.keys(themeOverrides).length > 0 ? themeOverrides : undefined,
       });
       resetAndClose();
     } finally {
@@ -370,6 +428,8 @@ export function BundleWizard({
     setCustomCss('');
     setTranslations({});
     setNewLocale('');
+    setThemeOverrides({});
+    setStylingExpanded(false);
     onCancel();
   };
 
@@ -1696,6 +1756,201 @@ export function BundleWizard({
                 </div>
               </div>
 
+              {/* Widget Styling (per-bundle) */}
+              <div style={{ marginBottom: '16px', border: '1px solid #e1e3e5', borderRadius: '8px', overflow: 'hidden' }}>
+                <div
+                  onClick={() => setStylingExpanded(!stylingExpanded)}
+                  style={{ padding: '10px 12px', backgroundColor: '#f6f6f7', fontWeight: 600, fontSize: '13px', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
+                >
+                  <span>Widget Styling (per-bundle)</span>
+                  <span style={{ fontSize: '11px', color: '#6d7175' }}>{stylingExpanded ? '\u25B2' : '\u25BC'}</span>
+                </div>
+                {stylingExpanded && (
+                  <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div style={{ fontSize: '13px', color: '#6d7175', marginBottom: '4px' }}>
+                      Override global theme settings for this bundle only. Leave blank to use defaults from Customize.
+                    </div>
+
+                    {/* Colors */}
+                    <fieldset style={{ border: '1px solid #e1e3e5', borderRadius: '6px', padding: '10px', margin: 0 }}>
+                      <legend style={{ fontSize: '12px', fontWeight: 600, color: '#6d7175', padding: '0 4px' }}>Colors</legend>
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
+                        {([
+                          ['primaryColor', 'Primary'],
+                          ['cardBackground', 'Card Background'],
+                          ['titleColor', 'Title'],
+                          ['borderColor', 'Border'],
+                          ['textColor', 'Text'],
+                          ['subtitleColor', 'Subtitle'],
+                          ['priceColor', 'Price'],
+                          ['originalPriceColor', 'Original Price'],
+                          ['buttonTextColor', 'Button Text'],
+                          ['badgeBackground', 'Badge Background'],
+                          ['badgeTextColor', 'Badge Text'],
+                          ['selectedBgColor', 'Selected Background'],
+                          ['giftBgColor', 'Gift Background'],
+                          ['giftTextColor', 'Gift Text'],
+                          ['upsellBgColor', 'Upsell Background'],
+                          ['upsellTextColor', 'Upsell Text'],
+                        ] as const).map(([key, label]) => (
+                          <div key={key} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <input
+                              type="color"
+                              value={themeOverrides[key] || effectiveTheme[key] || '#000000'}
+                              onChange={(e) => setThemeOverrides({ ...themeOverrides, [key]: e.target.value })}
+                              style={{ width: 24, height: 24, border: '1px solid #ccc', borderRadius: 4, padding: 0, cursor: 'pointer' }}
+                            />
+                            <span style={{ fontSize: '12px', flex: 1 }}>{label}</span>
+                            {themeOverrides[key] && (
+                              <button
+                                type="button"
+                                onClick={() => { const o = { ...themeOverrides }; delete o[key]; setThemeOverrides(o); }}
+                                style={{ fontSize: '10px', color: '#bf0711', background: 'none', border: 'none', cursor: 'pointer', padding: '0 2px' }}
+                                title="Reset to default"
+                              >
+                                ✕
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </fieldset>
+
+                    {/* Typography */}
+                    <fieldset style={{ border: '1px solid #e1e3e5', borderRadius: '6px', padding: '10px', margin: 0 }}>
+                      <legend style={{ fontSize: '12px', fontWeight: 600, color: '#6d7175', padding: '0 4px' }}>Typography</legend>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        {([
+                          ['blockTitleFontSize', 'blockTitleFontWeight', 'Block Title', 18],
+                          ['itemTitleFontSize', 'itemTitleFontWeight', 'Item Title', 14],
+                          ['priceFontSize', 'priceFontWeight', 'Price', 16],
+                          ['badgeFontSize', 'badgeFontWeight', 'Badge', 12],
+                          ['buttonFontSize', 'buttonFontWeight', 'Button', 14],
+                          ['giftFontSize', 'giftFontWeight', 'Gift', 13],
+                          ['upsellFontSize', 'upsellFontWeight', 'Upsell', 13],
+                        ] as [string, string, string, number][]).map(([sizeKey, weightKey, label, defaultSize]) => (
+                          <div key={sizeKey} style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <span style={{ fontSize: '12px', width: '70px', flexShrink: 0 }}>{label}</span>
+                            <input
+                              type="number"
+                              min={8}
+                              max={32}
+                              value={themeOverrides[sizeKey] ?? effectiveTheme[sizeKey] ?? defaultSize}
+                              onChange={(e) => setThemeOverrides({ ...themeOverrides, [sizeKey]: parseInt(e.target.value, 10) })}
+                              style={{ width: '50px', padding: '3px 4px', border: '1px solid #c9cccf', borderRadius: '3px', fontSize: '12px' }}
+                            />
+                            <span style={{ fontSize: '11px', color: '#6d7175' }}>px</span>
+                            <select
+                              value={themeOverrides[weightKey] ?? effectiveTheme[weightKey] ?? 'normal'}
+                              onChange={(e) => setThemeOverrides({ ...themeOverrides, [weightKey]: e.target.value })}
+                              style={{ padding: '3px 4px', border: '1px solid #c9cccf', borderRadius: '3px', fontSize: '12px' }}
+                            >
+                              <option value="normal">Normal</option>
+                              <option value="bold">Bold</option>
+                            </select>
+                            {(themeOverrides[sizeKey] !== undefined || themeOverrides[weightKey] !== undefined) && (
+                              <button
+                                type="button"
+                                onClick={() => { const o = { ...themeOverrides }; delete o[sizeKey]; delete o[weightKey]; setThemeOverrides(o); }}
+                                style={{ fontSize: '10px', color: '#bf0711', background: 'none', border: 'none', cursor: 'pointer', padding: '0 2px' }}
+                                title="Reset to default"
+                              >
+                                ✕
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </fieldset>
+
+                    {/* Layout & Display */}
+                    <fieldset style={{ border: '1px solid #e1e3e5', borderRadius: '6px', padding: '10px', margin: 0 }}>
+                      <legend style={{ fontSize: '12px', fontWeight: 600, color: '#6d7175', padding: '0 4px' }}>Layout & Display</legend>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontSize: '12px', width: '90px' }}>Border Radius</span>
+                          <input
+                            type="range"
+                            min={0}
+                            max={24}
+                            value={themeOverrides.borderRadius ?? effectiveTheme.borderRadius ?? 10}
+                            onChange={(e) => setThemeOverrides({ ...themeOverrides, borderRadius: parseInt(e.target.value, 10) })}
+                            style={{ flex: 1 }}
+                          />
+                          <span style={{ fontSize: '11px', color: '#6d7175', width: '30px' }}>{themeOverrides.borderRadius ?? effectiveTheme.borderRadius ?? 10}px</span>
+                          {themeOverrides.borderRadius !== undefined && (
+                            <button type="button" onClick={() => { const o = { ...themeOverrides }; delete o.borderRadius; setThemeOverrides(o); }} style={{ fontSize: '10px', color: '#bf0711', background: 'none', border: 'none', cursor: 'pointer' }} title="Reset">✕</button>
+                          )}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontSize: '12px', width: '90px' }}>Spacing</span>
+                          <input
+                            type="range"
+                            min={0}
+                            max={40}
+                            value={themeOverrides.spacing ?? effectiveTheme.spacing ?? 12}
+                            onChange={(e) => setThemeOverrides({ ...themeOverrides, spacing: parseInt(e.target.value, 10) })}
+                            style={{ flex: 1 }}
+                          />
+                          <span style={{ fontSize: '11px', color: '#6d7175', width: '30px' }}>{themeOverrides.spacing ?? effectiveTheme.spacing ?? 12}px</span>
+                          {themeOverrides.spacing !== undefined && (
+                            <button type="button" onClick={() => { const o = { ...themeOverrides }; delete o.spacing; setThemeOverrides(o); }} style={{ fontSize: '10px', color: '#bf0711', background: 'none', border: 'none', cursor: 'pointer' }} title="Reset">✕</button>
+                          )}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontSize: '12px', width: '90px' }}>Card Shadow</span>
+                          <select
+                            value={themeOverrides.cardShadow ?? effectiveTheme.cardShadow ?? 'subtle'}
+                            onChange={(e) => setThemeOverrides({ ...themeOverrides, cardShadow: e.target.value })}
+                            style={{ padding: '3px 4px', border: '1px solid #c9cccf', borderRadius: '3px', fontSize: '12px' }}
+                          >
+                            <option value="none">None</option>
+                            <option value="subtle">Subtle</option>
+                            <option value="medium">Medium</option>
+                            <option value="bold">Bold</option>
+                          </select>
+                          {themeOverrides.cardShadow !== undefined && (
+                            <button type="button" onClick={() => { const o = { ...themeOverrides }; delete o.cardShadow; setThemeOverrides(o); }} style={{ fontSize: '10px', color: '#bf0711', background: 'none', border: 'none', cursor: 'pointer' }} title="Reset">✕</button>
+                          )}
+                        </div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                          <span style={{ fontSize: '12px', width: '90px' }}>Button Text</span>
+                          <input
+                            type="text"
+                            value={themeOverrides.buttonText ?? effectiveTheme.buttonText ?? 'Add Bundle to Cart'}
+                            onChange={(e) => setThemeOverrides({ ...themeOverrides, buttonText: e.target.value })}
+                            maxLength={50}
+                            style={{ flex: 1, padding: '3px 6px', border: '1px solid #c9cccf', borderRadius: '3px', fontSize: '12px' }}
+                          />
+                          {themeOverrides.buttonText !== undefined && (
+                            <button type="button" onClick={() => { const o = { ...themeOverrides }; delete o.buttonText; setThemeOverrides(o); }} style={{ fontSize: '10px', color: '#bf0711', background: 'none', border: 'none', cursor: 'pointer' }} title="Reset">✕</button>
+                          )}
+                        </div>
+                      </div>
+                    </fieldset>
+
+                    {Object.keys(themeOverrides).length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setThemeOverrides({})}
+                        style={{
+                          padding: '6px 12px',
+                          backgroundColor: '#ffffff',
+                          border: '1px solid #c9cccf',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '12px',
+                          color: '#bf0711',
+                          alignSelf: 'flex-start',
+                        }}
+                      >
+                        Reset all overrides ({Object.keys(themeOverrides).length} active)
+                      </button>
+                    )}
+                  </div>
+                )}
+              </div>
+
               {/* Translations */}
               <div style={{ marginBottom: '16px', border: '1px solid #e1e3e5', borderRadius: '8px', overflow: 'hidden' }}>
                 <div style={{ padding: '10px 12px', backgroundColor: '#f6f6f7', fontWeight: 600, fontSize: '13px' }}>
@@ -1834,7 +2089,14 @@ export function BundleWizard({
           </div>
 
           {/* Live Preview Panel */}
-          <div style={{ width: '380px', flexShrink: 0 }}>
+          <div style={{ width: '380px', flexShrink: 0, position: 'relative' }}>
+          <div style={{
+            position: 'sticky',
+            top: 0,
+            height: 'calc(100vh - 120px)',
+            overflowY: 'auto',
+            padding: '0 0 16px 0',
+          }}>
             <BundlePreview
               bundleType={bundleType}
               name={name}
@@ -1866,11 +2128,9 @@ export function BundleWizard({
               lowStockAlertEnabled={lowStockAlertEnabled}
               skipToCheckout={skipToCheckout}
               customCss={customCss}
-              accentColor={shopSettings?.widgetPrimaryColor}
-              cardBg={shopSettings?.widgetCardBackground}
-              textColor={shopSettings?.widgetTitleColor}
-              borderColor={shopSettings?.widgetBorderColor}
+              theme={effectiveTheme}
             />
+          </div>
           </div>
         </div>
 

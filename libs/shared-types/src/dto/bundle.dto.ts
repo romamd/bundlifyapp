@@ -62,6 +62,7 @@ export interface BundleDto {
   skipToCheckout: boolean;
   customCss: string | null;
   translations: Record<string, Record<string, string>> | null;
+  themeOverrides: Record<string, any> | null;
   currentRedemptions: number;
   bogoGetQuantity: number | null;
   bogoGetDiscountPct: number | null;
@@ -131,4 +132,5 @@ export interface CreateBundleDto {
   skipToCheckout?: boolean;
   customCss?: string;
   translations?: Record<string, Record<string, string>>;
+  themeOverrides?: Record<string, any>;
 }

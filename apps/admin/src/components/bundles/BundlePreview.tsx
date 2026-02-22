@@ -1,5 +1,53 @@
 import React from 'react';
 
+export interface BundlePreviewTheme {
+  primaryColor?: string;
+  primaryColorHover?: string;
+  textColor?: string;
+  cardBackground?: string;
+  borderColor?: string;
+  badgeBackground?: string;
+  badgeTextColor?: string;
+  selectedBgColor?: string;
+  blockTitleColor?: string;
+  titleColor?: string;
+  subtitleColor?: string;
+  priceColor?: string;
+  originalPriceColor?: string;
+  labelBgColor?: string;
+  labelTextColor?: string;
+  buttonTextColor?: string;
+  savingsBadgeBgColor?: string;
+  savingsBadgeTextColor?: string;
+  giftBgColor?: string;
+  giftTextColor?: string;
+  upsellBgColor?: string;
+  upsellTextColor?: string;
+  fontSize?: number;
+  fontWeight?: string;
+  blockTitleFontSize?: number;
+  blockTitleFontWeight?: string;
+  itemTitleFontSize?: number;
+  itemTitleFontWeight?: string;
+  priceFontSize?: number;
+  priceFontWeight?: string;
+  badgeFontSize?: number;
+  badgeFontWeight?: string;
+  buttonFontSize?: number;
+  buttonFontWeight?: string;
+  giftFontSize?: number;
+  giftFontWeight?: string;
+  upsellFontSize?: number;
+  upsellFontWeight?: string;
+  layout?: string;
+  spacing?: number;
+  borderRadius?: number;
+  cardShadow?: string;
+  buttonText?: string;
+  showSavings?: boolean;
+  showCompareAtPrice?: boolean;
+}
+
 interface BundlePreviewProps {
   bundleType: string;
   name: string;
@@ -43,11 +91,15 @@ interface BundlePreviewProps {
   lowStockAlertEnabled?: boolean;
   skipToCheckout?: boolean;
   customCss?: string;
-  accentColor?: string;
-  cardBg?: string;
-  textColor?: string;
-  borderColor?: string;
+  theme?: BundlePreviewTheme;
 }
+
+const SHADOW_MAP: Record<string, string> = {
+  none: 'none',
+  subtle: '0 1px 3px rgba(0,0,0,0.08)',
+  medium: '0 4px 6px rgba(0,0,0,0.1)',
+  bold: '0 10px 15px rgba(0,0,0,0.15)',
+};
 
 export function BundlePreview({
   bundleType,
@@ -71,15 +123,45 @@ export function BundlePreview({
   lowStockAlertEnabled,
   skipToCheckout,
   customCss,
-  accentColor,
-  cardBg,
-  textColor,
-  borderColor,
+  theme,
 }: BundlePreviewProps) {
-  const accent = accentColor || '#2563eb';
-  const bg = cardBg || '#fff';
-  const text = textColor || '#111827';
-  const border = borderColor || '#e5e7eb';
+  const t = theme ?? {};
+  const accent = t.primaryColor || '#2563eb';
+  const bg = t.cardBackground || '#fff';
+  const text = t.titleColor || t.textColor || '#111827';
+  const border = t.borderColor || '#e5e7eb';
+  const subtitleColor = t.subtitleColor || '#6b7280';
+  const priceColor = t.priceColor || text;
+  const originalPriceColor = t.originalPriceColor || '#9ca3af';
+  const badgeBg = t.savingsBadgeBgColor || t.badgeBackground || '#dcfce7';
+  const badgeText = t.savingsBadgeTextColor || t.badgeTextColor || '#166534';
+  const btnText = t.buttonTextColor || '#fff';
+  const btnLabel = t.buttonText || (skipToCheckout ? 'Buy Now' : 'Add Bundle to Cart');
+  const radius = t.borderRadius ?? 10;
+  const shadow = SHADOW_MAP[t.cardShadow || 'subtle'] || SHADOW_MAP.subtle;
+  const spacing = t.spacing ?? 8;
+  const blockTitleSize = t.blockTitleFontSize ?? 16;
+  const blockTitleWeight = t.blockTitleFontWeight || '600';
+  const blockTitleColor = t.blockTitleColor || text;
+  const itemTitleSize = t.itemTitleFontSize ?? 14;
+  const itemTitleWeight = t.itemTitleFontWeight || '500';
+  const priceFontSize = t.priceFontSize ?? 14;
+  const priceFontWeight = t.priceFontWeight || '500';
+  const badgeFontSize = t.badgeFontSize ?? 12;
+  const badgeFontWeight = t.badgeFontWeight || '600';
+  const btnFontSize = t.buttonFontSize ?? 14;
+  const btnFontWeight = t.buttonFontWeight || '600';
+  const giftBg = t.giftBgColor || '#fef3c7';
+  const giftText = t.giftTextColor || '#92400e';
+  const giftFontSize = t.giftFontSize ?? 13;
+  const giftFontWeight = t.giftFontWeight || '500';
+  const upsellBg = t.upsellBgColor || '#f9fafb';
+  const upsellText = t.upsellTextColor || '#111827';
+  const upsellFontSize = t.upsellFontSize ?? 13;
+  const upsellFontWeight = t.upsellFontWeight || '500';
+  const selectedBg = t.selectedBgColor || '#eff6ff';
+  const showSavings = t.showSavings !== false;
+
   const individualTotal = items.reduce(
     (sum, item) => sum + item.price * item.quantity,
     0,
@@ -97,7 +179,7 @@ export function BundlePreview({
       className="bundlify-bundle-preview"
       style={{
         border: `1px solid ${border}`,
-        borderRadius: '12px',
+        borderRadius: `${radius + 2}px`,
         padding: '16px',
         background: '#fafafa',
       }}
@@ -124,7 +206,7 @@ export function BundlePreview({
             background: countdownBgColor || '#111827',
             color: countdownTextColor || '#ffffff',
             padding: '8px 12px',
-            borderRadius: '10px 10px 0 0',
+            borderRadius: `${radius}px ${radius}px 0 0`,
             fontSize: `${countdownTitleFontSize ?? 14}px`,
             fontWeight: (countdownTitleFontWeight ?? 'normal') as any,
             textAlign: (countdownTitleAlignment ?? 'center') as any,
@@ -137,15 +219,20 @@ export function BundlePreview({
       <div
         style={{
           background: bg,
-          borderRadius: countdownEnabled ? '0 0 10px 10px' : '10px',
+          borderRadius: countdownEnabled ? `0 0 ${radius}px ${radius}px` : `${radius}px`,
           border: `1px solid ${border}`,
-          borderTop: countdownEnabled ? 'none' : '1px solid #e5e7eb',
+          borderTop: countdownEnabled ? 'none' : `1px solid ${border}`,
           padding: '16px',
-          boxShadow: '0 1px 3px rgba(0,0,0,0.08)',
+          boxShadow: shadow,
         }}
       >
         {name && (
-          <h3 style={{ margin: '0 0 12px 0', fontSize: '16px', fontWeight: 600 }}>
+          <h3 style={{
+            margin: '0 0 12px 0',
+            fontSize: `${blockTitleSize}px`,
+            fontWeight: blockTitleWeight as any,
+            color: blockTitleColor,
+          }}>
             {name}
           </h3>
         )}
@@ -155,7 +242,7 @@ export function BundlePreview({
             style={{
               display: 'flex',
               flexDirection: 'column',
-              gap: '8px',
+              gap: `${spacing}px`,
               marginBottom: '12px',
             }}
           >
@@ -168,7 +255,7 @@ export function BundlePreview({
                   gap: '10px',
                   padding: '8px',
                   background: '#f9fafb',
-                  borderRadius: '8px',
+                  borderRadius: `${Math.max(radius - 2, 4)}px`,
                   position: 'relative',
                 }}
               >
@@ -179,21 +266,21 @@ export function BundlePreview({
                     style={{
                       width: 40,
                       height: 40,
-                      borderRadius: 6,
+                      borderRadius: Math.max(radius - 4, 4),
                       objectFit: 'cover',
                     }}
                   />
                 )}
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontSize: '14px', fontWeight: 500 }}>
+                  <div style={{ fontSize: `${itemTitleSize}px`, fontWeight: itemTitleWeight as any, color: text }}>
                     {item.title || 'Product'}
                   </div>
-                  <div style={{ fontSize: '12px', color: '#6b7280' }}>
+                  <div style={{ fontSize: '12px', color: subtitleColor }}>
                     Qty: {item.quantity}
                   </div>
                 </div>
                 <div style={{ textAlign: 'right', display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
-                  <div style={{ fontSize: '14px', fontWeight: 500 }}>
+                  <div style={{ fontSize: `${priceFontSize}px`, fontWeight: priceFontWeight as any, color: priceColor }}>
                     ${(item.price * item.quantity).toFixed(2)}
                   </div>
                   {lowStockAlertEnabled && idx === 0 && (
@@ -230,7 +317,7 @@ export function BundlePreview({
             marginTop: '4px',
             marginBottom: '8px',
           }}>
-            <div style={{ fontSize: '12px', fontWeight: 600, color: '#6b7280', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
+            <div style={{ fontSize: '12px', fontWeight: 600, color: subtitleColor, marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.03em' }}>
               Add-ons
             </div>
             {upsells.map((upsell, idx) => (
@@ -241,31 +328,32 @@ export function BundlePreview({
                   alignItems: 'center',
                   gap: '8px',
                   padding: '6px 8px',
-                  background: upsell.selectedByDefault ? '#eff6ff' : '#f9fafb',
-                  borderRadius: '6px',
+                  background: upsell.selectedByDefault ? selectedBg : upsellBg,
+                  borderRadius: `${Math.max(radius - 4, 4)}px`,
                   marginBottom: '4px',
                   cursor: 'default',
-                  fontSize: '13px',
+                  fontSize: `${upsellFontSize}px`,
+                  color: upsellText,
                 }}
               >
                 <input
                   type="checkbox"
                   checked={upsell.selectedByDefault ?? false}
                   readOnly
-                  style={{ accentColor: '#2563eb' }}
+                  style={{ accentColor: accent }}
                 />
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontWeight: 500 }}>{upsell.title}</div>
+                  <div style={{ fontWeight: upsellFontWeight as any }}>{upsell.title}</div>
                   {upsell.subtitle && (
-                    <div style={{ fontSize: '11px', color: '#6b7280' }}>{upsell.subtitle}</div>
+                    <div style={{ fontSize: '11px', color: subtitleColor }}>{upsell.subtitle}</div>
                   )}
                 </div>
                 {upsell.discountValue != null && upsell.discountValue > 0 && (
                   <span style={{
-                    fontSize: '11px',
-                    fontWeight: 600,
-                    color: '#166534',
-                    background: '#dcfce7',
+                    fontSize: `${badgeFontSize}px`,
+                    fontWeight: badgeFontWeight as any,
+                    color: badgeText,
+                    background: badgeBg,
                     padding: '2px 6px',
                     borderRadius: '8px',
                   }}>
@@ -287,7 +375,7 @@ export function BundlePreview({
             marginTop: '4px',
             marginBottom: '8px',
           }}>
-            <div style={{ fontSize: '12px', fontWeight: 600, color: '#92400e', marginBottom: '6px' }}>
+            <div style={{ fontSize: `${giftFontSize}px`, fontWeight: 600, color: giftText, marginBottom: '6px' }}>
               {giftsTitle || 'Free gifts with your order'}
             </div>
             {giftTiers.map((tier, idx) => {
@@ -301,10 +389,12 @@ export function BundlePreview({
                     alignItems: 'center',
                     gap: '8px',
                     padding: '6px 8px',
-                    background: unlocked ? '#fef3c7' : '#f9fafb',
-                    borderRadius: '6px',
+                    background: unlocked ? giftBg : '#f9fafb',
+                    borderRadius: `${Math.max(radius - 4, 4)}px`,
                     marginBottom: '4px',
-                    fontSize: '13px',
+                    fontSize: `${giftFontSize}px`,
+                    fontWeight: giftFontWeight as any,
+                    color: giftText,
                     opacity: unlocked ? 1 : 0.6,
                   }}
                 >
@@ -314,7 +404,7 @@ export function BundlePreview({
                       {unlocked ? tier.label : (tier.lockedTitle || 'Locked')}
                     </div>
                     {!unlocked && (
-                      <div style={{ fontSize: '11px', color: '#6b7280' }}>
+                      <div style={{ fontSize: '11px', color: subtitleColor }}>
                         Add {tier.unlockQuantity - totalQty} more to unlock
                       </div>
                     )}
@@ -340,18 +430,18 @@ export function BundlePreview({
                   display: 'flex',
                   justifyContent: 'space-between',
                   padding: '6px 8px',
-                  fontSize: '13px',
+                  fontSize: `${priceFontSize}px`,
                   background:
-                    idx === volumeTiers.length - 1 ? '#eff6ff' : 'transparent',
-                  borderRadius: '6px',
+                    idx === volumeTiers.length - 1 ? selectedBg : 'transparent',
+                  borderRadius: `${Math.max(radius - 4, 4)}px`,
                   marginBottom: '4px',
                 }}
               >
-                <span>
+                <span style={{ color: text }}>
                   Buy {tier.minQuantity}+
                   {tier.label ? ` \u2014 ${tier.label}` : ''}
                 </span>
-                <span style={{ fontWeight: 600, color: accent }}>
+                <span style={{ fontWeight: priceFontWeight as any, color: accent }}>
                   {tier.discountPct}% off
                 </span>
               </div>
@@ -368,12 +458,12 @@ export function BundlePreview({
           >
             <span
               style={{
-                background: '#dcfce7',
-                color: '#166534',
+                background: badgeBg,
+                color: badgeText,
                 padding: '4px 10px',
                 borderRadius: '12px',
-                fontSize: '12px',
-                fontWeight: 600,
+                fontSize: `${badgeFontSize}px`,
+                fontWeight: badgeFontWeight as any,
               }}
             >
               GET {bogoGetQuantity || 1}{' '}
@@ -396,7 +486,7 @@ export function BundlePreview({
               <div
                 style={{
                   fontSize: '12px',
-                  color: '#6b7280',
+                  color: originalPriceColor,
                   textDecoration: 'line-through',
                 }}
               >
@@ -404,23 +494,23 @@ export function BundlePreview({
               </div>
               <div
                 style={{
-                  fontSize: '20px',
+                  fontSize: `${(t.priceFontSize ?? 16) + 4}px`,
                   fontWeight: 700,
-                  color: text,
+                  color: priceColor,
                 }}
               >
                 ${bundlePrice.toFixed(2)}
               </div>
             </div>
-            {saved > 0 && (
+            {showSavings && saved > 0 && (
               <span
                 style={{
-                  background: '#dcfce7',
-                  color: '#166534',
+                  background: badgeBg,
+                  color: badgeText,
                   padding: '4px 10px',
                   borderRadius: '12px',
-                  fontSize: '12px',
-                  fontWeight: 600,
+                  fontSize: `${badgeFontSize}px`,
+                  fontWeight: badgeFontWeight as any,
                 }}
               >
                 SAVE ${saved.toFixed(2)}
@@ -435,15 +525,15 @@ export function BundlePreview({
             marginTop: '12px',
             padding: '10px',
             background: accent,
-            color: '#fff',
+            color: btnText,
             border: 'none',
-            borderRadius: '8px',
-            fontWeight: 600,
-            fontSize: '14px',
+            borderRadius: `${Math.max(radius - 2, 4)}px`,
+            fontWeight: btnFontWeight as any,
+            fontSize: `${btnFontSize}px`,
             cursor: 'default',
           }}
         >
-          {skipToCheckout ? 'Buy Now' : 'Add Bundle to Cart'}
+          {btnLabel}
         </button>
       </div>
     </div>

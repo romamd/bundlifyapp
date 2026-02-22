@@ -277,6 +277,63 @@
       }
     }
 
+    // Apply per-bundle theme overrides as CSS vars on the bundle card element
+    for (var to = 0; to < bundles.length; to++) {
+      var overrides = bundles[to].themeOverrides;
+      if (overrides && typeof overrides === 'object') {
+        var cardEl = wrapper.querySelector('.bundlify-card[data-bundle-id="' + bundles[to].bundleId + '"]')
+          || wrapper.querySelector('.bundlify-volume-multi[data-bundle-id="' + bundles[to].bundleId + '"]');
+        if (cardEl) {
+          var cs = cardEl.style;
+          if (overrides.primaryColor) cs.setProperty('--bundlify-accent', overrides.primaryColor);
+          if (overrides.primaryColorHover) cs.setProperty('--bundlify-accent-hover', overrides.primaryColorHover);
+          if (overrides.textColor) cs.setProperty('--bundlify-text-primary', overrides.textColor);
+          if (overrides.cardBackground) cs.setProperty('--bundlify-card-bg', overrides.cardBackground);
+          if (overrides.borderColor) cs.setProperty('--bundlify-card-border', overrides.borderColor);
+          if (overrides.badgeBackground) cs.setProperty('--bundlify-badge-bg', overrides.badgeBackground);
+          if (overrides.badgeTextColor) cs.setProperty('--bundlify-badge-text', overrides.badgeTextColor);
+          if (overrides.borderRadius != null) cs.setProperty('--bundlify-radius', overrides.borderRadius + 'px');
+          if (overrides.fontSize != null) cs.setProperty('--bundlify-font-size', overrides.fontSize + 'px');
+          if (overrides.fontWeight) cs.setProperty('--bundlify-font-weight', overrides.fontWeight);
+          if (overrides.cardShadow && SHADOW_MAP[overrides.cardShadow]) {
+            var oShadow = SHADOW_MAP[overrides.cardShadow];
+            cs.setProperty('--bundlify-card-shadow', oShadow.normal);
+            cs.setProperty('--bundlify-card-shadow-hover', oShadow.hover);
+          }
+          if (overrides.selectedBgColor) cs.setProperty('--bundlify-selected-bg', overrides.selectedBgColor);
+          if (overrides.blockTitleColor) cs.setProperty('--bundlify-block-title-color', overrides.blockTitleColor);
+          if (overrides.titleColor) cs.setProperty('--bundlify-title-color', overrides.titleColor);
+          if (overrides.subtitleColor) cs.setProperty('--bundlify-subtitle-color', overrides.subtitleColor);
+          if (overrides.priceColor) cs.setProperty('--bundlify-price-color', overrides.priceColor);
+          if (overrides.originalPriceColor) cs.setProperty('--bundlify-original-price-color', overrides.originalPriceColor);
+          if (overrides.labelBgColor) cs.setProperty('--bundlify-label-bg', overrides.labelBgColor);
+          if (overrides.labelTextColor) cs.setProperty('--bundlify-label-text', overrides.labelTextColor);
+          if (overrides.buttonTextColor) cs.setProperty('--bundlify-button-text', overrides.buttonTextColor);
+          if (overrides.savingsBadgeBgColor) cs.setProperty('--bundlify-savings-badge-bg', overrides.savingsBadgeBgColor);
+          if (overrides.savingsBadgeTextColor) cs.setProperty('--bundlify-savings-badge-text', overrides.savingsBadgeTextColor);
+          if (overrides.giftBgColor) cs.setProperty('--bundlify-gift-bg', overrides.giftBgColor);
+          if (overrides.giftTextColor) cs.setProperty('--bundlify-gift-text', overrides.giftTextColor);
+          if (overrides.upsellBgColor) cs.setProperty('--bundlify-upsell-bg', overrides.upsellBgColor);
+          if (overrides.upsellTextColor) cs.setProperty('--bundlify-upsell-text', overrides.upsellTextColor);
+          if (overrides.blockTitleFontSize != null) cs.setProperty('--bundlify-block-title-font-size', overrides.blockTitleFontSize + 'px');
+          if (overrides.blockTitleFontWeight) cs.setProperty('--bundlify-block-title-font-weight', overrides.blockTitleFontWeight);
+          if (overrides.itemTitleFontSize != null) cs.setProperty('--bundlify-item-title-font-size', overrides.itemTitleFontSize + 'px');
+          if (overrides.itemTitleFontWeight) cs.setProperty('--bundlify-item-title-font-weight', overrides.itemTitleFontWeight);
+          if (overrides.priceFontSize != null) cs.setProperty('--bundlify-price-font-size', overrides.priceFontSize + 'px');
+          if (overrides.priceFontWeight) cs.setProperty('--bundlify-price-font-weight', overrides.priceFontWeight);
+          if (overrides.badgeFontSize != null) cs.setProperty('--bundlify-badge-font-size', overrides.badgeFontSize + 'px');
+          if (overrides.badgeFontWeight) cs.setProperty('--bundlify-badge-font-weight', overrides.badgeFontWeight);
+          if (overrides.buttonFontSize != null) cs.setProperty('--bundlify-button-font-size', overrides.buttonFontSize + 'px');
+          if (overrides.buttonFontWeight) cs.setProperty('--bundlify-button-font-weight', overrides.buttonFontWeight);
+          if (overrides.giftFontSize != null) cs.setProperty('--bundlify-gift-font-size', overrides.giftFontSize + 'px');
+          if (overrides.giftFontWeight) cs.setProperty('--bundlify-gift-font-weight', overrides.giftFontWeight);
+          if (overrides.upsellFontSize != null) cs.setProperty('--bundlify-upsell-font-size', overrides.upsellFontSize + 'px');
+          if (overrides.upsellFontWeight) cs.setProperty('--bundlify-upsell-font-weight', overrides.upsellFontWeight);
+          if (overrides.spacing != null) cs.setProperty('--bundlify-spacing', overrides.spacing + 'px');
+        }
+      }
+    }
+
     // Theme product price override
     if (themeConfig.updateThemePrice && bundles.length > 0) {
       try {

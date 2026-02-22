@@ -286,4 +286,7 @@ export class CreateBundleDto {
   @IsString()
   @MaxLength(50000)
   translations?: string;
+
+  @IsOptional()
+  themeOverrides?: Record<string, any>;
 }
