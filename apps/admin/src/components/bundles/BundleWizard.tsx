@@ -485,7 +485,6 @@ export function BundleWizard({
       style={{
         display: 'flex',
         flexDirection: 'column',
-        minHeight: 'calc(100vh - 200px)',
       }}
     >
 
@@ -529,7 +528,7 @@ export function BundleWizard({
         </div>
 
         {/* Body */}
-        <div style={{ flex: 1, overflow: 'auto', padding: '20px', display: 'flex', gap: '20px' }}>
+        <div style={{ display: 'flex', gap: '20px', padding: '20px' }}>
           <div style={{ flex: 1, minWidth: 0 }}>
           {/* Step 0: Bundle Type */}
           {step === 0 && (
@@ -2089,14 +2088,7 @@ export function BundleWizard({
           </div>
 
           {/* Live Preview Panel */}
-          <div style={{ width: '380px', flexShrink: 0, position: 'relative' }}>
-          <div style={{
-            position: 'sticky',
-            top: 0,
-            height: 'calc(100vh - 120px)',
-            overflowY: 'auto',
-            padding: '0 0 16px 0',
-          }}>
+          <div style={{ width: '380px', flexShrink: 0, position: 'sticky' as const, top: '20px', alignSelf: 'flex-start' }}>
             <BundlePreview
               bundleType={bundleType}
               name={name}
@@ -2130,7 +2122,6 @@ export function BundleWizard({
               customCss={customCss}
               theme={effectiveTheme}
             />
-          </div>
           </div>
         </div>
 

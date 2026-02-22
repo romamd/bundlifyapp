@@ -36,6 +36,7 @@ test.describe('Cart Drawer', () => {
         (el) => getComputedStyle(el).backgroundColor,
       );
       await toggleBtn.click();
+      await page.waitForTimeout(200);
       const bgAfter = await toggleBtn.evaluate(
         (el) => getComputedStyle(el).backgroundColor,
       );

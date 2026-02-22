@@ -3,6 +3,15 @@ import { PrismaService } from '@bundlify/prisma-client';
 import type { StorefrontBundleDto, TrackEventDto } from '@bundlify/shared-types';
 import { ABTestingService } from '../ab-testing/ab-testing.service';
 
+function safeJsonParse(value: string | null | undefined): any {
+  if (!value) return null;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return null;
+  }
+}
+
 @Injectable()
 export class StorefrontService {
   private readonly logger = new Logger(StorefrontService.name);
@@ -253,8 +262,8 @@ export class StorefrontService {
         lowStockAlertEnabled: bundle.lowStockAlertEnabled ?? false,
         skipToCheckout: bundle.skipToCheckout ?? false,
         customCss: bundle.customCss ?? null,
-        translations: bundle.translations ? JSON.parse(bundle.translations) : null,
-        themeOverrides: bundle.themeOverrides ? JSON.parse(bundle.themeOverrides) : null,
+        translations: safeJsonParse(bundle.translations),
+        themeOverrides: safeJsonParse(bundle.themeOverrides),
         items: bundle.items.map((item) => ({
           shopifyProductId: item.product.shopifyProductId,
           shopifyVariantId: item.product.shopifyVariantId,

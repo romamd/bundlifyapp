@@ -714,12 +714,21 @@ export class BundlesService {
       lowStockAlertEnabled: bundle.lowStockAlertEnabled ?? false,
       skipToCheckout: bundle.skipToCheckout ?? false,
       customCss: bundle.customCss ?? null,
-      translations: bundle.translations ? JSON.parse(bundle.translations) : null,
-      themeOverrides: bundle.themeOverrides ? JSON.parse(bundle.themeOverrides) : null,
+      translations: this.safeJsonParse(bundle.translations),
+      themeOverrides: this.safeJsonParse(bundle.themeOverrides),
       currentRedemptions: bundle.currentRedemptions,
       startsAt: bundle.startsAt ? bundle.startsAt.toISOString() : null,
       endsAt: bundle.endsAt ? bundle.endsAt.toISOString() : null,
     };
+  }
+
+  private safeJsonParse(value: string | null | undefined): any {
+    if (!value) return null;
+    try {
+      return JSON.parse(value);
+    } catch {
+      return null;
+    }
   }
 
   private generateSlug(name: string): string {
