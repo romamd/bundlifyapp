@@ -122,6 +122,25 @@ export class ABTestingService {
     return this.toDto(updated);
   }
 
+  async applyWinner(shopId: string, testId: string): Promise<void> {
+    const test = await this.prisma.aBTest.findFirst({
+      where: { id: testId, bundle: { shopId } },
+      include: { bundle: true },
+    });
+    if (!test) throw new NotFoundException('Test not found');
+    if (test.status !== 'COMPLETED') throw new BadRequestException('Test must be completed');
+    if (!test.winnerVariant) throw new BadRequestException('No winner determined');
+
+    const newDiscountPct = test.winnerVariant === 'control'
+      ? test.controlDiscountPct
+      : test.variantDiscountPct;
+
+    await this.prisma.bundle.update({
+      where: { id: test.bundleId },
+      data: { discountPct: newDiscountPct },
+    });
+  }
+
   /**
    * Record an impression or conversion for an A/B test variant.
    * Called from storefront service when serving bundles and tracking events.

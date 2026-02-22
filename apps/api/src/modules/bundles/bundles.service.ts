@@ -17,8 +17,16 @@ export class BundlesService {
           include: { product: true },
           orderBy: { sortOrder: 'asc' },
         },
+        upsells: {
+          include: { product: true },
+          orderBy: { sortOrder: 'asc' },
+        },
         volumeTiers: {
           orderBy: { minQuantity: 'asc' },
+        },
+        giftTiers: {
+          include: { product: true },
+          orderBy: { sortOrder: 'asc' },
         },
         displayRules: true,
       },
@@ -36,8 +44,16 @@ export class BundlesService {
           include: { product: true },
           orderBy: { sortOrder: 'asc' },
         },
+        upsells: {
+          include: { product: true },
+          orderBy: { sortOrder: 'asc' },
+        },
         volumeTiers: {
           orderBy: { minQuantity: 'asc' },
+        },
+        giftTiers: {
+          include: { product: true },
+          orderBy: { sortOrder: 'asc' },
         },
         displayRules: true,
       },
@@ -126,6 +142,9 @@ export class BundlesService {
         endsAt: dto.endsAt ? new Date(dto.endsAt) : null,
         bogoGetQuantity: dto.bogoGetQuantity ?? null,
         bogoGetDiscountPct: dto.bogoGetDiscountPct ?? null,
+        giftsEnabled: dto.giftsEnabled ?? false,
+        giftsTitle: dto.giftsTitle ?? 'Free gifts with your order',
+        giftsSubtitle: dto.giftsSubtitle ?? null,
         countdownEnabled: dto.countdownEnabled ?? false,
         countdownType: dto.countdownType ?? 'fixed',
         countdownDuration: dto.countdownDuration ?? null,
@@ -133,6 +152,8 @@ export class BundlesService {
         countdownTitle: dto.countdownTitle ?? null,
         countdownBgColor: dto.countdownBgColor ?? '#111827',
         countdownTextColor: dto.countdownTextColor ?? '#ffffff',
+        customCss: dto.customCss ?? null,
+        translations: dto.translations ?? null,
         items: {
           create: dto.items.map((item, index) => ({
             productId: item.productId,
@@ -160,18 +181,80 @@ export class BundlesService {
               })),
             }
           : undefined,
+        giftTiers: dto.giftTiers
+          ? {
+              create: dto.giftTiers.map((g, idx) => ({
+                productId: g.productId ?? null,
+                giftType: g.giftType,
+                unlockQuantity: g.unlockQuantity,
+                label: g.label ?? null,
+                lockedTitle: g.lockedTitle ?? 'Locked',
+                imageUrl: g.imageUrl ?? null,
+                sortOrder: idx,
+              })),
+            }
+          : undefined,
       },
       include: {
         items: {
           include: { product: true },
           orderBy: { sortOrder: 'asc' },
         },
+        upsells: {
+          include: { product: true },
+          orderBy: { sortOrder: 'asc' },
+        },
         volumeTiers: {
           orderBy: { minQuantity: 'asc' },
+        },
+        giftTiers: {
+          include: { product: true },
+          orderBy: { sortOrder: 'asc' },
         },
         displayRules: true,
       },
     });
+
+    if (dto.upsells?.length) {
+      await this.prisma.bundleUpsell.createMany({
+        data: dto.upsells.map((u, idx) => ({
+          bundleId: bundle.id,
+          productId: u.productId,
+          discountType: u.discountType,
+          discountValue: u.discountValue,
+          title: u.title,
+          subtitle: u.subtitle ?? null,
+          selectedByDefault: u.selectedByDefault,
+          matchQuantity: u.matchQuantity,
+          sortOrder: idx,
+        })),
+      });
+
+      // Re-fetch to include newly created upsells with product relation
+      const refreshed = await this.prisma.bundle.findUniqueOrThrow({
+        where: { id: bundle.id },
+        include: {
+          items: {
+            include: { product: true },
+            orderBy: { sortOrder: 'asc' },
+          },
+          upsells: {
+            include: { product: true },
+            orderBy: { sortOrder: 'asc' },
+          },
+          volumeTiers: {
+            orderBy: { minQuantity: 'asc' },
+          },
+          giftTiers: {
+            include: { product: true },
+            orderBy: { sortOrder: 'asc' },
+          },
+          displayRules: true,
+        },
+      });
+
+      return this.toDto(refreshed);
+    }
 
     return this.toDto(bundle);
   }
@@ -289,6 +372,20 @@ export class BundlesService {
       });
     }
 
+    // If upsells are changing, delete old upsells and recreate
+    if (dto.upsells) {
+      await this.prisma.bundleUpsell.deleteMany({
+        where: { bundleId },
+      });
+    }
+
+    // If gift tiers are changing, delete old gift tiers and create new ones
+    if (dto.giftTiers) {
+      await this.prisma.giftTier.deleteMany({
+        where: { bundleId },
+      });
+    }
+
     const bundle = await this.prisma.bundle.update({
       where: { id: bundleId },
       data: {
@@ -304,6 +401,9 @@ export class BundlesService {
         ...(dto.endsAt !== undefined && { endsAt: dto.endsAt ? new Date(dto.endsAt) : null }),
         ...(dto.bogoGetQuantity !== undefined && { bogoGetQuantity: dto.bogoGetQuantity }),
         ...(dto.bogoGetDiscountPct !== undefined && { bogoGetDiscountPct: dto.bogoGetDiscountPct }),
+        ...(dto.giftsEnabled !== undefined && { giftsEnabled: dto.giftsEnabled }),
+        ...(dto.giftsTitle !== undefined && { giftsTitle: dto.giftsTitle }),
+        ...(dto.giftsSubtitle !== undefined && { giftsSubtitle: dto.giftsSubtitle }),
         ...(dto.countdownEnabled !== undefined && { countdownEnabled: dto.countdownEnabled }),
         ...(dto.countdownType !== undefined && { countdownType: dto.countdownType }),
         ...(dto.countdownDuration !== undefined && { countdownDuration: dto.countdownDuration }),
@@ -311,6 +411,8 @@ export class BundlesService {
         ...(dto.countdownTitle !== undefined && { countdownTitle: dto.countdownTitle }),
         ...(dto.countdownBgColor !== undefined && { countdownBgColor: dto.countdownBgColor }),
         ...(dto.countdownTextColor !== undefined && { countdownTextColor: dto.countdownTextColor }),
+        ...(dto.customCss !== undefined && { customCss: dto.customCss }),
+        ...(dto.translations !== undefined && { translations: dto.translations }),
         ...marginData,
         ...(dto.items && {
           items: {
@@ -341,14 +443,49 @@ export class BundlesService {
             })),
           },
         }),
+        ...(dto.upsells && {
+          upsells: {
+            create: dto.upsells.map((u, idx) => ({
+              productId: u.productId,
+              discountType: u.discountType,
+              discountValue: u.discountValue,
+              title: u.title,
+              subtitle: u.subtitle ?? null,
+              selectedByDefault: u.selectedByDefault,
+              matchQuantity: u.matchQuantity,
+              sortOrder: idx,
+            })),
+          },
+        }),
+        ...(dto.giftTiers && {
+          giftTiers: {
+            create: dto.giftTiers.map((g, idx) => ({
+              productId: g.productId ?? null,
+              giftType: g.giftType,
+              unlockQuantity: g.unlockQuantity,
+              label: g.label ?? null,
+              lockedTitle: g.lockedTitle ?? 'Locked',
+              imageUrl: g.imageUrl ?? null,
+              sortOrder: idx,
+            })),
+          },
+        }),
       },
       include: {
         items: {
           include: { product: true },
           orderBy: { sortOrder: 'asc' },
         },
+        upsells: {
+          include: { product: true },
+          orderBy: { sortOrder: 'asc' },
+        },
         volumeTiers: {
           orderBy: { minQuantity: 'asc' },
+        },
+        giftTiers: {
+          include: { product: true },
+          orderBy: { sortOrder: 'asc' },
         },
         displayRules: true,
       },
@@ -392,8 +529,16 @@ export class BundlesService {
           include: { product: true },
           orderBy: { sortOrder: 'asc' },
         },
+        upsells: {
+          include: { product: true },
+          orderBy: { sortOrder: 'asc' },
+        },
         volumeTiers: {
           orderBy: { minQuantity: 'asc' },
+        },
+        giftTiers: {
+          include: { product: true },
+          orderBy: { sortOrder: 'asc' },
         },
         displayRules: true,
       },
@@ -459,6 +604,48 @@ export class BundlesService {
         isDeadStock: item.isDeadStock,
         sortOrder: item.sortOrder,
       })),
+      upsells: (bundle.upsells ?? []).map((u: any) => ({
+        id: u.id,
+        productId: u.productId,
+        product: {
+          id: u.product.id,
+          shopifyProductId: u.product.shopifyProductId,
+          shopifyVariantId: u.product.shopifyVariantId,
+          title: u.product.title,
+          variantTitle: u.product.variantTitle,
+          sku: u.product.sku,
+          price: Number(u.product.price),
+          compareAtPrice: u.product.compareAtPrice
+            ? Number(u.product.compareAtPrice)
+            : null,
+          cogs: u.product.cogs ? Number(u.product.cogs) : null,
+          shippingCost: u.product.shippingCost
+            ? Number(u.product.shippingCost)
+            : null,
+          additionalCosts: u.product.additionalCosts
+            ? Number(u.product.additionalCosts)
+            : null,
+          contributionMargin: u.product.contributionMargin
+            ? Number(u.product.contributionMargin)
+            : null,
+          contributionMarginPct: u.product.contributionMarginPct
+            ? Number(u.product.contributionMarginPct)
+            : null,
+          inventoryQuantity: u.product.inventoryQuantity,
+          avgDailySales: Number(u.product.avgDailySales),
+          daysWithoutSale: u.product.daysWithoutSale,
+          isDeadStock: u.product.isDeadStock,
+          imageUrl: u.product.imageUrl,
+          status: u.product.status,
+        },
+        discountType: u.discountType,
+        discountValue: Number(u.discountValue),
+        title: u.title,
+        subtitle: u.subtitle,
+        selectedByDefault: u.selectedByDefault,
+        matchQuantity: u.matchQuantity,
+        sortOrder: u.sortOrder,
+      })),
       volumeTiers: (bundle.volumeTiers ?? []).map((tier: any) => ({
         id: tier.id,
         minQuantity: tier.minQuantity,
@@ -472,6 +659,19 @@ export class BundlesService {
         targetType: rule.targetType,
         targetId: rule.targetId,
       })),
+      giftsEnabled: bundle.giftsEnabled ?? false,
+      giftsTitle: bundle.giftsTitle ?? 'Free gifts with your order',
+      giftsSubtitle: bundle.giftsSubtitle ?? null,
+      giftTiers: (bundle.giftTiers ?? []).map((g: any) => ({
+        id: g.id,
+        productId: g.productId,
+        giftType: g.giftType,
+        unlockQuantity: g.unlockQuantity,
+        label: g.label,
+        lockedTitle: g.lockedTitle,
+        imageUrl: g.imageUrl,
+        sortOrder: g.sortOrder,
+      })),
       bogoGetQuantity: bundle.bogoGetQuantity ?? null,
       bogoGetDiscountPct: bundle.bogoGetDiscountPct
         ? Number(bundle.bogoGetDiscountPct)
@@ -483,6 +683,8 @@ export class BundlesService {
       countdownTitle: bundle.countdownTitle,
       countdownBgColor: bundle.countdownBgColor,
       countdownTextColor: bundle.countdownTextColor,
+      customCss: bundle.customCss ?? null,
+      translations: bundle.translations ? JSON.parse(bundle.translations) : null,
       currentRedemptions: bundle.currentRedemptions,
       startsAt: bundle.startsAt ? bundle.startsAt.toISOString() : null,
       endsAt: bundle.endsAt ? bundle.endsAt.toISOString() : null,

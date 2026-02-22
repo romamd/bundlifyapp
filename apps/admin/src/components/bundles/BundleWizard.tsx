@@ -72,6 +72,22 @@ const TRIGGER_TYPE_OPTIONS = [
   { value: 'EXIT_INTENT', label: 'Exit Intent Popup' },
 ] as const;
 
+const COUNTDOWN_SUGGESTIONS = [
+  'Hurry! Offer expires in {{timer}}',
+  'Deal ends in {{timer}} -- don\'t miss out!',
+  'Only {{timer}} left at this price',
+  'Flash sale! {{timer}} remaining',
+  'This bundle disappears in {{timer}}',
+];
+
+const NAME_SUGGESTIONS = [
+  'Ultimate Savings Bundle',
+  'Best-Seller Combo Pack',
+  'Complete Care Kit',
+  'Starter Essentials Set',
+  'Premium Value Bundle',
+];
+
 export function BundleWizard({
   open,
   onClose,
@@ -104,6 +120,28 @@ export function BundleWizard({
   const [countdownTextColor, setCountdownTextColor] = useState('#ffffff');
   const [bogoGetQuantity, setBogoGetQuantity] = useState(1);
   const [bogoGetDiscountPct, setBogoGetDiscountPct] = useState(100);
+  const [upsells, setUpsells] = useState<Array<{
+    productId: string;
+    discountType: string;
+    discountValue: number;
+    title: string;
+    subtitle: string;
+    selectedByDefault: boolean;
+    matchQuantity: boolean;
+  }>>([]);
+  const [giftsEnabled, setGiftsEnabled] = useState(false);
+  const [giftsTitle, setGiftsTitle] = useState('Free gifts with your order');
+  const [giftsSubtitle, setGiftsSubtitle] = useState('');
+  const [giftTiers, setGiftTiers] = useState<Array<{
+    productId: string;
+    giftType: string;
+    unlockQuantity: number;
+    label: string;
+    lockedTitle: string;
+  }>>([]);
+  const [customCss, setCustomCss] = useState('');
+  const [translations, setTranslations] = useState<Record<string, Record<string, string>>>({});
+  const [newLocale, setNewLocale] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [initialized, setInitialized] = useState(false);
 
@@ -135,6 +173,31 @@ export function BundleWizard({
       setCountdownTitle(editBundle.countdownTitle ?? 'Hurry! Offer expires in {{timer}}');
       setCountdownBgColor(editBundle.countdownBgColor ?? '#111827');
       setCountdownTextColor(editBundle.countdownTextColor ?? '#ffffff');
+      if (editBundle.upsells?.length) {
+        setUpsells(editBundle.upsells.map((u) => ({
+          productId: u.productId,
+          discountType: u.discountType,
+          discountValue: u.discountValue,
+          title: u.title,
+          subtitle: u.subtitle ?? '',
+          selectedByDefault: u.selectedByDefault,
+          matchQuantity: u.matchQuantity,
+        })));
+      }
+      setGiftsEnabled(editBundle.giftsEnabled ?? false);
+      setGiftsTitle(editBundle.giftsTitle ?? 'Free gifts with your order');
+      setGiftsSubtitle(editBundle.giftsSubtitle ?? '');
+      if (editBundle.giftTiers?.length) {
+        setGiftTiers(editBundle.giftTiers.map((g) => ({
+          productId: g.productId ?? '',
+          giftType: g.giftType,
+          unlockQuantity: g.unlockQuantity,
+          label: g.label ?? '',
+          lockedTitle: g.lockedTitle ?? 'Locked',
+        })));
+      }
+      if (editBundle.customCss) setCustomCss(editBundle.customCss);
+      if (editBundle.translations) setTranslations(editBundle.translations);
       setInitialized(true);
     }
     if (!open) {
@@ -214,6 +277,27 @@ export function BundleWizard({
         countdownTitle: countdownEnabled ? countdownTitle : undefined,
         countdownBgColor: countdownEnabled ? countdownBgColor : '#111827',
         countdownTextColor: countdownEnabled ? countdownTextColor : '#ffffff',
+        giftsEnabled,
+        giftsTitle: giftsEnabled ? giftsTitle : undefined,
+        giftsSubtitle: giftsEnabled && giftsSubtitle ? giftsSubtitle : undefined,
+        giftTiers: giftsEnabled && giftTiers.length > 0 ? giftTiers.map((g) => ({
+          productId: g.productId || undefined,
+          giftType: g.giftType,
+          unlockQuantity: g.unlockQuantity,
+          label: g.label || undefined,
+          lockedTitle: g.lockedTitle || undefined,
+        })) : undefined,
+        upsells: upsells.length > 0 ? upsells.map((u) => ({
+          productId: u.productId,
+          discountType: u.discountType,
+          discountValue: u.discountValue,
+          title: u.title,
+          subtitle: u.subtitle || undefined,
+          selectedByDefault: u.selectedByDefault,
+          matchQuantity: u.matchQuantity,
+        })) : undefined,
+        customCss: customCss || undefined,
+        translations: Object.keys(translations).length > 0 ? JSON.stringify(translations) : undefined,
       });
       resetAndClose();
     } finally {
@@ -241,6 +325,14 @@ export function BundleWizard({
     setCountdownTextColor('#ffffff');
     setBogoGetQuantity(1);
     setBogoGetDiscountPct(100);
+    setUpsells([]);
+    setGiftsEnabled(false);
+    setGiftsTitle('Free gifts with your order');
+    setGiftsSubtitle('');
+    setGiftTiers([]);
+    setCustomCss('');
+    setTranslations({});
+    setNewLocale('');
     onClose();
   };
 
@@ -252,7 +344,7 @@ export function BundleWizard({
       case 0:
         return !!bundleType;
       case 1:
-        if (isVolume) return selectedItems.length === 1;
+        if (isVolume) return selectedItems.length >= 1;
         if (isBogo) return selectedItems.length >= 2;
         if (bundleType === 'COLLECTION' || bundleType === 'MIX_MATCH') return selectedItems.length >= 1;
         return selectedItems.length >= 2;
@@ -420,7 +512,7 @@ export function BundleWizard({
             <div>
               <p style={{ fontSize: '14px', color: '#6d7175', marginTop: 0 }}>
                 {isVolume
-                  ? 'Select the product for volume pricing (1 product only).'
+                  ? 'Select one or more products. Customers will choose from these to build their volume bundle.'
                   : isBogo
                     ? 'Select at least 2 products. The last product is the "get" item.'
                     : bundleType === 'COLLECTION' || bundleType === 'MIX_MATCH'
@@ -429,9 +521,7 @@ export function BundleWizard({
               </p>
               <BundleProductPicker
                 selectedItems={selectedItems}
-                onItemsChange={(items) =>
-                  isVolume ? setSelectedItems(items.slice(0, 1)) : setSelectedItems(items)
-                }
+                onItemsChange={setSelectedItems}
                 products={products}
                 paymentProcessingPct={paymentProcessingPct}
                 paymentProcessingFlat={paymentProcessingFlat}
@@ -448,6 +538,19 @@ export function BundleWizard({
                   <p style={{ fontSize: '14px', color: '#6d7175', marginTop: 0 }}>
                     Define quantity tiers and their discount percentages.
                   </p>
+                  {selectedItems.length > 1 && (
+                    <div style={{
+                      padding: '10px 12px',
+                      marginBottom: '12px',
+                      background: '#eff6ff',
+                      border: '1px solid #bfdbfe',
+                      borderRadius: '6px',
+                      fontSize: '13px',
+                      color: '#1e40af',
+                    }}>
+                      Volume tiers apply to total quantity across all {selectedItems.length} selected products.
+                    </div>
+                  )}
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                     {volumeTiers.map((tier, idx) => (
                       <div
@@ -834,16 +937,34 @@ export function BundleWizard({
           {step === 4 && (
             <div>
               <div style={{ marginBottom: '16px' }}>
-                <label
-                  style={{
-                    display: 'block',
-                    fontWeight: 600,
-                    fontSize: '14px',
-                    marginBottom: '6px',
-                  }}
-                >
-                  Bundle Name
-                </label>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                  <label
+                    style={{
+                      fontWeight: 600,
+                      fontSize: '14px',
+                    }}
+                  >
+                    Bundle Name
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const suggestion = NAME_SUGGESTIONS[Math.floor(Math.random() * NAME_SUGGESTIONS.length)];
+                      setName(suggestion);
+                    }}
+                    style={{
+                      padding: '2px 8px',
+                      border: '1px solid #c9cccf',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '11px',
+                      backgroundColor: '#ffffff',
+                      color: '#2c6ecb',
+                    }}
+                  >
+                    Suggest
+                  </button>
+                </div>
                 <input
                   type="text"
                   value={name}
@@ -1014,7 +1135,27 @@ export function BundleWizard({
                       </div>
                     )}
                     <div>
-                      <label style={{ display: 'block', fontWeight: 600, fontSize: '13px', marginBottom: '4px' }}>Title</label>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
+                        <label style={{ fontWeight: 600, fontSize: '13px' }}>Title</label>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const suggestion = COUNTDOWN_SUGGESTIONS[Math.floor(Math.random() * COUNTDOWN_SUGGESTIONS.length)];
+                            setCountdownTitle(suggestion);
+                          }}
+                          style={{
+                            padding: '2px 8px',
+                            border: '1px solid #c9cccf',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontSize: '11px',
+                            backgroundColor: '#ffffff',
+                            color: '#2c6ecb',
+                          }}
+                        >
+                          Suggest
+                        </button>
+                      </div>
                       <input type="text" value={countdownTitle} onChange={(e) => setCountdownTitle(e.target.value)} maxLength={255} style={{ width: '100%', padding: '6px 10px', border: '1px solid #c9cccf', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box' as const }} />
                       <div style={{ fontSize: '11px', color: '#6d7175', marginTop: '2px' }}>Use {'{{timer}}'} where the countdown should appear.</div>
                     </div>
@@ -1039,6 +1180,445 @@ export function BundleWizard({
                     </div>
                   </div>
                 )}
+              </div>
+
+              {/* Checkout Upsells */}
+              <div style={{ marginBottom: '16px', border: '1px solid #e1e3e5', borderRadius: '8px', overflow: 'hidden' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', backgroundColor: '#f6f6f7', fontWeight: 600, fontSize: '13px' }}>
+                  <span>Checkout Upsells</span>
+                  <button
+                    onClick={() => setUpsells([...upsells, {
+                      productId: '',
+                      discountType: 'PERCENTAGE',
+                      discountValue: 0,
+                      title: '{{product}}',
+                      subtitle: '',
+                      selectedByDefault: false,
+                      matchQuantity: false,
+                    }])}
+                    style={{
+                      padding: '4px 10px',
+                      border: '1px solid #c9cccf',
+                      borderRadius: '4px',
+                      cursor: 'pointer',
+                      fontSize: '12px',
+                      backgroundColor: '#ffffff',
+                    }}
+                  >
+                    + Add Upsell
+                  </button>
+                </div>
+                {upsells.length === 0 && (
+                  <div style={{ padding: '12px', fontSize: '13px', color: '#6d7175' }}>
+                    No upsells configured. Add checkbox add-ons that appear below the bundle widget.
+                  </div>
+                )}
+                {upsells.map((upsell, idx) => (
+                  <div key={idx} style={{ padding: '12px', borderTop: '1px solid #f1f1f1', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                      <div style={{ flex: 1 }}>
+                        <label style={{ fontSize: '11px', color: '#6d7175', display: 'block' }}>Product ID</label>
+                        <input
+                          type="text"
+                          value={upsell.productId}
+                          onChange={(e) => {
+                            const updated = [...upsells];
+                            updated[idx] = { ...updated[idx], productId: e.target.value };
+                            setUpsells(updated);
+                          }}
+                          placeholder="Product ID"
+                          style={{ width: '100%', padding: '6px 8px', border: '1px solid #c9cccf', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box' as const }}
+                        />
+                      </div>
+                      <div style={{ flex: '0 0 140px' }}>
+                        <label style={{ fontSize: '11px', color: '#6d7175', display: 'block' }}>Discount Type</label>
+                        <select
+                          value={upsell.discountType}
+                          onChange={(e) => {
+                            const updated = [...upsells];
+                            updated[idx] = { ...updated[idx], discountType: e.target.value };
+                            setUpsells(updated);
+                          }}
+                          style={{ width: '100%', padding: '6px 8px', border: '1px solid #c9cccf', borderRadius: '4px', fontSize: '13px' }}
+                        >
+                          <option value="PERCENTAGE">Percentage off</option>
+                          <option value="FIXED_AMOUNT">Fixed amount</option>
+                          <option value="FREE">Free</option>
+                        </select>
+                      </div>
+                      {upsell.discountType !== 'FREE' && (
+                        <div style={{ flex: '0 0 90px' }}>
+                          <label style={{ fontSize: '11px', color: '#6d7175', display: 'block' }}>Discount</label>
+                          <input
+                            type="number"
+                            min={0}
+                            max={100}
+                            step={1}
+                            value={upsell.discountValue}
+                            onChange={(e) => {
+                              const updated = [...upsells];
+                              updated[idx] = { ...updated[idx], discountValue: parseFloat(e.target.value) || 0 };
+                              setUpsells(updated);
+                            }}
+                            style={{ width: '100%', padding: '6px 8px', border: '1px solid #c9cccf', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box' as const }}
+                          />
+                        </div>
+                      )}
+                      <button
+                        onClick={() => setUpsells(upsells.filter((_, i) => i !== idx))}
+                        style={{
+                          padding: '4px 8px',
+                          border: '1px solid #c9cccf',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                          fontSize: '12px',
+                          backgroundColor: '#ffffff',
+                          color: '#bf0711',
+                          alignSelf: 'flex-end',
+                          marginBottom: '2px',
+                        }}
+                      >
+                        Remove
+                      </button>
+                    </div>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <div style={{ flex: 1 }}>
+                        <label style={{ fontSize: '11px', color: '#6d7175', display: 'block' }}>Title</label>
+                        <input
+                          type="text"
+                          value={upsell.title}
+                          onChange={(e) => {
+                            const updated = [...upsells];
+                            updated[idx] = { ...updated[idx], title: e.target.value };
+                            setUpsells(updated);
+                          }}
+                          maxLength={255}
+                          style={{ width: '100%', padding: '6px 8px', border: '1px solid #c9cccf', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box' as const }}
+                        />
+                        <div style={{ fontSize: '10px', color: '#8c9196', marginTop: '2px' }}>{'Use {{product}} for product name'}</div>
+                      </div>
+                      <div style={{ flex: 1 }}>
+                        <label style={{ fontSize: '11px', color: '#6d7175', display: 'block' }}>Subtitle (optional)</label>
+                        <input
+                          type="text"
+                          value={upsell.subtitle}
+                          onChange={(e) => {
+                            const updated = [...upsells];
+                            updated[idx] = { ...updated[idx], subtitle: e.target.value };
+                            setUpsells(updated);
+                          }}
+                          maxLength={255}
+                          placeholder="e.g., Save {{saved_amount}}"
+                          style={{ width: '100%', padding: '6px 8px', border: '1px solid #c9cccf', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box' as const }}
+                        />
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: '16px', fontSize: '13px' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                        <input
+                          type="checkbox"
+                          checked={upsell.selectedByDefault}
+                          onChange={(e) => {
+                            const updated = [...upsells];
+                            updated[idx] = { ...updated[idx], selectedByDefault: e.target.checked };
+                            setUpsells(updated);
+                          }}
+                          style={{ cursor: 'pointer' }}
+                        />
+                        Selected by default
+                      </label>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer' }}>
+                        <input
+                          type="checkbox"
+                          checked={upsell.matchQuantity}
+                          onChange={(e) => {
+                            const updated = [...upsells];
+                            updated[idx] = { ...updated[idx], matchQuantity: e.target.checked };
+                            setUpsells(updated);
+                          }}
+                          style={{ cursor: 'pointer' }}
+                        />
+                        Match quantity
+                      </label>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
+              {/* Progressive Gifts */}
+              <div style={{ marginBottom: '16px', border: '1px solid #e1e3e5', borderRadius: '8px', overflow: 'hidden' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 12px', backgroundColor: '#f6f6f7', fontWeight: 600, fontSize: '13px' }}>
+                  <span>Progressive Gifts</span>
+                  <label style={{ display: 'flex', alignItems: 'center', gap: '6px', cursor: 'pointer', fontWeight: 400, fontSize: '13px' }}>
+                    <input type="checkbox" checked={giftsEnabled} onChange={(e) => setGiftsEnabled(e.target.checked)} style={{ cursor: 'pointer' }} />
+                    Enable
+                  </label>
+                </div>
+                {giftsEnabled && (
+                  <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                    <div>
+                      <label style={{ display: 'block', fontWeight: 600, fontSize: '13px', marginBottom: '4px' }}>Title</label>
+                      <input type="text" value={giftsTitle} onChange={(e) => setGiftsTitle(e.target.value)} maxLength={255} style={{ width: '100%', padding: '6px 10px', border: '1px solid #c9cccf', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box' as const }} />
+                    </div>
+                    <div>
+                      <label style={{ display: 'block', fontWeight: 600, fontSize: '13px', marginBottom: '4px' }}>Subtitle (optional)</label>
+                      <input type="text" value={giftsSubtitle} onChange={(e) => setGiftsSubtitle(e.target.value)} maxLength={255} style={{ width: '100%', padding: '6px 10px', border: '1px solid #c9cccf', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box' as const }} />
+                    </div>
+                    {giftTiers.map((gift, idx) => (
+                      <div key={idx} style={{ padding: '10px', border: '1px solid #e1e3e5', borderRadius: '6px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                          <div style={{ flex: '0 0 140px' }}>
+                            <label style={{ fontSize: '11px', color: '#6d7175', display: 'block' }}>Gift Type</label>
+                            <select
+                              value={gift.giftType}
+                              onChange={(e) => {
+                                const updated = [...giftTiers];
+                                updated[idx] = { ...updated[idx], giftType: e.target.value };
+                                setGiftTiers(updated);
+                              }}
+                              style={{ width: '100%', padding: '6px 8px', border: '1px solid #c9cccf', borderRadius: '4px', fontSize: '13px' }}
+                            >
+                              <option value="FREE_GIFT">Free Gift</option>
+                              <option value="FREE_SHIPPING">Free Shipping</option>
+                            </select>
+                          </div>
+                          <div style={{ flex: '0 0 100px' }}>
+                            <label style={{ fontSize: '11px', color: '#6d7175', display: 'block' }}>Unlock at qty</label>
+                            <input
+                              type="number"
+                              min={1}
+                              value={gift.unlockQuantity}
+                              onChange={(e) => {
+                                const updated = [...giftTiers];
+                                updated[idx] = { ...updated[idx], unlockQuantity: parseInt(e.target.value) || 1 };
+                                setGiftTiers(updated);
+                              }}
+                              style={{ width: '100%', padding: '6px 8px', border: '1px solid #c9cccf', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box' as const }}
+                            />
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <label style={{ fontSize: '11px', color: '#6d7175', display: 'block' }}>Label</label>
+                            <input
+                              type="text"
+                              value={gift.label}
+                              onChange={(e) => {
+                                const updated = [...giftTiers];
+                                updated[idx] = { ...updated[idx], label: e.target.value };
+                                setGiftTiers(updated);
+                              }}
+                              placeholder="e.g., Free Tote Bag"
+                              maxLength={255}
+                              style={{ width: '100%', padding: '6px 8px', border: '1px solid #c9cccf', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box' as const }}
+                            />
+                          </div>
+                          <button
+                            onClick={() => setGiftTiers(giftTiers.filter((_, i) => i !== idx))}
+                            style={{
+                              padding: '4px 8px',
+                              border: '1px solid #c9cccf',
+                              borderRadius: '4px',
+                              cursor: 'pointer',
+                              fontSize: '12px',
+                              backgroundColor: '#ffffff',
+                              color: '#bf0711',
+                              alignSelf: 'flex-end',
+                              marginBottom: '2px',
+                            }}
+                          >
+                            Remove
+                          </button>
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '11px', color: '#6d7175', display: 'block' }}>Locked Title</label>
+                          <input
+                            type="text"
+                            value={gift.lockedTitle}
+                            onChange={(e) => {
+                              const updated = [...giftTiers];
+                              updated[idx] = { ...updated[idx], lockedTitle: e.target.value };
+                              setGiftTiers(updated);
+                            }}
+                            placeholder="e.g., Buy 3+ to unlock"
+                            maxLength={255}
+                            style={{ width: '100%', padding: '6px 8px', border: '1px solid #c9cccf', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box' as const }}
+                          />
+                        </div>
+                      </div>
+                    ))}
+                    <button
+                      onClick={() => setGiftTiers([...giftTiers, {
+                        productId: '',
+                        giftType: 'FREE_GIFT',
+                        unlockQuantity: giftTiers.length + 1,
+                        label: '',
+                        lockedTitle: 'Locked',
+                      }])}
+                      style={{
+                        padding: '6px 12px',
+                        border: '1px solid #c9cccf',
+                        borderRadius: '4px',
+                        cursor: 'pointer',
+                        fontSize: '12px',
+                        backgroundColor: '#ffffff',
+                        alignSelf: 'flex-start',
+                      }}
+                    >
+                      + Add Gift
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              {/* Custom CSS */}
+              <div style={{ marginBottom: '16px', border: '1px solid #e1e3e5', borderRadius: '8px', overflow: 'hidden' }}>
+                <div style={{ padding: '10px 12px', backgroundColor: '#f6f6f7', fontWeight: 600, fontSize: '13px' }}>
+                  Custom CSS
+                </div>
+                <div style={{ padding: '12px' }}>
+                  <textarea
+                    value={customCss}
+                    onChange={(e) => setCustomCss(e.target.value)}
+                    rows={8}
+                    maxLength={10000}
+                    placeholder={`.bundlify-card { border-radius: 16px; }`}
+                    style={{
+                      width: '100%',
+                      padding: '8px 10px',
+                      border: '1px solid #c9cccf',
+                      borderRadius: '4px',
+                      fontSize: '13px',
+                      fontFamily: 'monospace',
+                      resize: 'vertical',
+                      boxSizing: 'border-box',
+                    }}
+                  />
+                  <div style={{ fontSize: '11px', color: '#6d7175', marginTop: '4px' }}>
+                    CSS rules applied only to this deal. Scoped via a per-deal style tag on the storefront.
+                  </div>
+                </div>
+              </div>
+
+              {/* Translations */}
+              <div style={{ marginBottom: '16px', border: '1px solid #e1e3e5', borderRadius: '8px', overflow: 'hidden' }}>
+                <div style={{ padding: '10px 12px', backgroundColor: '#f6f6f7', fontWeight: 600, fontSize: '13px' }}>
+                  Translations
+                </div>
+                <div style={{ padding: '12px', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  <div style={{ fontSize: '13px', color: '#6d7175' }}>
+                    Add translations for customer-facing text in different languages.
+                  </div>
+                  {Object.keys(translations).map((locale) => (
+                    <div key={locale} style={{ padding: '10px', border: '1px solid #e1e3e5', borderRadius: '6px' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                        <span style={{ fontWeight: 600, fontSize: '13px', textTransform: 'uppercase' }}>{locale}</span>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const updated = { ...translations };
+                            delete updated[locale];
+                            setTranslations(updated);
+                          }}
+                          style={{
+                            padding: '2px 8px',
+                            border: '1px solid #c9cccf',
+                            borderRadius: '4px',
+                            cursor: 'pointer',
+                            fontSize: '11px',
+                            backgroundColor: '#ffffff',
+                            color: '#bf0711',
+                          }}
+                        >
+                          Remove
+                        </button>
+                      </div>
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                        <div>
+                          <label style={{ fontSize: '11px', color: '#6d7175', display: 'block' }}>Name</label>
+                          <input
+                            type="text"
+                            value={translations[locale]?.name || ''}
+                            onChange={(e) => {
+                              setTranslations({
+                                ...translations,
+                                [locale]: { ...translations[locale], name: e.target.value },
+                              });
+                            }}
+                            placeholder={name || 'Bundle name'}
+                            style={{ width: '100%', padding: '6px 8px', border: '1px solid #c9cccf', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box' as const }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '11px', color: '#6d7175', display: 'block' }}>Button Text</label>
+                          <input
+                            type="text"
+                            value={translations[locale]?.buttonText || ''}
+                            onChange={(e) => {
+                              setTranslations({
+                                ...translations,
+                                [locale]: { ...translations[locale], buttonText: e.target.value },
+                              });
+                            }}
+                            placeholder="Add Bundle to Cart"
+                            style={{ width: '100%', padding: '6px 8px', border: '1px solid #c9cccf', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box' as const }}
+                          />
+                        </div>
+                        <div>
+                          <label style={{ fontSize: '11px', color: '#6d7175', display: 'block' }}>Countdown Title</label>
+                          <input
+                            type="text"
+                            value={translations[locale]?.countdownTitle || ''}
+                            onChange={(e) => {
+                              setTranslations({
+                                ...translations,
+                                [locale]: { ...translations[locale], countdownTitle: e.target.value },
+                              });
+                            }}
+                            placeholder={countdownTitle}
+                            style={{ width: '100%', padding: '6px 8px', border: '1px solid #c9cccf', borderRadius: '4px', fontSize: '13px', boxSizing: 'border-box' as const }}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                  <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                    <input
+                      type="text"
+                      value={newLocale}
+                      onChange={(e) => setNewLocale(e.target.value.toLowerCase().slice(0, 5))}
+                      placeholder="e.g., fr, de, es"
+                      maxLength={5}
+                      style={{
+                        width: '100px',
+                        padding: '6px 8px',
+                        border: '1px solid #c9cccf',
+                        borderRadius: '4px',
+                        fontSize: '13px',
+                        boxSizing: 'border-box' as const,
+                      }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const code = newLocale.trim();
+                        if (code && !translations[code]) {
+                          setTranslations({ ...translations, [code]: {} });
+                          setNewLocale('');
+                        }
+                      }}
+                      disabled={!newLocale.trim() || !!translations[newLocale.trim()]}
+                      style={{
+                        padding: '6px 12px',
+                        border: '1px solid #c9cccf',
+                        borderRadius: '4px',
+                        cursor: newLocale.trim() && !translations[newLocale.trim()] ? 'pointer' : 'not-allowed',
+                        fontSize: '12px',
+                        backgroundColor: '#ffffff',
+                      }}
+                    >
+                      + Add Language
+                    </button>
+                  </div>
+                </div>
               </div>
 
               {marginResult && (

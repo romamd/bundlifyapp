@@ -59,4 +59,16 @@ export interface ShopSettingsDto {
   widgetSavingsBadgeBgColor: string;
   widgetSavingsBadgeTextColor: string;
   widgetCardHoverBgColor: string;
+  stickyBarEnabled: boolean;
+  stickyBarBgColor: string;
+  stickyBarTextColor: string;
+  stickyBarButtonBgColor: string;
+  stickyBarButtonTextColor: string;
+  cartTimerMinutes: number;
+  cartTimerText: string;
+  priceRoundingEnabled: boolean;
+  updateThemePrice: boolean;
+  themePriceMode: string;
+  excludeB2B: boolean;
+  discountOnlyViaWidget: boolean;
 }

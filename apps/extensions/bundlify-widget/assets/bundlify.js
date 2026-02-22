@@ -47,6 +47,15 @@
       loader.style.display = 'block';
     }
 
+    // B2B exclusion: skip rendering if customer is tagged b2b/wholesale
+    if (themeConfig.excludeB2B && window.Shopify && window.Shopify.customer && window.Shopify.customer.tags) {
+      var tags = window.Shopify.customer.tags;
+      if (tags.indexOf('b2b') >= 0 || tags.indexOf('B2B') >= 0 || tags.indexOf('wholesale') >= 0) {
+        hideLoader(loader);
+        return;
+      }
+    }
+
     try {
       var res = await fetch(PROXY_BASE + '/bundles?' + params.toString());
       if (!res.ok) {
@@ -69,6 +78,31 @@
   }
 
   /* ------------------------------------------------------------------ */
+  /*  Locale detection & translation helper                              */
+  /* ------------------------------------------------------------------ */
+
+  var currentLocale = 'en';
+
+  function detectLocale() {
+    if (window.Shopify && window.Shopify.locale) {
+      currentLocale = window.Shopify.locale;
+    } else if (navigator.language) {
+      currentLocale = navigator.language.split('-')[0];
+    }
+  }
+
+  /**
+   * Translate a bundle field. Looks for a per-locale override in
+   * bundle.translations[currentLocale][key]; falls back to defaultValue.
+   */
+  function t(bundle, key, defaultValue) {
+    if (bundle.translations && bundle.translations[currentLocale] && bundle.translations[currentLocale][key]) {
+      return bundle.translations[currentLocale][key];
+    }
+    return defaultValue;
+  }
+
+  /* ------------------------------------------------------------------ */
   /*  Rendering                                                          */
   /* ------------------------------------------------------------------ */
 
@@ -80,7 +114,7 @@
     if (!bundle.countdownEnabled) return '';
 
     var id = 'bundlify-countdown-' + bundle.bundleId;
-    var title = (bundle.countdownTitle || 'Offer expires in {{timer}}');
+    var title = t(bundle, 'countdownTitle', bundle.countdownTitle || 'Offer expires in {{timer}}');
 
     return '<div class="bundlify-countdown" id="' + id + '" ' +
       'style="background:' + (bundle.countdownBgColor || '#111827') + ';color:' + (bundle.countdownTextColor || '#ffffff') + ';" ' +
@@ -171,16 +205,27 @@
     var showCompareAtPrice = themeConfig.showCompareAtPrice !== false;
     var layout = container.dataset.layout || 'vertical';
 
+    // Remove all layout classes first
+    wrapper.classList.remove('bundlify-bundles--horizontal', 'bundlify-bundles--compact', 'bundlify-bundles--grid');
     if (layout === 'horizontal') {
       wrapper.classList.add('bundlify-bundles--horizontal');
-    } else {
-      wrapper.classList.remove('bundlify-bundles--horizontal');
+    } else if (layout === 'compact') {
+      wrapper.classList.add('bundlify-bundles--compact');
+    } else if (layout === 'grid') {
+      wrapper.classList.add('bundlify-bundles--grid');
     }
+
+    // Collect multi-product volume bundles for post-render wiring
+    var multiVolumeBundles = [];
 
     var html = bundles
       .map(function (bundle) {
         var countdown = renderCountdown(bundle);
         if (bundle.type === 'VOLUME' && bundle.volumeTiers && bundle.volumeTiers.length) {
+          if (bundle.items && bundle.items.length > 1) {
+            multiVolumeBundles.push(bundle);
+            return countdown + '<div class="bundlify-volume-multi" data-bundle-id="' + escapeAttr(bundle.bundleId) + '"></div>';
+          }
           return countdown + renderVolumeTable(bundle, buttonText, showSavings);
         }
         return countdown + renderBundleCard(bundle, buttonText, showSavings, showCompareAtPrice);
@@ -188,6 +233,57 @@
       .join('');
 
     wrapper.innerHTML = html;
+
+    // Render multi-product volume bundles (needs DOM container references)
+    for (var mv = 0; mv < multiVolumeBundles.length; mv++) {
+      var mvBundle = multiVolumeBundles[mv];
+      var mvContainer = wrapper.querySelector('.bundlify-volume-multi[data-bundle-id="' + mvBundle.bundleId + '"]');
+      if (mvContainer) {
+        renderVolumeBundle(mvBundle, mvContainer, shop, trigger);
+      }
+    }
+
+    // Inject per-deal custom CSS
+    for (var d = 0; d < bundles.length; d++) {
+      if (bundles[d].customCss) {
+        var styleId = 'bundlify-deal-css-' + bundles[d].bundleId;
+        var existingStyle = document.getElementById(styleId);
+        if (existingStyle) existingStyle.remove();
+        var styleEl = document.createElement('style');
+        styleEl.id = styleId;
+        styleEl.textContent = bundles[d].customCss;
+        document.head.appendChild(styleEl);
+      }
+    }
+
+    // Theme product price override
+    if (themeConfig.updateThemePrice && bundles.length > 0) {
+      try {
+        var priceSelectors = ['.price', '.product-price', '[class*="price"]', '.product__price', '.price__regular', '.price-item--regular'];
+        var priceEl = null;
+        for (var ps = 0; ps < priceSelectors.length; ps++) {
+          priceEl = document.querySelector(priceSelectors[ps]);
+          if (priceEl && priceEl.closest('.bundlify-card, .bundlify-volume-widget, .bundlify-volume-multi, .bundlify-drawer')) {
+            priceEl = null; // skip bundlify's own price elements
+            continue;
+          }
+          if (priceEl) break;
+        }
+        if (priceEl) {
+          var firstBundle = bundles[0];
+          if (themeConfig.themePriceMode === 'bundle_price') {
+            priceEl.textContent = formatPrice(firstBundle.bundlePrice);
+          } else {
+            // per_item: show discounted per-item price of first item
+            var itemCount = firstBundle.items.reduce(function(sum, it) { return sum + it.quantity; }, 0);
+            var perItemPrice = itemCount > 0 ? firstBundle.bundlePrice / itemCount : firstBundle.bundlePrice;
+            priceEl.textContent = formatPrice(perItemPrice);
+          }
+        }
+      } catch (e) {
+        // Best-effort — theme selectors vary
+      }
+    }
 
     // Start any countdown timers that were just rendered
     startCountdowns();
@@ -198,7 +294,7 @@
     });
 
     // Attach add-to-cart handlers for standard bundles
-    wrapper.querySelectorAll('.bundlify-card__btn:not(.bundlify-volume-tier__btn)').forEach(function (btn) {
+    wrapper.querySelectorAll('.bundlify-card__btn:not(.bundlify-volume-tier__btn):not(.bundlify-volume__add-btn)').forEach(function (btn) {
       btn.addEventListener('click', function () {
         addBundleToCart(btn, bundles, trigger, shop);
       });
@@ -221,6 +317,82 @@
   }
 
   /**
+   * Render checkbox upsell add-ons below a bundle card.
+   * Returns empty string if the bundle has no upsells.
+   */
+  function renderUpsells(bundle) {
+    if (!bundle.upsells || !bundle.upsells.length) return '';
+
+    var html = '<div class="bundlify-upsells">';
+    bundle.upsells.forEach(function(upsell, idx) {
+      var discountLabel = '';
+      if (upsell.discountType === 'FREE') {
+        discountLabel = 'FREE';
+      } else if (upsell.discountType === 'PERCENTAGE' && upsell.discountValue > 0) {
+        discountLabel = upsell.discountValue + '% off';
+      } else if (upsell.discountType === 'FIXED_AMOUNT' && upsell.discountValue > 0) {
+        discountLabel = formatPrice(Number(upsell.discountValue)) + ' off';
+      }
+
+      var finalPrice = upsell.price;
+      if (upsell.discountType === 'FREE') finalPrice = 0;
+      else if (upsell.discountType === 'PERCENTAGE') finalPrice = upsell.price * (1 - upsell.discountValue / 100);
+      else if (upsell.discountType === 'FIXED_AMOUNT') finalPrice = Math.max(0, upsell.price - upsell.discountValue);
+
+      var checked = upsell.selectedByDefault ? ' checked' : '';
+      var imgHtml = upsell.imageUrl ? '<img src="' + escapeAttr(upsell.imageUrl) + '" alt="" class="bundlify-upsell__img" />' : '';
+
+      html += '<label class="bundlify-upsell" data-upsell-idx="' + idx + '" data-variant-id="' + escapeAttr(upsell.shopifyVariantId || '') + '">' +
+        '<input type="checkbox" class="bundlify-upsell__checkbox"' + checked + ' />' +
+        imgHtml +
+        '<div class="bundlify-upsell__info">' +
+          '<div class="bundlify-upsell__title">' + escapeHtml(upsell.title) + '</div>' +
+          (upsell.subtitle ? '<div class="bundlify-upsell__subtitle">' + escapeHtml(upsell.subtitle) + '</div>' : '') +
+        '</div>' +
+        '<div class="bundlify-upsell__price">' +
+          (discountLabel ? '<span class="bundlify-upsell__discount">' + discountLabel + '</span>' : '') +
+          '<span class="bundlify-upsell__final-price">' + formatPrice(finalPrice) + '</span>' +
+        '</div>' +
+      '</label>';
+    });
+    html += '</div>';
+    return html;
+  }
+
+  /**
+   * Render progressive gift tiers below a bundle card.
+   * Returns empty string if gifts are not enabled or there are none.
+   */
+  function renderGifts(bundle) {
+    if (!bundle.giftsEnabled || !bundle.giftTiers || !bundle.giftTiers.length) return '';
+
+    var html = '<div class="bundlify-gifts">';
+    html += '<div class="bundlify-gifts__header">';
+    html += '<div class="bundlify-gifts__title">' + escapeHtml(bundle.giftsTitle || 'Free gifts with your order') + '</div>';
+    if (bundle.giftsSubtitle) {
+      html += '<div class="bundlify-gifts__subtitle">' + escapeHtml(bundle.giftsSubtitle) + '</div>';
+    }
+    html += '</div>';
+    html += '<div class="bundlify-gifts__grid">';
+
+    bundle.giftTiers.forEach(function(gift) {
+      var isLocked = true;
+      var imgHtml = gift.imageUrl ? '<img src="' + escapeAttr(gift.imageUrl) + '" alt="" class="bundlify-gift__img" />' : '<div class="bundlify-gift__img bundlify-gift__img--placeholder"></div>';
+
+      html += '<div class="bundlify-gift' + (isLocked ? ' bundlify-gift--locked' : '') + '" data-unlock-qty="' + gift.unlockQuantity + '">';
+      html += imgHtml;
+      html += '<div class="bundlify-gift__label">' + escapeHtml(gift.label || gift.productTitle || (gift.giftType === 'FREE_SHIPPING' ? 'Free Shipping' : 'Free Gift')) + '</div>';
+      if (isLocked) {
+        html += '<div class="bundlify-gift__locked">' + escapeHtml(gift.lockedTitle || 'Locked') + '</div>';
+      }
+      html += '</div>';
+    });
+
+    html += '</div></div>';
+    return html;
+  }
+
+  /**
    * Render a standard bundle card (FIXED, CROSS_SELL, DEAD_STOCK, MIX_MATCH).
    */
   function renderBundleCard(bundle, buttonText, showSavings, showCompareAtPrice) {
@@ -234,7 +406,7 @@
       '">' +
       '  <div class="bundlify-card__header">' +
       '    <h3 class="bundlify-card__title">' +
-      escapeHtml(bundle.name) +
+      escapeHtml(t(bundle, 'name', bundle.name)) +
       '</h3>' +
       badgeHtml +
       '  </div>' +
@@ -243,19 +415,21 @@
       '  </div>' +
       '  <div class="bundlify-card__footer">' +
       '    <div class="bundlify-card__pricing">' +
-      '      <span class="bundlify-card__original">$' +
-      bundle.individualTotal.toFixed(2) +
+      '      <span class="bundlify-card__original">' +
+      formatPrice(bundle.individualTotal) +
       '</span>' +
-      '      <span class="bundlify-card__bundle-price">$' +
-      bundle.bundlePrice.toFixed(2) +
+      '      <span class="bundlify-card__bundle-price">' +
+      formatPrice(bundle.bundlePrice) +
       '</span>' +
       '    </div>' +
       '    <button class="bundlify-card__btn" data-bundle-id="' +
       escapeAttr(bundle.bundleId) +
       '">' +
-      escapeHtml(buttonText) +
+      escapeHtml(t(bundle, 'buttonText', buttonText)) +
       '    </button>' +
       '  </div>' +
+      renderUpsells(bundle) +
+      renderGifts(bundle) +
       '</div>'
     );
   }
@@ -289,7 +463,7 @@
         bestBadge +
         label +
         '<span class="bundlify-volume-tier__qty">Buy ' + qtyText + '</span>' +
-        '<span class="bundlify-volume-tier__price">$' + pricePerUnit.toFixed(2) + ' each</span>' +
+        '<span class="bundlify-volume-tier__price">' + formatPrice(pricePerUnit) + ' each</span>' +
         savingsText +
         '<button class="bundlify-card__btn bundlify-volume-tier__btn" ' +
         'data-bundle-id="' + escapeAttr(bundle.bundleId) + '" ' +
@@ -310,6 +484,164 @@
   }
 
   /**
+   * Render a multi-product volume bundle with per-product qty selectors.
+   * Used when bundle.items.length > 1.
+   */
+  function renderVolumeBundle(bundle, container, shop, trigger) {
+    var html = '';
+    html += '<div class="bundlify-volume">';
+    html += '<h3 class="bundlify-volume__title">' + escapeHtml(bundle.name) + '</h3>';
+
+    // Product grid
+    html += '<div class="bundlify-volume__products">';
+    for (var i = 0; i < bundle.items.length; i++) {
+      var item = bundle.items[i];
+      html += '<div class="bundlify-volume__product" data-variant-id="' + escapeAttr(item.shopifyVariantId) + '">';
+      if (item.imageUrl) {
+        html += '<img src="' + escapeAttr(item.imageUrl) + '" alt="" class="bundlify-volume__product-img" />';
+      }
+      html += '<div class="bundlify-volume__product-info">';
+      html += '<div class="bundlify-volume__product-title">' + escapeHtml(item.title) + '</div>';
+      html += '<div class="bundlify-volume__product-price">' + formatPrice(item.price) + '</div>';
+      html += '</div>';
+      html += '<div class="bundlify-volume__product-qty">';
+      html += '<button class="bundlify-volume__qty-btn" data-action="decrement">\u2212</button>';
+      html += '<span class="bundlify-volume__qty-value">0</span>';
+      html += '<button class="bundlify-volume__qty-btn" data-action="increment">+</button>';
+      html += '</div>';
+      html += '</div>';
+    }
+    html += '</div>';
+
+    // Volume tiers display
+    html += '<div class="bundlify-volume__tiers">';
+    for (var t = 0; t < (bundle.volumeTiers || []).length; t++) {
+      var tier = bundle.volumeTiers[t];
+      var tierLabel = tier.label || ('Buy ' + tier.minQuantity + '+');
+      var isLast = t === bundle.volumeTiers.length - 1;
+      html += '<div class="bundlify-volume__tier' + (isLast ? ' bundlify-volume__tier--best' : '') + '">';
+      html += '<span class="bundlify-volume__tier-label">' + escapeHtml(tierLabel) + '</span>';
+      html += '<span class="bundlify-volume__tier-discount">Save ' + Math.round(Number(tier.discountPct)) + '%</span>';
+      html += '</div>';
+    }
+    html += '</div>';
+
+    // Total + active tier summary
+    html += '<div class="bundlify-volume__summary">';
+    html += '<span class="bundlify-volume__total-qty">0 items selected</span>';
+    html += '<span class="bundlify-volume__active-tier"></span>';
+    html += '</div>';
+
+    // Add to cart button
+    html += '<button class="bundlify-card__btn bundlify-volume__add-btn" disabled>Select items to continue</button>';
+    html += '</div>';
+
+    container.innerHTML = html;
+
+    // Wire up qty buttons
+    var productEls = container.querySelectorAll('.bundlify-volume__product');
+    var addBtn = container.querySelector('.bundlify-volume__add-btn');
+    var totalQtyEl = container.querySelector('.bundlify-volume__total-qty');
+    var activeTierEl = container.querySelector('.bundlify-volume__active-tier');
+
+    function updateSummary() {
+      var total = 0;
+      for (var p = 0; p < productEls.length; p++) {
+        total += parseInt(productEls[p].querySelector('.bundlify-volume__qty-value').textContent) || 0;
+      }
+      totalQtyEl.textContent = total + ' item' + (total !== 1 ? 's' : '') + ' selected';
+
+      // Find active tier
+      var activeTier = null;
+      for (var at = 0; at < (bundle.volumeTiers || []).length; at++) {
+        if (total >= bundle.volumeTiers[at].minQuantity) {
+          activeTier = bundle.volumeTiers[at];
+        }
+      }
+
+      if (activeTier) {
+        activeTierEl.textContent = 'Saving ' + Math.round(Number(activeTier.discountPct)) + '%!';
+        activeTierEl.style.color = '#166534';
+        addBtn.disabled = false;
+        addBtn.textContent = 'Add Bundle to Cart \u2014 Save ' + Math.round(Number(activeTier.discountPct)) + '%';
+      } else {
+        var minNeeded = bundle.volumeTiers && bundle.volumeTiers.length ? bundle.volumeTiers[0].minQuantity : 1;
+        activeTierEl.textContent = 'Add ' + (minNeeded - total) + ' more to unlock discount';
+        activeTierEl.style.color = '#6b7280';
+        addBtn.disabled = total === 0;
+        addBtn.textContent = total > 0 ? 'Add ' + total + ' Items to Cart' : 'Select items to continue';
+      }
+
+      // Highlight active tier in tier display
+      var tierEls = container.querySelectorAll('.bundlify-volume__tier');
+      for (var te = 0; te < tierEls.length; te++) {
+        if (bundle.volumeTiers[te] && total >= bundle.volumeTiers[te].minQuantity) {
+          tierEls[te].classList.add('bundlify-volume__tier--active');
+        } else {
+          tierEls[te].classList.remove('bundlify-volume__tier--active');
+        }
+      }
+    }
+
+    for (var pe = 0; pe < productEls.length; pe++) {
+      (function(productEl) {
+        var btns = productEl.querySelectorAll('.bundlify-volume__qty-btn');
+        var qtyEl = productEl.querySelector('.bundlify-volume__qty-value');
+        btns[0].addEventListener('click', function() {
+          var val = parseInt(qtyEl.textContent) || 0;
+          if (val > 0) { qtyEl.textContent = val - 1; updateSummary(); }
+        });
+        btns[1].addEventListener('click', function() {
+          var val = parseInt(qtyEl.textContent) || 0;
+          qtyEl.textContent = val + 1;
+          updateSummary();
+        });
+      })(productEls[pe]);
+    }
+
+    // Add to cart handler
+    addBtn.addEventListener('click', function() {
+      if (addBtn.disabled) return;
+      var items = [];
+      for (var ci = 0; ci < productEls.length; ci++) {
+        var qty = parseInt(productEls[ci].querySelector('.bundlify-volume__qty-value').textContent) || 0;
+        var variantId = productEls[ci].getAttribute('data-variant-id');
+        if (qty > 0 && variantId) {
+          var mvProps = { _bundlify_bundle_id: bundle.bundleId };
+          if (themeConfig.discountOnlyViaWidget) {
+            mvProps._bundlify_widget_sale = 'true';
+          }
+          items.push({ id: parseInt(variantId, 10), quantity: qty, properties: mvProps });
+        }
+      }
+      if (!items.length) return;
+
+      addBtn.disabled = true;
+      addBtn.textContent = 'Adding...';
+
+      fetch('/cart/add.js', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ items: items })
+      })
+      .then(function(res) { return res.json(); })
+      .catch(function() { return null; })
+      .then(function() {
+        addBtn.textContent = 'Added!';
+        setTimeout(function() {
+          addBtn.disabled = false;
+          updateSummary();
+        }, 2500);
+      });
+
+      // Track conversion
+      trackEvent(shop, bundle.bundleId, 'ADDED_TO_CART', trigger);
+    });
+
+    updateSummary();
+  }
+
+  /**
    * Add a volume tier's quantity to cart using the AJAX Cart API.
    */
   async function addVolumeBundleToCart(btn, bundles, trigger, shop) {
@@ -324,6 +656,11 @@
     btn.classList.add('bundlify-card__btn--loading');
 
     try {
+      var volumeProps = { _bundlify_bundle_id: bundleId };
+      if (themeConfig.discountOnlyViaWidget) {
+        volumeProps._bundlify_widget_sale = 'true';
+      }
+
       var res = await fetch('/cart/add.js', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -331,7 +668,7 @@
           items: [{
             id: variantId,
             quantity: quantity,
-            properties: { _bundlify_bundle_id: bundleId },
+            properties: volumeProps,
           }],
         }),
       });
@@ -379,13 +716,13 @@
       title += ' <span class="bundlify-card__variant">' + escapeHtml(item.variantTitle) + '</span>';
     }
 
-    var price = '$' + item.price.toFixed(2);
+    var price = formatPrice(item.price);
     if (item.quantity > 1) {
       price += ' &times; ' + item.quantity;
     }
 
     if (showCompareAtPrice && item.compareAtPrice && item.compareAtPrice > item.price) {
-      price = '<span class="bundlify-card__item-compare-at">$' + item.compareAtPrice.toFixed(2) + '</span> ' + price;
+      price = '<span class="bundlify-card__item-compare-at">' + formatPrice(item.compareAtPrice) + '</span> ' + price;
     }
 
     return (
@@ -426,12 +763,32 @@
 
     try {
       var items = bundle.items.map(function (item) {
+        var props = { _bundlify_bundle_id: bundleId };
+        if (themeConfig.discountOnlyViaWidget) {
+          props._bundlify_widget_sale = 'true';
+        }
         return {
           id: parseInt(item.shopifyVariantId, 10),
           quantity: item.quantity,
-          properties: { _bundlify_bundle_id: bundleId },
+          properties: props,
         };
       });
+
+      // Add checked upsell items to cart
+      var card = btn.closest('.bundlify-card');
+      if (card) {
+        var upsellCheckboxes = card.querySelectorAll('.bundlify-upsell__checkbox:checked');
+        upsellCheckboxes.forEach(function(cb) {
+          var label = cb.closest('.bundlify-upsell');
+          if (label && label.dataset.variantId) {
+            items.push({
+              id: parseInt(label.dataset.variantId, 10),
+              quantity: 1,
+              properties: { _bundlify_upsell: 'true', _bundlify_bundle_id: bundleId },
+            });
+          }
+        });
+      }
 
       var res = await fetch('/cart/add.js', {
         method: 'POST',
@@ -794,23 +1151,71 @@
     }
   }
 
+  var CART_TIMER_KEY = 'bundlify_cart_timer_start';
+  var cartTimerInterval = null;
+
+  function startCartTimer(timerEl, minutes, textTemplate) {
+    var startStr = sessionStorage.getItem(CART_TIMER_KEY);
+    var startTime;
+    if (startStr) {
+      startTime = parseInt(startStr, 10);
+    } else {
+      startTime = Date.now();
+      sessionStorage.setItem(CART_TIMER_KEY, String(startTime));
+    }
+
+    var endTime = startTime + minutes * 60 * 1000;
+
+    function tickTimer() {
+      var remaining = endTime - Date.now();
+      if (remaining <= 0) {
+        timerEl.className = 'bundlify-drawer__timer bundlify-drawer__timer--expired';
+        timerEl.textContent = 'Cart expired';
+        if (cartTimerInterval) {
+          clearInterval(cartTimerInterval);
+          cartTimerInterval = null;
+        }
+        return;
+      }
+      var mins = Math.floor(remaining / 60000);
+      var secs = Math.floor((remaining % 60000) / 1000);
+      var mStr = mins < 10 ? '0' + mins : '' + mins;
+      var sStr = secs < 10 ? '0' + secs : '' + secs;
+      var timerStr = mStr + ':' + sStr;
+      timerEl.textContent = textTemplate.replace('{{timer}}', timerStr);
+    }
+
+    tickTimer();
+    cartTimerInterval = setInterval(tickTimer, 1000);
+  }
+
   function renderCartDrawer(cart, drawerData, shop, container) {
     var upsellHeading = container.dataset.upsellHeading || 'Complete your order';
     var showShippingProgress = container.dataset.showShippingProgress !== 'false';
     var cartTotal = cart.total_price / 100;
     var threshold = drawerData.freeShippingThreshold;
 
-    // Build shipping progress bar
+    // Build urgency timer
+    var timerHtml = '';
+    var cartTimerMinutes = drawerData.cartTimerMinutes || 0;
+    var cartTimerText = drawerData.cartTimerText || 'Your cart will expire in {{timer}}';
+    if (cartTimerMinutes > 0) {
+      timerHtml = '<div class="bundlify-drawer__timer" id="bundlify-cart-timer"></div>';
+    }
+
+    // Build shipping progress bar with milestone markers
     var shippingHtml = '';
     if (showShippingProgress && threshold && threshold > 0) {
       var remaining = Math.max(0, threshold - cartTotal);
       var pct = Math.min(100, (cartTotal / threshold) * 100);
-      var progressText = remaining > 0
-        ? 'Add $' + remaining.toFixed(2) + ' for free shipping!'
-        : 'You qualify for free shipping!';
+      var unlocked = remaining <= 0;
+      var shippingClass = 'bundlify-drawer__shipping' + (unlocked ? ' bundlify-drawer__shipping--unlocked' : '');
+      var progressText = unlocked
+        ? '\u2713 Free shipping unlocked!'
+        : 'Add ' + formatPrice(remaining) + ' for free shipping!';
 
       shippingHtml =
-        '<div class="bundlify-drawer__shipping">' +
+        '<div class="' + shippingClass + '">' +
         '  <p class="bundlify-drawer__shipping-text">' + progressText + '</p>' +
         '  <div class="bundlify-drawer__shipping-bar">' +
         '    <div class="bundlify-drawer__shipping-fill" style="width: ' + pct + '%"></div>' +
@@ -830,19 +1235,30 @@
         imgTag +
         '<div class="bundlify-drawer__item-info">' +
         '  <span class="bundlify-drawer__item-title">' + escapeHtml(item.title) + '</span>' +
-        '  <span class="bundlify-drawer__item-meta">' + item.quantity + ' x $' + (item.price / 100).toFixed(2) + '</span>' +
+        '  <span class="bundlify-drawer__item-meta">' + item.quantity + ' x ' + formatPrice(item.price / 100) + '</span>' +
         '</div>' +
         '</div>'
       );
     }).join('');
 
-    // Build upsell bundles
+    // Build upsell carousel
     var upsellHtml = '';
     if (drawerData.bundles && drawerData.bundles.length > 0) {
+      var carouselCards = '';
+      for (var i = 0; i < drawerData.bundles.length; i++) {
+        var b = drawerData.bundles[i];
+        carouselCards +=
+          '<div class="bundlify-drawer__upsell-card" data-bundle-id="' + escapeAttr(b.bundleId) + '">' +
+          '  <div class="bundlify-drawer__upsell-card__title">' + escapeHtml(b.name) + '</div>' +
+          '  <div class="bundlify-drawer__upsell-card__price">' + formatPrice(Number(b.bundlePrice)) + '</div>' +
+          '  <button class="bundlify-drawer__upsell-card__btn" data-bundle-id="' + escapeAttr(b.bundleId) + '">Add to Cart</button>' +
+          '</div>';
+      }
+
       upsellHtml =
         '<div class="bundlify-drawer__upsell">' +
         '  <h3 class="bundlify-drawer__upsell-heading">' + escapeHtml(upsellHeading) + '</h3>' +
-        '  <div class="bundlify-bundles" data-button-text="' + escapeAttr(container.dataset.buttonText || 'Add Bundle to Cart') + '" data-show-savings="' + escapeAttr(container.dataset.showSavings || 'true') + '"></div>' +
+        '  <div class="bundlify-drawer__upsells-carousel">' + carouselCards + '</div>' +
         '</div>';
     }
 
@@ -855,6 +1271,7 @@
       '    <h2 class="bundlify-drawer__title">Your Cart (' + cart.item_count + ')</h2>' +
       '    <button class="bundlify-drawer__close" aria-label="Close">&times;</button>' +
       '  </div>' +
+      timerHtml +
       shippingHtml +
       '  <div class="bundlify-drawer__body">' +
       '    <div class="bundlify-drawer__items">' + itemsHtml + '</div>' +
@@ -863,7 +1280,7 @@
       '  <div class="bundlify-drawer__footer">' +
       '    <div class="bundlify-drawer__subtotal">' +
       '      <span>Subtotal</span>' +
-      '      <span class="bundlify-drawer__subtotal-price">$' + cartTotal.toFixed(2) + '</span>' +
+      '      <span class="bundlify-drawer__subtotal-price">' + formatPrice(cartTotal) + '</span>' +
       '    </div>' +
       '    <a href="/checkout" class="bundlify-drawer__checkout">Checkout</a>' +
       '  </div>' +
@@ -875,13 +1292,65 @@
     overlay.offsetHeight;
     overlay.classList.add('bundlify-drawer-overlay--active');
 
-    // Render upsell bundles inside the drawer
-    if (drawerData.bundles && drawerData.bundles.length > 0) {
-      var drawerEl = overlay.querySelector('.bundlify-drawer');
-      var upsellWrapper = drawerEl.querySelector('.bundlify-drawer__upsell');
-      if (upsellWrapper) {
-        renderBundles(upsellWrapper, drawerData.bundles, 'cart_page', shop);
+    // Start urgency timer if enabled
+    if (cartTimerMinutes > 0) {
+      var timerEl = overlay.querySelector('#bundlify-cart-timer');
+      if (timerEl) {
+        startCartTimer(timerEl, cartTimerMinutes, cartTimerText);
       }
+    }
+
+    // Attach upsell carousel add-to-cart handlers
+    if (drawerData.bundles && drawerData.bundles.length > 0) {
+      var carouselBtns = overlay.querySelectorAll('.bundlify-drawer__upsell-card__btn');
+      carouselBtns.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+          var bundleId = btn.dataset.bundleId;
+          var bundle = drawerData.bundles.find(function (b) { return b.bundleId === bundleId; });
+          if (!bundle) return;
+
+          btn.disabled = true;
+          btn.textContent = 'Adding...';
+
+          var items = bundle.items.map(function (item) {
+            var drawerProps = { _bundlify_bundle_id: bundleId };
+            if (themeConfig.discountOnlyViaWidget) {
+              drawerProps._bundlify_widget_sale = 'true';
+            }
+            return {
+              id: parseInt(item.shopifyVariantId, 10),
+              quantity: item.quantity,
+              properties: drawerProps,
+            };
+          });
+
+          fetch('/cart/add.js', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ items: items }),
+          }).then(function (res) {
+            if (res.ok) {
+              btn.textContent = 'Added!';
+              trackEvent(shop, bundleId, 'ADDED_TO_CART', 'cart_page');
+              setTimeout(function () {
+                btn.textContent = 'Add to Cart';
+                btn.disabled = false;
+              }, 2500);
+            } else {
+              btn.textContent = 'Error';
+              btn.disabled = false;
+            }
+          }).catch(function () {
+            btn.textContent = 'Error';
+            btn.disabled = false;
+          });
+        });
+      });
+
+      // Track VIEWED for upsell bundles
+      drawerData.bundles.forEach(function (b) {
+        trackEvent(shop, b.bundleId, 'VIEWED', 'cart_page');
+      });
     }
 
     // Close handlers
@@ -899,6 +1368,10 @@
   }
 
   function closeCartDrawer(overlay) {
+    if (cartTimerInterval) {
+      clearInterval(cartTimerInterval);
+      cartTimerInterval = null;
+    }
     overlay.classList.remove('bundlify-drawer-overlay--active');
     setTimeout(function () {
       overlay.remove();
@@ -920,7 +1393,23 @@
   var themeConfig = {
     showSavings: true,
     showCompareAtPrice: true,
+    priceRounding: false,
+    updateThemePrice: false,
+    themePriceMode: 'per_item',
+    excludeB2B: false,
+    discountOnlyViaWidget: false,
   };
+
+  /**
+   * Format a numeric price amount into a display string,
+   * respecting the priceRounding setting.
+   */
+  function formatPrice(amount) {
+    if (themeConfig.priceRounding) {
+      return '$' + Math.round(amount);
+    }
+    return '$' + amount.toFixed(2);
+  }
 
   var THEME_CACHE_KEY = 'bundlify_theme';
 
@@ -1038,11 +1527,71 @@
     // Store toggle config for rendering
     themeConfig.showSavings = theme.showSavings !== false;
     themeConfig.showCompareAtPrice = theme.showCompareAtPrice !== false;
+
+    // Store sticky bar settings
+    themeConfig.stickyBarEnabled = theme.stickyBarEnabled || false;
+    themeConfig.stickyBarBgColor = theme.stickyBarBgColor || '#ffffff';
+    themeConfig.stickyBarTextColor = theme.stickyBarTextColor || '#111827';
+    themeConfig.stickyBarButtonBgColor = theme.stickyBarButtonBgColor || '#2563eb';
+    themeConfig.stickyBarButtonTextColor = theme.stickyBarButtonTextColor || '#ffffff';
+
+    // Phase 4 polish settings
+    themeConfig.priceRounding = theme.priceRounding || false;
+    themeConfig.updateThemePrice = theme.updateThemePrice || false;
+    themeConfig.themePriceMode = theme.themePriceMode || 'per_item';
+    themeConfig.excludeB2B = theme.excludeB2B || false;
+    themeConfig.discountOnlyViaWidget = theme.discountOnlyViaWidget || false;
   }
 
   /* ------------------------------------------------------------------ */
   /*  Initialization                                                     */
   /* ------------------------------------------------------------------ */
+
+  function initStickyBar(shop) {
+    if (!themeConfig.stickyBarEnabled) return;
+
+    var containers = document.querySelectorAll('#bundlify-product-bundles');
+    if (!containers.length) return;
+    var container = containers[0];
+
+    // Create sticky bar element
+    var bar = document.createElement('div');
+    bar.id = 'bundlify-sticky-bar';
+    bar.className = 'bundlify-sticky-bar';
+    bar.style.cssText = 'background:' + (themeConfig.stickyBarBgColor || '#ffffff') + ';color:' + (themeConfig.stickyBarTextColor || '#111827') + ';';
+
+    var headingEl = document.querySelector('h1');
+    var productTitle = headingEl ? headingEl.textContent : 'This product';
+
+    bar.innerHTML = '<div class="bundlify-sticky-bar__content">' +
+      '<span class="bundlify-sticky-bar__title">' + escapeHtml(productTitle) + '</span>' +
+      '<button class="bundlify-sticky-bar__btn" style="background:' + (themeConfig.stickyBarButtonBgColor || '#2563eb') + ';color:' + (themeConfig.stickyBarButtonTextColor || '#ffffff') + ';">Choose Bundle</button>' +
+      '</div>';
+
+    document.body.appendChild(bar);
+
+    // Show/hide based on scroll position
+    var visible = false;
+    function checkScroll() {
+      var rect = container.getBoundingClientRect();
+      var shouldShow = rect.bottom < 0;
+      if (shouldShow && !visible) {
+        bar.classList.add('bundlify-sticky-bar--visible');
+        visible = true;
+      } else if (!shouldShow && visible) {
+        bar.classList.remove('bundlify-sticky-bar--visible');
+        visible = false;
+      }
+    }
+
+    window.addEventListener('scroll', checkScroll, { passive: true });
+    checkScroll();
+
+    // Click scrolls to bundle widget
+    bar.querySelector('.bundlify-sticky-bar__btn').addEventListener('click', function() {
+      container.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    });
+  }
 
   function init() {
     var containers = document.querySelectorAll(
@@ -1058,7 +1607,9 @@
       shop = window.Shopify.shop || '';
     }
 
+    detectLocale();
     applyTheme(shop);
+    initStickyBar(shop);
 
     containers.forEach(fetchBundles);
     initExitIntent();

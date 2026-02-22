@@ -16,6 +16,35 @@ import {
 } from 'class-validator';
 import { Type } from 'class-transformer';
 
+export class BundleUpsellInputDto {
+  @IsString()
+  productId!: string;
+
+  @IsString()
+  @IsIn(['PERCENTAGE', 'FIXED_AMOUNT', 'FREE'])
+  discountType!: string;
+
+  @IsNumber()
+  @Min(0)
+  @Max(100)
+  discountValue!: number;
+
+  @IsString()
+  @MaxLength(255)
+  title!: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  subtitle?: string;
+
+  @IsBoolean()
+  selectedByDefault!: boolean;
+
+  @IsBoolean()
+  matchQuantity!: boolean;
+}
+
 export class BundleItemInputDto {
   @IsString()
   productId!: string;
@@ -56,6 +85,34 @@ export class VolumeTierInputDto {
   label?: string;
 }
 
+export class GiftTierInputDto {
+  @IsOptional()
+  @IsString()
+  productId?: string;
+
+  @IsString()
+  @IsIn(['FREE_GIFT', 'FREE_SHIPPING'])
+  giftType!: string;
+
+  @IsNumber()
+  @Min(1)
+  unlockQuantity!: number;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  label?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  lockedTitle?: string;
+
+  @IsOptional()
+  @IsString()
+  imageUrl?: string;
+}
+
 export class CreateBundleDto {
   @IsString()
   @MinLength(1)
@@ -94,6 +151,12 @@ export class CreateBundleDto {
   volumeTiers?: VolumeTierInputDto[];
 
   @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => BundleUpsellInputDto)
+  upsells?: BundleUpsellInputDto[];
+
+  @IsOptional()
   @IsNumber()
   @Min(1)
   @Max(10)
@@ -122,6 +185,26 @@ export class CreateBundleDto {
   @IsOptional()
   @IsString()
   endsAt?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  giftsEnabled?: boolean;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  giftsTitle?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  giftsSubtitle?: string;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => GiftTierInputDto)
+  giftTiers?: GiftTierInputDto[];
 
   @IsOptional()
   @IsBoolean()
@@ -156,4 +239,14 @@ export class CreateBundleDto {
   @IsString()
   @Matches(/^#[0-9a-fA-F]{3,8}$/)
   countdownTextColor?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(10000)
+  customCss?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(50000)
+  translations?: string;
 }

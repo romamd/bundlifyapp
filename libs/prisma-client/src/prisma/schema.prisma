@@ -119,6 +119,21 @@ model ShopSettings {
   widgetSavingsBadgeTextColor  String @default("#166534") @db.VarChar(9)
   widgetCardHoverBgColor       String @default("#f9fafb") @db.VarChar(9)
 
+  stickyBarEnabled        Boolean @default(false)
+  stickyBarBgColor        String  @default("#ffffff") @db.VarChar(9)
+  stickyBarTextColor      String  @default("#111827") @db.VarChar(9)
+  stickyBarButtonBgColor  String  @default("#2563eb") @db.VarChar(9)
+  stickyBarButtonTextColor String @default("#ffffff") @db.VarChar(9)
+
+  cartTimerMinutes  Int    @default(0)
+  cartTimerText     String @default("Your cart will expire in {{timer}}") @db.VarChar(255)
+
+  priceRoundingEnabled   Boolean @default(false)
+  updateThemePrice       Boolean @default(false)
+  themePriceMode         String  @default("per_item") @db.VarChar(20)
+  excludeB2B             Boolean @default(false)
+  discountOnlyViaWidget  Boolean @default(false)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -159,8 +174,10 @@ model Product {
   imageUrl         String?       @db.Text
   status           ProductStatus @default(ACTIVE)
 
-  bundleItems  BundleItem[]
-  affinitiesA  ProductAffinity[] @relation("AffinityProductA")
+  bundleItems    BundleItem[]
+  bundleUpsells  BundleUpsell[]
+  giftTiers      GiftTier[]
+  affinitiesA    ProductAffinity[] @relation("AffinityProductA")
   affinitiesB  ProductAffinity[] @relation("AffinityProductB")
 
   createdAt DateTime @default(now())
@@ -219,6 +236,10 @@ model Bundle {
   bogoGetQuantity    Int?
   bogoGetDiscountPct Decimal? @db.Decimal(5, 2)
 
+  giftsEnabled   Boolean @default(false)
+  giftsTitle     String  @default("Free gifts with your order") @db.VarChar(255)
+  giftsSubtitle  String? @db.VarChar(255)
+
   countdownEnabled   Boolean  @default(false)
   countdownType      String   @default("fixed") @db.VarChar(20)
   countdownDuration  Int?
@@ -227,12 +248,17 @@ model Bundle {
   countdownBgColor   String   @default("#111827") @db.VarChar(9)
   countdownTextColor String   @default("#ffffff") @db.VarChar(9)
 
+  customCss      String? @db.Text
+  translations   String? @db.Text
+
   items            BundleItem[]
+  upsells          BundleUpsell[]
   volumeTiers      VolumeTier[]
   views            BundleView[]
   displayRules     BundleDisplayRule[]
   abTests          ABTest[]
   discountHistory  DiscountHistory[]
+  giftTiers        GiftTier[]
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -308,6 +334,29 @@ model BundleItem {
   @@unique([bundleId, productId])
 }
 
+model BundleUpsell {
+  id       String @id @default(cuid())
+  bundleId String
+  bundle   Bundle @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+
+  productId String
+  product   Product @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  discountType  String  @default("PERCENTAGE") @db.VarChar(20)
+  discountValue Decimal @default(0) @db.Decimal(5, 2)
+
+  title            String  @default("{{product}}") @db.VarChar(255)
+  subtitle         String? @db.VarChar(255)
+  selectedByDefault Boolean @default(false)
+  matchQuantity    Boolean @default(false)
+  sortOrder        Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([bundleId])
+}
+
 model VolumeTier {
   id           String       @id @default(cuid())
   bundleId     String
@@ -320,6 +369,27 @@ model VolumeTier {
   label        String?      @db.VarChar(50)
 
   @@unique([bundleId, minQuantity])
+  @@index([bundleId])
+}
+
+model GiftTier {
+  id       String @id @default(cuid())
+  bundleId String
+  bundle   Bundle @relation(fields: [bundleId], references: [id], onDelete: Cascade)
+
+  productId String?
+  product   Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  giftType       String  @default("FREE_GIFT") @db.VarChar(20)
+  unlockQuantity Int     @default(1)
+  label          String? @db.VarChar(255)
+  lockedTitle    String  @default("Locked") @db.VarChar(255)
+  imageUrl       String? @db.Text
+  sortOrder      Int     @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
   @@index([bundleId])
 }
 

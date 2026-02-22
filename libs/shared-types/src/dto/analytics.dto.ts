@@ -51,6 +51,8 @@ export interface StorefrontBundleDto {
   countdownTitle: string | null;
   countdownBgColor: string;
   countdownTextColor: string;
+  customCss: string | null;
+  translations: Record<string, Record<string, string>> | null;
   volumeTiers?: StorefrontVolumeTierDto[];
   abTestId?: string;
   abVariant?: 'control' | 'variant';

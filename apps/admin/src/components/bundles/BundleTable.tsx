@@ -7,6 +7,7 @@ interface BundleTableProps {
   onEdit: (bundle: BundleDto) => void;
   onDelete: (bundleId: string) => void;
   onStatusChange: (bundleId: string, status: string) => void;
+  onCreateABTest?: (bundleId: string) => void;
 }
 
 const STATUS_COLORS: Record<string, { bg: string; color: string }> = {
@@ -48,6 +49,7 @@ export function BundleTable({
   onEdit,
   onDelete,
   onStatusChange,
+  onCreateABTest,
 }: BundleTableProps) {
   const cellStyle: React.CSSProperties = {
     padding: '10px 12px',
@@ -176,6 +178,20 @@ export function BundleTable({
                       Activate
                     </button>
                   ) : null}
+                  {bundle.status === 'ACTIVE' && onCreateABTest && (
+                    <button
+                      onClick={() => onCreateABTest(bundle.id)}
+                      style={{
+                        ...buttonStyle,
+                        color: '#1e40af',
+                        backgroundColor: '#eff6ff',
+                        borderColor: '#bfdbfe',
+                      }}
+                      title="Create A/B Test"
+                    >
+                      A/B
+                    </button>
+                  )}
                   <button onClick={() => onEdit(bundle)} style={buttonStyle}>
                     Edit
                   </button>

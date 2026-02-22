@@ -131,7 +131,7 @@ export class UpdateSettingsDto {
 
   @IsOptional()
   @IsString()
-  @IsIn(['vertical', 'horizontal'])
+  @IsIn(['vertical', 'horizontal', 'compact', 'grid'])
   widgetLayout?: string;
 
   @IsOptional()
@@ -298,4 +298,60 @@ export class UpdateSettingsDto {
   @IsString()
   @Matches(/^#[0-9a-fA-F]{3,8}$/)
   widgetCardHoverBgColor?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  stickyBarEnabled?: boolean;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^#[0-9a-fA-F]{3,8}$/)
+  stickyBarBgColor?: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^#[0-9a-fA-F]{3,8}$/)
+  stickyBarTextColor?: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^#[0-9a-fA-F]{3,8}$/)
+  stickyBarButtonBgColor?: string;
+
+  @IsOptional()
+  @IsString()
+  @Matches(/^#[0-9a-fA-F]{3,8}$/)
+  stickyBarButtonTextColor?: string;
+
+  @IsOptional()
+  @IsNumber()
+  @Min(0)
+  @Max(60)
+  cartTimerMinutes?: number;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  cartTimerText?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  priceRoundingEnabled?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  updateThemePrice?: boolean;
+
+  @IsOptional()
+  @IsString()
+  @IsIn(['per_item', 'bundle_price'])
+  themePriceMode?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  excludeB2B?: boolean;
+
+  @IsOptional()
+  @IsBoolean()
+  discountOnlyViaWidget?: boolean;
 }

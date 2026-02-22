@@ -4,6 +4,7 @@ import {
   Post,
   Param,
   Body,
+  Req,
   UseGuards,
 } from '@nestjs/common';
 import { ShopifyAuthGuard } from '../../common/guards/shopify-auth.guard';
@@ -46,5 +47,11 @@ export class ABTestingController {
   @Post(':id/stop')
   async stopTest(@CurrentShop() shop: any, @Param('id') id: string) {
     return this.abTestingService.stop(shop.id, id);
+  }
+
+  @Post(':id/apply')
+  async applyWinner(@CurrentShop() shop: any, @Param('id') id: string) {
+    await this.abTestingService.applyWinner(shop.id, id);
+    return { success: true };
   }
 }

@@ -397,6 +397,54 @@
   max-width: 400px;
 }
 
+/* ─── Layout: Compact ─── */
+.bundlify-bundles--compact .bundlify-card {
+  padding: 10px;
+  box-shadow: none;
+  border-radius: 6px;
+  margin-bottom: 6px;
+}
+
+.bundlify-bundles--compact .bundlify-card__item {
+  gap: 8px;
+}
+
+.bundlify-bundles--compact .bundlify-card__item-img {
+  width: 36px;
+  height: 36px;
+}
+
+.bundlify-bundles--compact .bundlify-card__header {
+  padding-bottom: 6px;
+  margin-bottom: 6px;
+}
+
+.bundlify-bundles--compact .bundlify-card__footer {
+  padding-top: 6px;
+}
+
+/* ─── Layout: Grid ─── */
+.bundlify-bundles--grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.bundlify-bundles--grid .bundlify-card {
+  margin-bottom: 0;
+}
+
+.bundlify-bundles--grid .bundlify-card__item-img {
+  width: 48px;
+  height: 48px;
+}
+
+@media (max-width: 480px) {
+  .bundlify-bundles--grid {
+    grid-template-columns: 1fr;
+  }
+}
+
 /* ── Volume Discount Widget ─────────────────────────────────────────── */
 
 .bundlify-volume-widget {
@@ -503,6 +551,38 @@
   .bundlify-volume-tiers {
     flex-direction: column;
   }
+}
+
+/* ── Multi-Product Volume Bundle ────────────────────────────────────── */
+
+.bundlify-volume { padding: 16px; background: var(--bundlify-card-bg); border: 1px solid var(--bundlify-card-border); border-radius: var(--bundlify-radius); box-shadow: var(--bundlify-card-shadow); }
+.bundlify-volume__title { font-size: 18px; font-weight: 700; margin: 0 0 12px; color: var(--bundlify-text-primary, #111827); }
+.bundlify-volume__products { display: flex; flex-direction: column; gap: 8px; margin-bottom: 16px; }
+.bundlify-volume__product { display: flex; align-items: center; gap: 12px; padding: 10px; border: 1px solid var(--bundlify-card-border, #e5e7eb); border-radius: 8px; }
+.bundlify-volume__product-img { width: 48px; height: 48px; object-fit: cover; border-radius: 6px; flex-shrink: 0; }
+.bundlify-volume__product-info { flex: 1; min-width: 0; }
+.bundlify-volume__product-title { font-size: 13px; font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; color: var(--bundlify-text-primary, #111827); }
+.bundlify-volume__product-price { font-size: 13px; color: var(--bundlify-text-secondary, #6b7280); }
+.bundlify-volume__product-qty { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+.bundlify-volume__qty-btn { width: 28px; height: 28px; border: 1px solid #d1d5db; border-radius: 50%; background: #fff; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; line-height: 1; transition: background 0.15s ease; }
+.bundlify-volume__qty-btn:hover { background: #f3f4f6; }
+.bundlify-volume__qty-value { min-width: 20px; text-align: center; font-size: 14px; font-weight: 600; }
+.bundlify-volume__tiers { display: flex; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+.bundlify-volume__tier { padding: 6px 12px; border: 1px solid #e5e7eb; border-radius: 16px; font-size: 12px; background: #f9fafb; display: flex; gap: 6px; align-items: center; transition: all 0.2s ease; }
+.bundlify-volume__tier--active { border-color: var(--bundlify-accent, #2563eb); background: #eff6ff; color: var(--bundlify-accent, #2563eb); font-weight: 600; }
+.bundlify-volume__tier--best::after { content: ' \2605'; }
+.bundlify-volume__tier-label { font-weight: 500; }
+.bundlify-volume__tier-discount { font-weight: 600; }
+.bundlify-volume__summary { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; font-size: 14px; }
+.bundlify-volume__total-qty { color: var(--bundlify-text-primary, #111827); font-weight: 500; }
+.bundlify-volume__active-tier { font-weight: 600; }
+.bundlify-volume__add-btn { width: 100%; }
+.bundlify-volume__add-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+@media screen and (max-width: 480px) {
+  .bundlify-volume__product { gap: 8px; padding: 8px; }
+  .bundlify-volume__product-img { width: 40px; height: 40px; }
+  .bundlify-volume__tiers { gap: 6px; }
 }
 
 /* ── Exit-Intent Modal ──────────────────────────────────────────────── */
@@ -645,17 +725,24 @@
   background: #f3f4f6;
 }
 
-.bundlify-drawer__shipping {
-  padding: 12px 20px;
-  border-bottom: 1px solid var(--bundlify-card-border, #e5e7eb);
-}
-
-.bundlify-drawer__shipping-text {
-  margin: 0 0 8px;
+.bundlify-drawer__timer {
+  text-align: center;
+  padding: 8px 16px;
+  background: #fef3c7;
+  color: #92400e;
   font-size: 13px;
   font-weight: 600;
-  color: var(--bundlify-text-primary, #111827);
-  text-align: center;
+}
+
+.bundlify-drawer__timer--expired {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.bundlify-drawer__shipping {
+  padding: 12px 16px;
+  background: #f0fdf4;
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .bundlify-drawer__shipping-bar {
@@ -663,13 +750,25 @@
   background: #e5e7eb;
   border-radius: 3px;
   overflow: hidden;
+  margin-top: 8px;
 }
 
 .bundlify-drawer__shipping-fill {
   height: 100%;
-  background: var(--bundlify-accent, #2563eb);
+  background: var(--bundlify-primary, #2563eb);
   border-radius: 3px;
   transition: width 0.3s ease;
+}
+
+.bundlify-drawer__shipping-text {
+  font-size: 13px;
+  color: #374151;
+  margin: 0 0 4px;
+}
+
+.bundlify-drawer__shipping--unlocked .bundlify-drawer__shipping-text {
+  color: #166534;
+  font-weight: 600;
 }
 
 .bundlify-drawer__body {
@@ -744,6 +843,56 @@
   color: var(--bundlify-text-primary, #111827);
 }
 
+.bundlify-drawer__upsells-carousel {
+  display: flex;
+  gap: 12px;
+  overflow-x: auto;
+  padding: 0 16px 12px;
+  scroll-snap-type: x mandatory;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+
+.bundlify-drawer__upsells-carousel::-webkit-scrollbar {
+  display: none;
+}
+
+.bundlify-drawer__upsell-card {
+  flex: 0 0 220px;
+  scroll-snap-align: start;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 12px;
+  background: #fff;
+}
+
+.bundlify-drawer__upsell-card__title {
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bundlify-drawer__upsell-card__price {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--bundlify-primary, #2563eb);
+}
+
+.bundlify-drawer__upsell-card__btn {
+  margin-top: 8px;
+  width: 100%;
+  padding: 6px 12px;
+  background: var(--bundlify-primary, #2563eb);
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+}
+
 .bundlify-drawer__footer {
   padding: 16px 20px;
   border-top: 1px solid var(--bundlify-card-border, #e5e7eb);
@@ -791,6 +940,197 @@
     width: 100%;
     max-width: 90vw;
   }
+}
+
+/* ─── Sticky Add to Cart Bar ─── */
+.bundlify-sticky-bar {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 9998;
+  padding: 12px 20px;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+  transform: translateY(100%);
+  transition: transform 0.3s ease;
+}
+
+.bundlify-sticky-bar--visible {
+  transform: translateY(0);
+}
+
+.bundlify-sticky-bar__content {
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.bundlify-sticky-bar__title {
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.bundlify-sticky-bar__btn {
+  padding: 10px 24px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: opacity 0.15s ease;
+}
+
+.bundlify-sticky-bar__btn:hover {
+  opacity: 0.9;
+}
+
+/* ─── Checkbox Upsells ─── */
+.bundlify-upsells {
+  border-top: 1px solid var(--bundlify-card-border);
+  padding-top: 12px;
+  margin-top: 12px;
+}
+
+.bundlify-upsell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.15s ease;
+  margin-bottom: 6px;
+}
+
+.bundlify-upsell:hover {
+  background: var(--bundlify-card-hover-bg, #f9fafb);
+}
+
+.bundlify-upsell__checkbox {
+  width: 18px;
+  height: 18px;
+  accent-color: var(--bundlify-accent);
+  cursor: pointer;
+  flex-shrink: 0;
+}
+
+.bundlify-upsell__img {
+  width: 40px;
+  height: 40px;
+  object-fit: cover;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+
+.bundlify-upsell__info {
+  flex: 1;
+  min-width: 0;
+}
+
+.bundlify-upsell__title {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--bundlify-text-primary);
+}
+
+.bundlify-upsell__subtitle {
+  font-size: 12px;
+  color: var(--bundlify-text-secondary);
+}
+
+.bundlify-upsell__price {
+  text-align: right;
+  flex-shrink: 0;
+}
+
+.bundlify-upsell__discount {
+  display: block;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--bundlify-success);
+}
+
+.bundlify-upsell__final-price {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--bundlify-text-primary);
+}
+
+/* ─── Progressive Gifts ─── */
+.bundlify-gifts {
+  border-top: 1px solid var(--bundlify-card-border);
+  padding-top: 12px;
+  margin-top: 12px;
+}
+
+.bundlify-gifts__header {
+  margin-bottom: 10px;
+}
+
+.bundlify-gifts__title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--bundlify-text-primary);
+}
+
+.bundlify-gifts__subtitle {
+  font-size: 12px;
+  color: var(--bundlify-text-secondary);
+  margin-top: 2px;
+}
+
+.bundlify-gifts__grid {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+}
+
+.bundlify-gift {
+  flex: 0 0 100px;
+  text-align: center;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid var(--bundlify-card-border);
+  background: var(--bundlify-card-bg);
+  transition: all 0.2s ease;
+}
+
+.bundlify-gift--locked {
+  opacity: 0.5;
+  filter: grayscale(0.5);
+}
+
+.bundlify-gift__img {
+  width: 60px;
+  height: 60px;
+  object-fit: cover;
+  border-radius: 6px;
+  margin: 0 auto 8px;
+  display: block;
+}
+
+.bundlify-gift__img--placeholder {
+  background: #f3f4f6;
+}
+
+.bundlify-gift__label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--bundlify-text-primary);
+}
+
+.bundlify-gift__locked {
+  font-size: 11px;
+  color: var(--bundlify-text-secondary);
+  margin-top: 4px;
+  font-style: italic;
 }
 
 /* ── Print: hide the widget entirely ──────────────────────────────────── */

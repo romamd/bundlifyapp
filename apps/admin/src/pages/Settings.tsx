@@ -560,26 +560,38 @@ export function Settings() {
               />
             </div>
 
-            {/* Layout select */}
-            <div style={fieldRowStyle}>
-              <div>
-                <div style={labelStyle}>Layout</div>
-                <div style={sublabelStyle}>Bundle card arrangement direction</div>
+            {/* Layout presets */}
+            <div style={{ marginBottom: '16px' }}>
+              <label style={{ display: 'block', fontWeight: 600, fontSize: '14px', marginBottom: '8px' }}>Layout</label>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '10px' }}>
+                {[
+                  { value: 'vertical', label: 'Vertical', icon: '\u25ad\n\u25ad\n\u25ad' },
+                  { value: 'horizontal', label: 'Horizontal', icon: '\u25ad \u25ad \u25ad' },
+                  { value: 'compact', label: 'Compact', icon: '\u2500\n\u2500\n\u2500' },
+                  { value: 'grid', label: 'Grid', icon: '\u25ad \u25ad\n\u25ad \u25ad' },
+                ].map((opt) => (
+                  <div
+                    key={opt.value}
+                    onClick={() => updateField('widgetLayout', opt.value)}
+                    style={{
+                      border: form.widgetLayout === opt.value ? '2px solid #2563eb' : '1px solid #d1d5db',
+                      borderRadius: '8px',
+                      padding: '12px 8px',
+                      textAlign: 'center' as const,
+                      cursor: 'pointer',
+                      background: form.widgetLayout === opt.value ? '#eff6ff' : '#fff',
+                      transition: 'all 0.15s ease',
+                    }}
+                  >
+                    <div style={{ fontFamily: 'monospace', fontSize: '11px', lineHeight: '1.4', marginBottom: '6px', whiteSpace: 'pre' as const, color: '#6b7280' }}>
+                      {opt.icon}
+                    </div>
+                    <div style={{ fontSize: '12px', fontWeight: form.widgetLayout === opt.value ? 600 : 400 }}>
+                      {opt.label}
+                    </div>
+                  </div>
+                ))}
               </div>
-              <select
-                value={form.widgetLayout ?? 'vertical'}
-                onChange={(e) => updateField('widgetLayout', e.target.value)}
-                style={{
-                  padding: '6px 10px',
-                  border: '1px solid #c9cccf',
-                  borderRadius: '4px',
-                  fontSize: '14px',
-                  width: '140px',
-                }}
-              >
-                <option value="vertical">Vertical</option>
-                <option value="horizontal">Horizontal</option>
-              </select>
             </div>
 
             {/* Global Font Size slider (base) */}
@@ -697,6 +709,17 @@ export function Settings() {
               </select>
             </div>
 
+            {/* Price Display */}
+            <h4 style={{ fontSize: '13px', fontWeight: 600, color: '#6d7175', margin: '20px 0 8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Price Display
+            </h4>
+            <ToggleField
+              label="Show prices without decimals"
+              sublabel="Display $25 instead of $25.00"
+              value={form.priceRoundingEnabled}
+              onChange={(val) => updateField('priceRoundingEnabled', val)}
+            />
+
             {/* Show Savings Badge toggle */}
             <ToggleField
               label="Show Savings Badge"
@@ -739,6 +762,67 @@ export function Settings() {
             </div>
           </div>
 
+          {/* Sticky Add to Cart */}
+          <div style={sectionStyle}>
+            <h2 style={sectionTitleStyle}>Sticky Add to Cart</h2>
+            <p
+              style={{
+                fontSize: '13px',
+                color: '#6d7175',
+                marginTop: 0,
+                marginBottom: '12px',
+              }}
+            >
+              Show a floating bar when the bundle widget scrolls out of view.
+            </p>
+            <ToggleField
+              label="Enable sticky bar"
+              sublabel="Show floating bar when bundle widget scrolls out of view"
+              value={form.stickyBarEnabled ?? false}
+              onChange={(val) => updateField('stickyBarEnabled', val)}
+            />
+            {form.stickyBarEnabled && (
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px', marginTop: '12px' }}>
+                {([
+                  ['stickyBarBgColor', 'Background', '#ffffff'] as const,
+                  ['stickyBarTextColor', 'Text Color', '#111827'] as const,
+                  ['stickyBarButtonBgColor', 'Button Background', '#2563eb'] as const,
+                  ['stickyBarButtonTextColor', 'Button Text', '#ffffff'] as const,
+                ]).map(([key, label, fallback]) => (
+                  <div key={key} style={fieldRowStyle}>
+                    <div>
+                      <div style={labelStyle}>{label}</div>
+                    </div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div
+                        style={{
+                          width: '24px',
+                          height: '24px',
+                          borderRadius: '4px',
+                          border: '1px solid #c9cccf',
+                          backgroundColor: (form as any)[key] || fallback,
+                        }}
+                      />
+                      <input
+                        type="color"
+                        value={(form as any)[key] || fallback}
+                        onChange={(e) => updateField(key as keyof ShopSettingsDto, e.target.value as any)}
+                        style={{
+                          width: '40px',
+                          height: '32px',
+                          padding: '2px',
+                          border: '1px solid #c9cccf',
+                          borderRadius: '4px',
+                          cursor: 'pointer',
+                        }}
+                      />
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
           {/* Section 5: Cart Drawer */}
           <div style={sectionStyle}>
             <h2 style={sectionTitleStyle}>Cart Drawer</h2>
@@ -768,6 +852,39 @@ export function Settings() {
               step={1}
               min={0}
             />
+
+            {/* Urgency Timer sub-section */}
+            <h4 style={{ fontSize: '13px', fontWeight: 600, color: '#6d7175', margin: '20px 0 8px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Urgency Timer
+            </h4>
+            <NumberField
+              label="Timer Minutes"
+              sublabel="Countdown timer in the cart drawer. Set to 0 to disable."
+              value={form.cartTimerMinutes ?? 0}
+              onChange={(val) => updateField('cartTimerMinutes', Math.round(val))}
+              step={1}
+              min={0}
+              suffix="min"
+            />
+            <div style={fieldRowStyle}>
+              <div>
+                <div style={labelStyle}>Timer Text</div>
+                <div style={sublabelStyle}>{'Use {{timer}} as the countdown placeholder'}</div>
+              </div>
+              <input
+                type="text"
+                value={form.cartTimerText ?? 'Your cart will expire in {{timer}}'}
+                onChange={(e) => updateField('cartTimerText', e.target.value)}
+                maxLength={255}
+                style={{
+                  padding: '6px 10px',
+                  border: '1px solid #c9cccf',
+                  borderRadius: '4px',
+                  fontSize: '14px',
+                  width: '280px',
+                }}
+              />
+            </div>
           </div>
 
           {/* Section 5: Multi-Currency */}
@@ -847,6 +964,76 @@ export function Settings() {
               sublabel="Show a bundle offer when users try to navigate away"
               value={form.exitIntentEnabled}
               onChange={(val) => updateField('exitIntentEnabled', val)}
+            />
+          </div>
+
+          {/* Section 7: Product Price Override */}
+          <div style={sectionStyle}>
+            <h2 style={sectionTitleStyle}>Product Price Override</h2>
+            <p
+              style={{
+                fontSize: '13px',
+                color: '#6d7175',
+                marginTop: 0,
+                marginBottom: '12px',
+              }}
+            >
+              Override the product page price to show the bundle deal price.
+            </p>
+            <ToggleField
+              label="Update theme product price"
+              sublabel="Replace the theme's product price with the bundle deal price"
+              value={form.updateThemePrice}
+              onChange={(val) => updateField('updateThemePrice', val)}
+            />
+            {form.updateThemePrice && (
+              <div style={fieldRowStyle}>
+                <div>
+                  <div style={labelStyle}>Price Mode</div>
+                  <div style={sublabelStyle}>How the overridden price is calculated</div>
+                </div>
+                <select
+                  value={form.themePriceMode ?? 'per_item'}
+                  onChange={(e) => updateField('themePriceMode', e.target.value)}
+                  style={{
+                    padding: '6px 10px',
+                    border: '1px solid #c9cccf',
+                    borderRadius: '4px',
+                    fontSize: '14px',
+                    width: '160px',
+                  }}
+                >
+                  <option value="per_item">Per item</option>
+                  <option value="bundle_price">Bundle price</option>
+                </select>
+              </div>
+            )}
+          </div>
+
+          {/* Section 8: Access Control */}
+          <div style={sectionStyle}>
+            <h2 style={sectionTitleStyle}>Access Control</h2>
+            <p
+              style={{
+                fontSize: '13px',
+                color: '#6d7175',
+                marginTop: 0,
+                marginBottom: '12px',
+              }}
+            >
+              Control who can see and use bundle deals.
+            </p>
+            <ToggleField
+              label="Exclude B2B customers"
+              sublabel="Hide bundle deals from customers tagged with 'b2b' or 'wholesale'"
+              value={form.excludeB2B}
+              onChange={(val) => updateField('excludeB2B', val)}
+            />
+            <ToggleField
+              label="Discount only via widget"
+              sublabel="Bundle discounts only apply when added through the widget. Prevents discount code stacking."
+              value={form.discountOnlyViaWidget}
+              onChange={(val) => updateField('discountOnlyViaWidget', val)}
             />
           </div>
 

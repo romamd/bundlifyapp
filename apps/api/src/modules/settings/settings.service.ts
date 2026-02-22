@@ -146,6 +146,30 @@ export class SettingsService {
       settingsData.widgetSavingsBadgeTextColor = dto.widgetSavingsBadgeTextColor;
     if (dto.widgetCardHoverBgColor !== undefined)
       settingsData.widgetCardHoverBgColor = dto.widgetCardHoverBgColor;
+    if (dto.stickyBarEnabled !== undefined)
+      settingsData.stickyBarEnabled = dto.stickyBarEnabled;
+    if (dto.stickyBarBgColor !== undefined)
+      settingsData.stickyBarBgColor = dto.stickyBarBgColor;
+    if (dto.stickyBarTextColor !== undefined)
+      settingsData.stickyBarTextColor = dto.stickyBarTextColor;
+    if (dto.stickyBarButtonBgColor !== undefined)
+      settingsData.stickyBarButtonBgColor = dto.stickyBarButtonBgColor;
+    if (dto.stickyBarButtonTextColor !== undefined)
+      settingsData.stickyBarButtonTextColor = dto.stickyBarButtonTextColor;
+    if (dto.cartTimerMinutes !== undefined)
+      settingsData.cartTimerMinutes = dto.cartTimerMinutes;
+    if (dto.cartTimerText !== undefined)
+      settingsData.cartTimerText = dto.cartTimerText;
+    if (dto.priceRoundingEnabled !== undefined)
+      settingsData.priceRoundingEnabled = dto.priceRoundingEnabled;
+    if (dto.updateThemePrice !== undefined)
+      settingsData.updateThemePrice = dto.updateThemePrice;
+    if (dto.themePriceMode !== undefined)
+      settingsData.themePriceMode = dto.themePriceMode;
+    if (dto.excludeB2B !== undefined)
+      settingsData.excludeB2B = dto.excludeB2B;
+    if (dto.discountOnlyViaWidget !== undefined)
+      settingsData.discountOnlyViaWidget = dto.discountOnlyViaWidget;
 
     // Ensure settings row exists before updating
     await this.prisma.shopSettings.upsert({
@@ -234,6 +258,18 @@ export class SettingsService {
       widgetSavingsBadgeBgColor: settings.widgetSavingsBadgeBgColor ?? '#dcfce7',
       widgetSavingsBadgeTextColor: settings.widgetSavingsBadgeTextColor ?? '#166534',
       widgetCardHoverBgColor: settings.widgetCardHoverBgColor ?? '#f9fafb',
+      stickyBarEnabled: settings.stickyBarEnabled ?? false,
+      stickyBarBgColor: settings.stickyBarBgColor ?? '#ffffff',
+      stickyBarTextColor: settings.stickyBarTextColor ?? '#111827',
+      stickyBarButtonBgColor: settings.stickyBarButtonBgColor ?? '#2563eb',
+      stickyBarButtonTextColor: settings.stickyBarButtonTextColor ?? '#ffffff',
+      cartTimerMinutes: settings.cartTimerMinutes ?? 0,
+      cartTimerText: settings.cartTimerText ?? 'Your cart will expire in {{timer}}',
+      priceRoundingEnabled: settings.priceRoundingEnabled ?? false,
+      updateThemePrice: settings.updateThemePrice ?? false,
+      themePriceMode: settings.themePriceMode ?? 'per_item',
+      excludeB2B: settings.excludeB2B ?? false,
+      discountOnlyViaWidget: settings.discountOnlyViaWidget ?? false,
       defaultShippingCost: Number(shop.defaultShippingCost),
       paymentProcessingPct: Number(shop.paymentProcessingPct),
       paymentProcessingFlat: Number(shop.paymentProcessingFlat),

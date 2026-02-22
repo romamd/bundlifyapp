@@ -1,5 +1,29 @@
 import type { ProductDto } from './product.dto';
 
+export interface BundleUpsellDto {
+  id: string;
+  productId: string;
+  product: ProductDto;
+  discountType: string;
+  discountValue: number;
+  title: string;
+  subtitle: string | null;
+  selectedByDefault: boolean;
+  matchQuantity: boolean;
+  sortOrder: number;
+}
+
+export interface GiftTierDto {
+  id: string;
+  productId: string | null;
+  giftType: string;
+  unlockQuantity: number;
+  label: string | null;
+  lockedTitle: string;
+  imageUrl: string | null;
+  sortOrder: number;
+}
+
 export interface BundleDto {
   id: string;
   name: string;
@@ -14,8 +38,13 @@ export interface BundleDto {
   contributionMarginPct: number | null;
   triggerType: string;
   items: BundleItemDto[];
+  upsells?: BundleUpsellDto[];
   volumeTiers?: VolumeTierDto[];
   displayRules: BundleDisplayRuleDto[];
+  giftsEnabled: boolean;
+  giftsTitle: string;
+  giftsSubtitle: string | null;
+  giftTiers?: GiftTierDto[];
   countdownEnabled: boolean;
   countdownType: string;
   countdownDuration: number | null;
@@ -23,6 +52,8 @@ export interface BundleDto {
   countdownTitle: string | null;
   countdownBgColor: string;
   countdownTextColor: string;
+  customCss: string | null;
+  translations: Record<string, Record<string, string>> | null;
   currentRedemptions: number;
   bogoGetQuantity: number | null;
   bogoGetDiscountPct: number | null;
@@ -64,12 +95,17 @@ export interface CreateBundleDto {
   items: { productId: string; quantity: number; isAnchor: boolean }[];
   displayRules?: { targetType: 'PRODUCT' | 'COLLECTION'; targetId: string }[];
   volumeTiers?: { minQuantity: number; maxQuantity?: number; discountPct: number; label?: string }[];
+  upsells?: { productId: string; discountType: string; discountValue: number; title: string; subtitle?: string; selectedByDefault: boolean; matchQuantity: boolean }[];
   bogoGetQuantity?: number;
   bogoGetDiscountPct?: number;
   minCartValue?: number;
   maxCartValue?: number;
   startsAt?: string;
   endsAt?: string;
+  giftsEnabled?: boolean;
+  giftsTitle?: string;
+  giftsSubtitle?: string;
+  giftTiers?: { productId?: string; giftType: string; unlockQuantity: number; label?: string; lockedTitle?: string; imageUrl?: string }[];
   countdownEnabled?: boolean;
   countdownType?: string;
   countdownDuration?: number;
@@ -77,4 +113,6 @@ export interface CreateBundleDto {
   countdownTitle?: string;
   countdownBgColor?: string;
   countdownTextColor?: string;
+  customCss?: string;
+  translations?: Record<string, Record<string, string>>;
 }

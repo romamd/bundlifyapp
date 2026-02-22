@@ -50,6 +50,10 @@ interface ABTestsState {
     authenticatedFetch: typeof fetch,
     id: string,
   ) => Promise<void>;
+  applyWinner: (
+    authenticatedFetch: typeof fetch,
+    id: string,
+  ) => Promise<void>;
 }
 
 export const useABTestsStore = create<ABTestsState>()(
@@ -141,6 +145,28 @@ export const useABTestsStore = create<ABTestsState>()(
           const updated = await res.json();
           set((s) => ({
             tests: s.tests.map((t) => (t.id === id ? updated : t)),
+          }));
+        } catch (e: any) {
+          set({ error: e.message });
+        }
+      },
+
+      applyWinner: async (authenticatedFetch, id) => {
+        set({ error: null });
+        try {
+          const res = await authenticatedFetch(
+            `/api/admin/ab-tests/${id}/apply`,
+            { method: 'POST' },
+          );
+          if (!res.ok) {
+            const body = await res.json().catch(() => ({}));
+            throw new Error(body.message || `Request failed (${res.status})`);
+          }
+          // Remove the applied marker or just re-fetch to keep state consistent
+          set((s) => ({
+            tests: s.tests.map((t) =>
+              t.id === id ? { ...t, status: 'COMPLETED' as ABTestStatus } : t,
+            ),
           }));
         } catch (e: any) {
           set({ error: e.message });

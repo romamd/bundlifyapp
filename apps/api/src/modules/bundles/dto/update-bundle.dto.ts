@@ -15,7 +15,7 @@ import {
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
-import { BundleItemInputDto, DisplayRuleInputDto, VolumeTierInputDto } from './create-bundle.dto';
+import { BundleItemInputDto, BundleUpsellInputDto, DisplayRuleInputDto, GiftTierInputDto, VolumeTierInputDto } from './create-bundle.dto';
 
 export class UpdateBundleDto {
   @IsOptional()
@@ -65,6 +65,12 @@ export class UpdateBundleDto {
   volumeTiers?: VolumeTierInputDto[];
 
   @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => BundleUpsellInputDto)
+  upsells?: BundleUpsellInputDto[];
+
+  @IsOptional()
   @IsNumber()
   @Min(1)
   @Max(10)
@@ -93,6 +99,26 @@ export class UpdateBundleDto {
   @IsOptional()
   @IsString()
   endsAt?: string;
+
+  @IsOptional()
+  @IsBoolean()
+  giftsEnabled?: boolean;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  giftsTitle?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(255)
+  giftsSubtitle?: string;
+
+  @IsOptional()
+  @IsArray()
+  @ValidateNested({ each: true })
+  @Type(() => GiftTierInputDto)
+  giftTiers?: GiftTierInputDto[];
 
   @IsOptional()
   @IsBoolean()
@@ -127,4 +153,14 @@ export class UpdateBundleDto {
   @IsString()
   @Matches(/^#[0-9a-fA-F]{3,8}$/)
   countdownTextColor?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(10000)
+  customCss?: string;
+
+  @IsOptional()
+  @IsString()
+  @MaxLength(50000)
+  translations?: string;
 }

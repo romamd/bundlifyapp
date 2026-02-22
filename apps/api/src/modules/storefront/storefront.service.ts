@@ -66,6 +66,16 @@ export class StorefrontService {
       savingsBadgeBgColor: s?.widgetSavingsBadgeBgColor ?? '#dcfce7',
       savingsBadgeTextColor: s?.widgetSavingsBadgeTextColor ?? '#166534',
       cardHoverBgColor: s?.widgetCardHoverBgColor ?? '#f9fafb',
+      stickyBarEnabled: s?.stickyBarEnabled ?? false,
+      stickyBarBgColor: s?.stickyBarBgColor ?? '#ffffff',
+      stickyBarTextColor: s?.stickyBarTextColor ?? '#111827',
+      stickyBarButtonBgColor: s?.stickyBarButtonBgColor ?? '#2563eb',
+      stickyBarButtonTextColor: s?.stickyBarButtonTextColor ?? '#ffffff',
+      priceRounding: s?.priceRoundingEnabled ?? false,
+      updateThemePrice: s?.updateThemePrice ?? false,
+      themePriceMode: s?.themePriceMode ?? 'per_item',
+      excludeB2B: s?.excludeB2B ?? false,
+      discountOnlyViaWidget: s?.discountOnlyViaWidget ?? false,
     };
   }
 
@@ -112,8 +122,18 @@ export class StorefrontService {
           },
           orderBy: { sortOrder: 'asc' },
         },
+        upsells: {
+          include: {
+            product: true,
+          },
+          orderBy: { sortOrder: 'asc' },
+        },
         volumeTiers: {
           orderBy: { minQuantity: 'asc' },
+        },
+        giftTiers: {
+          include: { product: true },
+          orderBy: { sortOrder: 'asc' },
         },
         displayRules: true,
       },
@@ -200,6 +220,8 @@ export class StorefrontService {
         countdownTitle: bundle.countdownTitle ?? 'Offer expires in {{timer}}',
         countdownBgColor: bundle.countdownBgColor,
         countdownTextColor: bundle.countdownTextColor,
+        customCss: bundle.customCss ?? null,
+        translations: bundle.translations ? JSON.parse(bundle.translations) : null,
         items: bundle.items.map((item) => ({
           shopifyProductId: item.product.shopifyProductId,
           shopifyVariantId: item.product.shopifyVariantId,
@@ -210,6 +232,29 @@ export class StorefrontService {
           imageUrl: item.product.imageUrl,
           quantity: item.quantity,
           isAnchor: item.isAnchor,
+        })),
+        upsells: ((bundle as any).upsells ?? []).map((u: any) => ({
+          productId: u.productId,
+          shopifyVariantId: u.product.shopifyVariantId,
+          title: u.title.replace('{{product}}', u.product.title),
+          subtitle: u.subtitle ?? null,
+          imageUrl: u.product.imageUrl,
+          price: Number(u.product.price),
+          discountType: u.discountType,
+          discountValue: Number(u.discountValue),
+          selectedByDefault: u.selectedByDefault,
+          matchQuantity: u.matchQuantity,
+        })),
+        giftsEnabled: bundle.giftsEnabled,
+        giftsTitle: bundle.giftsTitle,
+        giftsSubtitle: bundle.giftsSubtitle,
+        giftTiers: ((bundle as any).giftTiers ?? []).map((g: any) => ({
+          giftType: g.giftType,
+          unlockQuantity: g.unlockQuantity,
+          label: g.label,
+          lockedTitle: g.lockedTitle,
+          imageUrl: g.imageUrl || (g.product?.imageUrl ?? null),
+          productTitle: g.product?.title ?? null,
         })),
         bogoGetQuantity: bundle.bogoGetQuantity ?? null,
         bogoGetDiscountPct: bundle.bogoGetDiscountPct
@@ -278,6 +323,8 @@ export class StorefrontService {
       freeShippingThreshold: settings.freeShippingThreshold
         ? Number(settings.freeShippingThreshold)
         : null,
+      cartTimerMinutes: settings.cartTimerMinutes ?? 0,
+      cartTimerText: settings.cartTimerText ?? 'Your cart will expire in {{timer}}',
       bundles: filteredBundles,
     };
   }

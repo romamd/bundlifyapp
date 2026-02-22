@@ -65,10 +65,12 @@ function TestCard({
   test,
   onStart,
   onStop,
+  onApplyWinner,
 }: {
   test: ABTestDto;
   onStart: () => void;
   onStop: () => void;
+  onApplyWinner: () => void;
 }) {
   const cardStyle: React.CSSProperties = {
     border: '1px solid #e1e3e5',
@@ -131,6 +133,7 @@ function TestCard({
           )}
           {test.status === 'COMPLETED' && test.winner && (
             <button
+              onClick={onApplyWinner}
               style={{
                 padding: '6px 14px',
                 backgroundColor: '#008060',
@@ -232,7 +235,7 @@ function TestCard({
 
 export function ABTests() {
   const fetch = useAuthenticatedFetch();
-  const { tests, loading, error, upgradeRequired, requiredPlan, fetchTests, createTest, startTest, stopTest } =
+  const { tests, loading, error, upgradeRequired, requiredPlan, fetchTests, createTest, startTest, stopTest, applyWinner } =
     useABTestsStore();
   const { bundles, fetchBundles } = useBundlesStore();
 
@@ -493,6 +496,7 @@ export function ABTests() {
               test={test}
               onStart={() => startTest(fetch, test.id)}
               onStop={() => stopTest(fetch, test.id)}
+              onApplyWinner={() => applyWinner(fetch, test.id)}
             />
           ))}
         </>
