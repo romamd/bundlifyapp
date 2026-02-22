@@ -34,6 +34,7 @@ interface BundlesState {
     id: string,
     status: string,
   ) => Promise<void>;
+  clearCurrentBundle: () => void;
 }
 
 export const useBundlesStore = create<BundlesState>()(
@@ -137,6 +138,8 @@ export const useBundlesStore = create<BundlesState>()(
           return 0;
         }
       },
+
+      clearCurrentBundle: () => set({ currentBundle: null }),
 
       setStatus: async (authenticatedFetch, id, status) => {
         set({ error: null });

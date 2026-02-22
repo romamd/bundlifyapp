@@ -12,8 +12,7 @@ import { ProductSearchDropdown } from '../common/ProductSearchDropdown';
 import { CollectionSearchDropdown } from '../common/CollectionSearchDropdown';
 
 interface BundleWizardProps {
-  open: boolean;
-  onClose: () => void;
+  onCancel: () => void;
   onSubmit: (data: CreateBundleDto) => Promise<void>;
   products: ProductDto[];
   editBundle?: BundleDto | null;
@@ -89,8 +88,7 @@ const NAME_SUGGESTIONS = [
 ];
 
 export function BundleWizard({
-  open,
-  onClose,
+  onCancel,
   onSubmit,
   products,
   editBundle,
@@ -157,7 +155,7 @@ export function BundleWizard({
 
   // Pre-populate fields when editing
   React.useEffect(() => {
-    if (open && editBundle && !initialized) {
+    if (editBundle && !initialized) {
       setName(editBundle.name);
       setBundleType(editBundle.type);
       setDiscountPct(editBundle.discountPct);
@@ -220,10 +218,7 @@ export function BundleWizard({
       setSkipToCheckout(editBundle.skipToCheckout ?? false);
       setInitialized(true);
     }
-    if (!open) {
-      setInitialized(false);
-    }
-  }, [open, editBundle, initialized]);
+  }, [editBundle, initialized]);
 
   const paymentProcessingPct = 2.9;
   const paymentProcessingFlat = 0.3;
@@ -373,7 +368,7 @@ export function BundleWizard({
     setCustomCss('');
     setTranslations({});
     setNewLocale('');
-    onClose();
+    onCancel();
   };
 
   const isVolume = bundleType === 'VOLUME';
@@ -415,8 +410,6 @@ export function BundleWizard({
     setUpsells(updated);
   };
 
-  if (!open) return null;
-
   const stepLabels = [
     'Bundle Type',
     'Select Products',
@@ -428,54 +421,11 @@ export function BundleWizard({
   return (
     <div
       style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0, 0, 0, 0.5)',
         display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000,
+        flexDirection: 'column',
+        minHeight: 'calc(100vh - 200px)',
       }}
     >
-      <div
-        style={{
-          backgroundColor: '#ffffff',
-          borderRadius: '12px',
-          width: '960px',
-          maxHeight: '85vh',
-          display: 'flex',
-          flexDirection: 'column',
-          boxShadow: '0 8px 32px rgba(0,0,0,0.12)',
-        }}
-      >
-        {/* Header */}
-        <div
-          style={{
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center',
-            padding: '16px 20px',
-            borderBottom: '1px solid #e1e3e5',
-          }}
-        >
-          <h2 style={{ margin: 0, fontSize: '18px' }}>{isEditing ? 'Edit Bundle' : 'Create Bundle'}</h2>
-          <button
-            onClick={resetAndClose}
-            style={{
-              background: 'none',
-              border: 'none',
-              fontSize: '20px',
-              cursor: 'pointer',
-              color: '#6d7175',
-              padding: '4px',
-            }}
-          >
-            x
-          </button>
-        </div>
 
         {/* Step indicator */}
         <div
@@ -1882,7 +1832,7 @@ export function BundleWizard({
           </div>
 
           {/* Live Preview Panel */}
-          <div style={{ width: '280px', flexShrink: 0 }}>
+          <div style={{ width: '380px', flexShrink: 0 }}>
             <BundlePreview
               bundleType={bundleType}
               name={name}
@@ -1965,7 +1915,6 @@ export function BundleWizard({
             </button>
           )}
         </div>
-      </div>
     </div>
   );
 }

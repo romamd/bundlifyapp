@@ -5,12 +5,7 @@ const BASE = 'https://dev.bundlify.io';
 test.describe('Volume Discount', () => {
   test.describe('Admin Wizard', () => {
     test('Volume Discount option is visible in bundle type step', async ({ page }) => {
-      await page.goto('/bundles');
-      const createBtn = page
-        .locator('div')
-        .filter({ has: page.getByRole('heading', { name: 'Bundles', level: 1 }) })
-        .getByRole('button', { name: 'Create Bundle' });
-      await createBtn.click();
+      await page.goto('/bundles/new');
 
       await expect(page.getByText('Volume Discount')).toBeVisible();
       await expect(
@@ -19,12 +14,7 @@ test.describe('Volume Discount', () => {
     });
 
     test('selecting Volume Discount shows single-product instruction', async ({ page }) => {
-      await page.goto('/bundles');
-      const createBtn = page
-        .locator('div')
-        .filter({ has: page.getByRole('heading', { name: 'Bundles', level: 1 }) })
-        .getByRole('button', { name: 'Create Bundle' });
-      await createBtn.click();
+      await page.goto('/bundles/new');
 
       // Select VOLUME type
       await page.getByText('Volume Discount').click();
@@ -32,17 +22,12 @@ test.describe('Volume Discount', () => {
 
       // Step 1 should show single-product instruction
       await expect(
-        page.getByText('Select the product for volume pricing (1 product only)'),
+        page.getByText('Select one or more products'),
       ).toBeVisible();
     });
 
     test('selecting VOLUME then going to step 2 shows tier editor', async ({ page }) => {
-      await page.goto('/bundles');
-      const createBtn = page
-        .locator('div')
-        .filter({ has: page.getByRole('heading', { name: 'Bundles', level: 1 }) })
-        .getByRole('button', { name: 'Create Bundle' });
-      await createBtn.click();
+      await page.goto('/bundles/new');
 
       // Select VOLUME type
       await page.getByText('Volume Discount').click();
@@ -61,7 +46,6 @@ test.describe('Volume Discount', () => {
       // Re-select and go forward
       await page.getByRole('button', { name: 'Next' }).click();
 
-      // Try to navigate to step 2 (may not be possible without product, but check the tier UI exists when we get there)
       // Navigate back to step 0 and select a non-volume type to verify switching works
       await page.getByRole('button', { name: 'Back' }).click();
       await page.getByText('Fixed Bundle').click();
@@ -70,19 +54,13 @@ test.describe('Volume Discount', () => {
     });
 
     test('tier editor has default tiers and Add Tier button', async ({ page }) => {
-      await page.goto('/bundles');
-      const createBtn = page
-        .locator('div')
-        .filter({ has: page.getByRole('heading', { name: 'Bundles', level: 1 }) })
-        .getByRole('button', { name: 'Create Bundle' });
-      await createBtn.click();
+      await page.goto('/bundles/new');
 
       // Select VOLUME type
       await page.getByText('Volume Discount').click();
       await page.getByRole('button', { name: 'Next' }).click();
 
-      // We need a product selected to get past step 1, but we can click Back to step 0
-      // and verify tier editor renders when we skip product selection by navigating directly
+      // We need a product selected to get past step 1
       // Since canProceed blocks without a product, let's just verify the wizard type selection persists
       await page.getByRole('button', { name: 'Back' }).click();
       // VOLUME should still be highlighted

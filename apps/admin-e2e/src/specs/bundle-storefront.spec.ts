@@ -57,15 +57,9 @@ test.describe('Bundle → Storefront Flow', () => {
   });
 
   test('bundle created in admin appears on storefront API', async ({ page, request }) => {
-    // Step 1: Create a new bundle via the admin wizard
-    await page.goto('/bundles');
-    await expect(page.getByRole('heading', { name: 'Bundles', level: 1 })).toBeVisible();
-
-    const createBtn = page
-      .locator('div')
-      .filter({ has: page.getByRole('heading', { name: 'Bundles', level: 1 }) })
-      .getByRole('button', { name: 'Create Bundle' });
-    await createBtn.click();
+    // Step 1: Navigate directly to the create wizard page
+    await page.goto('/bundles/new');
+    await expect(page.getByRole('heading', { name: 'Create Bundle', level: 1 })).toBeVisible();
 
     // Step 0: Select FIXED bundle type → Next
     await expect(page.getByText('Fixed Bundle')).toBeVisible();
@@ -88,10 +82,10 @@ test.describe('Bundle → Storefront Flow', () => {
     const bundleName = `E2E Test Bundle ${Date.now()}`;
     await nameInput.fill(bundleName);
 
-    // Click the wizard's submit button (last one, inside the modal)
-    await page.getByRole('button', { name: 'Create Bundle' }).nth(1).click();
+    // Click the wizard's submit button
+    await page.getByRole('button', { name: 'Create Bundle' }).click();
 
-    // Wait for the wizard to close and the new bundle to appear in the list
+    // After submit, wizard navigates back to /bundles — wait for the new bundle to appear
     await expect(page.getByText(bundleName)).toBeVisible({ timeout: 10000 });
 
     // Step 2: Activate the bundle (new bundles default to DRAFT)

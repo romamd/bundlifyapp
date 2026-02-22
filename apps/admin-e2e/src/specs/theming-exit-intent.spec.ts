@@ -5,12 +5,7 @@ const BASE = 'https://dev.bundlify.io';
 test.describe('Theming Controls', () => {
   test.describe('Bundles Wizard types', () => {
     test('all four bundle types are visible in wizard', async ({ page }) => {
-      await page.goto('/bundles');
-      const createBtn = page
-        .locator('div')
-        .filter({ has: page.getByRole('heading', { name: 'Bundles', level: 1 }) })
-        .getByRole('button', { name: 'Create Bundle' });
-      await createBtn.click();
+      await page.goto('/bundles/new');
 
       await expect(page.getByText('Fixed Bundle')).toBeVisible();
       await expect(page.getByText('Cross-Sell')).toBeVisible();
@@ -19,12 +14,7 @@ test.describe('Theming Controls', () => {
     });
 
     test('wizard bundle type selection is highlighted', async ({ page }) => {
-      await page.goto('/bundles');
-      const createBtn = page
-        .locator('div')
-        .filter({ has: page.getByRole('heading', { name: 'Bundles', level: 1 }) })
-        .getByRole('button', { name: 'Create Bundle' });
-      await createBtn.click();
+      await page.goto('/bundles/new');
 
       // Default is FIXED — should have green border
       const fixedOption = page.getByText('Fixed Bundle').locator('..');
@@ -41,14 +31,13 @@ test.describe('Theming Controls', () => {
   });
 
   test.describe('Settings sections', () => {
-    test('all 7 settings sections are visible', async ({ page }) => {
+    test('settings sections are visible (theming moved to Customize)', async ({ page }) => {
       await page.goto('/settings');
 
       const sections = [
         'Cost Defaults',
         'Bundle Engine',
         'Display Settings',
-        'Widget Theming',
         'Cart Drawer',
         'Multi-Currency',
         'Widget Settings',
@@ -57,6 +46,10 @@ test.describe('Theming Controls', () => {
       for (const section of sections) {
         await expect(page.getByRole('heading', { name: section })).toBeVisible();
       }
+
+      // Widget Theming has been moved to the Customize page
+      await expect(page.getByText('Widget Styling')).toBeVisible();
+      await expect(page.getByRole('link', { name: 'Go to Customize' })).toBeVisible();
     });
   });
 });

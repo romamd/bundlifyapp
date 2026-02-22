@@ -1,32 +1,27 @@
 import React, { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useBundlesStore } from '../stores/bundles.store';
-import { useProductsStore } from '../stores/products.store';
 import { useABTestsStore } from '../stores/ab-tests.store';
 import { useAuthenticatedFetch } from '../hooks/useAuthenticatedFetch';
 import { BundleTable } from '../components/bundles/BundleTable';
-import { BundleWizard } from '../components/bundles/BundleWizard';
 import { LoadingState } from '../components/common/LoadingState';
-import type { BundleDto, CreateBundleDto } from '@bundlify/shared-types';
+import type { BundleDto } from '@bundlify/shared-types';
 
 export function Bundles() {
   const fetch = useAuthenticatedFetch();
+  const navigate = useNavigate();
   const {
     bundles,
     loading,
     error,
     fetchBundles,
-    createBundle,
     deleteBundle,
-    updateBundle,
     setStatus,
     generateBundles,
   } = useBundlesStore();
-  const { products, fetchProducts } = useProductsStore();
 
   const { createTest } = useABTestsStore();
 
-  const [wizardOpen, setWizardOpen] = useState(false);
-  const [editingBundle, setEditingBundle] = useState<BundleDto | null>(null);
   const [generating, setGenerating] = useState(false);
   const [generateResult, setGenerateResult] = useState<number | null>(null);
   const [abTestBundleId, setAbTestBundleId] = useState<string | null>(null);
@@ -34,25 +29,10 @@ export function Bundles() {
 
   useEffect(() => {
     fetchBundles(fetch);
-    // Fetch products for the bundle wizard product picker
-    if (products.length === 0) {
-      fetchProducts(fetch);
-    }
   }, []);
 
-  const handleCreate = async (data: CreateBundleDto) => {
-    if (editingBundle) {
-      await updateBundle(fetch, editingBundle.id, data);
-    } else {
-      await createBundle(fetch, data);
-    }
-    setWizardOpen(false);
-    setEditingBundle(null);
-  };
-
   const handleEdit = (bundle: BundleDto) => {
-    setEditingBundle(bundle);
-    setWizardOpen(true);
+    navigate(`/bundles/${bundle.id}/edit`);
   };
 
   const handleDelete = async (bundleId: string) => {
@@ -120,7 +100,7 @@ export function Bundles() {
             {generating ? 'Generating...' : 'Generate Bundles'}
           </button>
           <button
-            onClick={() => setWizardOpen(true)}
+            onClick={() => navigate('/bundles/new')}
             style={{
               padding: '8px 16px',
               backgroundColor: '#008060',
@@ -407,15 +387,6 @@ export function Bundles() {
         </div>
       )}
 
-      {/* Bundle creation wizard */}
-      <BundleWizard
-        open={wizardOpen}
-        onClose={() => { setWizardOpen(false); setEditingBundle(null); }}
-        onSubmit={handleCreate}
-        products={products}
-        editBundle={editingBundle}
-        fetch={fetch}
-      />
     </div>
   );
 }
